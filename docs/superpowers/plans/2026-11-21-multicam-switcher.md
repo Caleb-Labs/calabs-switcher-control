@@ -6,7 +6,7 @@
 
 **Architecture:** Un servidor Node guarda el estado completo (reducer puro) y lo difunde por WebSocket. `/control` (operador) y `/program` (salida limpia) son páginas estáticas que solo renderizan ese estado y mandan acciones. Las cámaras son iframes de VDO.Ninja; el VTR es un `<video>` local.
 
-**Tech Stack:** Node.js 20+, `ws`, `node:test` (sin framework de pruebas externo), HTML/CSS/JS con módulos ES, Google Sheets API v4 (clave de API).
+**Tech Stack:** Node.js 20+, `ws`, `node:test` + `linkedom` (jsdom tardaba 41 s en cargar en el disco E), HTML/CSS/JS con módulos ES, Google Sheets API v4 (clave de API).
 
 **Spec:** `docs/superpowers/specs/2026-11-21-multicam-switcher-design.md`
 

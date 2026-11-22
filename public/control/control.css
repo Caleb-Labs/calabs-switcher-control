@@ -1,0 +1,18 @@
+#bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--live); }
+.dot.on { background: var(--ok); }
+button { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; font: inherit; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+.take { font-weight: 600; }
+kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
+#warn { color: var(--warn); margin-left: auto; }
+#mv { display: grid; grid-template-columns: repeat(18, 1fr); gap: 6px; padding: 8px; align-items: start; }
+.slot, .tile { aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; position: relative; }
+.slot { background: var(--panel); border: 1px dashed var(--line); display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.tile { border: 2px solid var(--line); background: #000; cursor: pointer; z-index: 1; }
+.tile .src { pointer-events: none; }
+.tile .label { position: absolute; left: 6px; bottom: 4px; font-size: 12px; text-shadow: 0 1px 2px #000; z-index: 3; }
+.tile .hit { position: absolute; inset: 0; z-index: 4; }
+.tile.pgm { border-color: var(--live); }
+.tile.pre { border-color: var(--ok); }
+.tile.nosignal::after { content: 'SIN SEÑAL'; position: absolute; inset: 0; display: grid; place-items: center; background: #111c; color: var(--warn); z-index: 2; }

@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { JSDOM } from 'jsdom';
+import { parseHTML } from 'linkedom';
 import { createSourceElement, mountOnly, neededIds } from '../public/shared/sources.js';
 
 const setup = () => {
-  const dom = new JSDOM('<div id="c"></div>');
-  global.document = dom.window.document;
-  return dom.window.document.getElementById('c');
+  const { document } = parseHTML('<div id="c"></div>');
+  global.document = document;
+  return document.getElementById('c');
 };
 const create = (id) => createSourceElement({ id, kind: 'vdo' }, { url: `https://vdo.ninja/?view=${id}` });
 const mounted = (c) => [...c.children].map((e) => e.dataset.sourceId).sort();
