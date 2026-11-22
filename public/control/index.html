@@ -37,7 +37,9 @@
   <strong>VTR</strong>
   <select id="vtr-files"></select>
   <button id="vtr-play">▶</button><button id="vtr-pause">⏸</button><button id="vtr-next">⏭</button>
-  <span id="vtr-empty" hidden>sin archivos en la carpeta vtr/</span>
+  <label class="btn" title="Imágenes (png, jpg, svg) o videos (mp4, webm, mov)">Subir archivos<input id="vtr-upload" type="file" multiple accept=".png,.jpg,.jpeg,.svg,.mp4,.webm,.mov" hidden></label>
+  <span id="vtr-upload-status"></span>
+  <span id="vtr-empty" hidden>aún no hay archivos: usa "Subir archivos"</span>
 </section>
 <main id="mv"></main>
 <section id="splitpanel">
@@ -47,8 +49,7 @@
     <span id="sp-hint">Haz clic en las cámaras que quieres (hasta 9). Se acomodan solas; cambia el orden con los desplegables o arrastra los recuadros.</span>
   </div>
   <div class="sp-row">
-    <strong>Fondo y tamaño</strong>
-    <label>Fondo <select id="sp-bg"></select></label>
+    <strong>Ajustes</strong>
     <label class="chk"><input type="checkbox" id="sp-lock" checked> mantener 16:9</label>
     <button id="sp-reset">Restablecer posiciones</button>
     <button id="sp-preview">Dividida a Preview</button>
@@ -64,6 +65,11 @@
   <div class="sp-editor">
     <div id="sp-slots"></div>
     <div id="sp-canvas"></div>
+  </div>
+  <div class="sp-bgs">
+    <strong>Fondos por cantidad de cámaras</strong>
+    <span id="sp-bgs-hint">Cada cantidad tiene su fondo. "Molde PNG" descarga una guía 1920×1080 con los recuadros y sus medidas en píxeles para mandar a diseñar el fondo; luego lo cargas con "Cargar fondo". Los recuadros se ven por encima del fondo.</span>
+    <div id="sp-cards" class="cards"></div>
   </div>
 </section>
 <script type="module" src="/control/control.js"></script>

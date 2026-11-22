@@ -11,7 +11,8 @@ test('createState arma 10 fuentes (8 cámaras + vtr + split), program=cam1 y pre
   assert.equal(s.program, 'cam1');
   assert.equal(s.preview, 'cam2');
   assert.equal(s.sources[8].kind, 'vtr');
-  assert.equal(s.sources[0].label, 'Equipo 1');
+  assert.equal(s.sources[0].label, 'Cámara 1');
+  assert.equal(s.sources[0].team, 'Equipo 1'); // el nombre del equipo sigue disponible para los GC
 });
 
 test('TAKE cut intercambia preview y program y sube seq', () => {

@@ -6,9 +6,10 @@ import path from 'node:path';
 import { createState, reduce, normalizeSplit, defaultSlots } from '../server/state.js';
 import { startServer } from '../server/index.js';
 import { parseHTML } from 'linkedom';
-import { slotStyle, splitPlacement, moveRect, resizeRect, slotNames, toggleCam } from '../public/shared/split.js';
+import { slotStyle, splitPlacement, moveRect, resizeRect, slotNames, toggleCam, slotPixels } from '../public/shared/split.js';
 import { neededIds, visibleIds, createSourceElement, applyPlacement } from '../public/shared/sources.js';
 import { fileURLToPath } from 'node:url';
+import { drawMold } from '../public/control/mold.js';
 
 const team = (i) => ({ name: `Equipo ${i}`, players: [`J${i}A`, `J${i}B`], source: { kind: 'vdo', room: `r${i}` } });
 const config = {
@@ -21,7 +22,8 @@ const apply = (s, ...a) => a.reduce(reduce, s);
 test('con aérea: 8 equipos + cam9 + vtr + split; la aérea no tiene jugadores ni cuenta como equipo', () => {
   const s = S();
   assert.deepEqual(s.sources.map((x) => x.id), ['cam1','cam2','cam3','cam4','cam5','cam6','cam7','cam8','cam9','vtr','split']);
-  assert.equal(s.sources[8].label, 'Aérea');
+  assert.equal(s.sources[8].label, 'Cámara 9');
+  assert.equal(s.sources[8].team, undefined);
   assert.equal(s.sources[10].kind, 'split');
   assert.equal(apply(S(), { type: 'SET_AUDIO_MASTER', id: 'cam9' }).audioMaster, 'cam9'); // la aérea sí puede ser audio master
   assert.equal(apply(S(), { type: 'SET_AUDIO_MASTER', id: 'split' }).audioMaster, null);
@@ -327,4 +329,23 @@ test('toggleCam agrega al final, quita si ya estaba, no pasa de 9 ni deja la lis
   assert.deepEqual(toggleCam(['cam4'], 'cam4'), ['cam4']);
   const nine = Array.from({ length: 9 }, (_, i) => `cam${i + 1}`);
   assert.deepEqual(toggleCam(nine, 'cam10'), nine);
+});
+
+test('slotPixels da las medidas en píxeles sobre 1920x1080 (para encargar los fondos)', () => {
+  assert.deepEqual(slotPixels([{ cam: 'cam1', x: 0.01, y: 0.26, w: 0.48, h: 0.48 }]), [{ x: 19, y: 281, w: 922, h: 518 }]);
+  assert.deepEqual(slotPixels([{ cam: 'cam1', x: 0, y: 0, w: 1, h: 1 }]), [{ x: 0, y: 0, w: 1920, h: 1080 }]);
+  assert.deepEqual(slotPixels([{ cam: 'cam1', x: 0.25, y: 0.5, w: 0.5, h: 0.25 }], 1280, 720), [{ x: 320, y: 360, w: 640, h: 180 }]);
+});
+
+test('drawMold dibuja un recuadro por posición con nombre y medidas en píxeles (guía para el diseñador)', () => {
+  const calls = [];
+  const ctx = new Proxy({}, { get: (t, k) => (...a) => calls.push([k, ...a]), set: (t, k, v) => { calls.push(['set', k, v]); return true; } });
+  drawMold(ctx, 2, [{ cam: 'cam1', x: 0.01, y: 0.26, w: 0.48, h: 0.48 }, { cam: 'cam4', x: 0.51, y: 0.26, w: 0.48, h: 0.48 }], ['Izquierda', 'Derecha']);
+  const texts = calls.filter((c) => c[0] === 'fillText').map((c) => String(c[1]));
+  assert.ok(texts.some((t) => t.includes('922 × 518 px')), texts.join(' | '));
+  assert.ok(texts.some((t) => t.includes('Izquierda')));
+  assert.ok(texts.some((t) => t.includes('Derecha')));
+  assert.ok(texts.some((t) => t.includes('2 cámaras')));
+  assert.ok(texts.some((t) => t.includes('1920 × 1080')));
+  assert.equal(calls.filter((c) => c[0] === 'strokeRect').length >= 2, true);
 });

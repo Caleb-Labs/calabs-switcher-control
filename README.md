@@ -33,7 +33,8 @@ Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920,
 - Click en un tile = a Preview. `⚠` marca una cámara "sin señal" a mano; `🔊` = audio master.
 - **GC**: elige equipo/jugador → "a preview" (se ve solo en el tile PREVIEW) → "al aire" → "bajar".
 - **EMERGENCIA** pone el logo de emergencia (`"emergencyLogo": "/vtr/emergencia.png"` en la config).
-- **VTR**: pon videos (`.mp4 .webm .mov`) e imágenes (`.png .jpg .svg`) en la carpeta `vtr/`. "Tabla de posiciones" sale por el VTR.
+- **VTR**: usa el botón **"Subir archivos"** del panel (videos `.mp4 .webm .mov` o imágenes `.png .jpg .svg`; también puedes copiarlos a la carpeta `vtr/`). "Tabla de posiciones" sale por el VTR. Sin archivo elegido muestra un cartel "VTR · sin archivo seleccionado".
+- Las cámaras se llaman **Cámara 1 … Cámara 9** (la 9 es la aérea). El nombre del equipo se usa solo en los GC.
 
 ## Cámara aérea
 En `config\teams.json` agrega `"aerial": {"name": "Cámara aérea", "source": {"kind": "vdo", "room": "sala-aerea"}}`.
@@ -43,7 +44,7 @@ Aparece como la cámara 9 (tecla `9`, comando `cam9`), entra en `npm run links` 
 Es una fuente más (`s`, comando `split`): se manda a Preview y se toma con CUT/FADE como cualquier cámara. En el panel "Pantalla dividida":
 1. En **"Cámaras en pantalla"** haz clic en los botones de las cámaras que quieres, en el orden que quieras (hasta 9; por ejemplo 1 y 4). La cantidad sale de cuántas elijas y se acomodan solas (2 quedan lado a lado). Para cambiar quién va en cada posición usa los desplegables con nombre ("Izquierda", "Derecha"…).
 2. **Arrastra** los recuadros del lienzo para moverlos y usa la esquina para cambiar el tamaño ("mantener 16:9" evita franjas negras). `/program` se actualiza en vivo si está al aire.
-3. **Fondo por cantidad:** cada cantidad (2, 3, 4…) tiene su fondo. Se detecta solo si pones en `vtr/` un archivo llamado `split-2.png`, `split-3.png`, `split-4.png`… (también `.jpg .svg .mp4 .webm .mov`; `split-1` a `split-9`), o lo eliges en el menú "Fondo".
+3. **Fondos por cantidad:** abajo del panel hay una ficha por cada cantidad (1 a 9 cámaras) con su vista previa. En cada ficha: **"Molde PNG"** descarga una guía 1920×1080 con los recuadros y sus medidas en píxeles (también se ven en "Medidas") para mandar a diseñar el fondo; **"Cargar fondo"** sube la imagen y la asigna a esa cantidad; y el desplegable cambia el fondo por otro ya subido. Los recuadros de cámara quedan por encima del fondo. Si cambias las posiciones, descarga el molde otra vez. También se detecta solo un archivo `split-2.png`, `split-3.png`… en `vtr/`.
 4. **Peleas:** escribe un nombre ("Pelea 1") y "Guardar" para recordar cámaras + posiciones. Después "Cargar" y listo; así no necesitas un macro por cada combinación.
 Cada cantidad recuerda su propio arreglo. Todo se guarda en `data/split.json` y sobrevive a reinicios.
 En el panel la dividida se ve como un esquema (fondo + recuadros con nombres); el video real solo se compone en `/program`.

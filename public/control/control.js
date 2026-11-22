@@ -4,6 +4,7 @@ import { keyToAction, shouldHandleKey } from './keymap.js';
 import { assignAreas, gridTemplate, clampSizes, bigColsFor, badgeText } from './layout.js';
 import { renderSplitView } from './splitview.js';
 import { initSplitPanel } from './splitpanel.js';
+import { uploadFile } from './upload.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
@@ -13,7 +14,7 @@ const tiles = new Map();
 let sources = null;
 let lastState = null;
 let teams = [];
-let preGfx = null, pgmGfx = null, preSlot = null;
+let preGfx = null, pgmGfx = null, preSlot = null, preBadge = null, preNote = null;
 
 const conn = connect((state) => { lastState = state; render(); }, {
   onStatus: (on) => document.getElementById('conn').classList.toggle('on', on),
@@ -59,7 +60,11 @@ function build(state) {
     d.className = 'slot'; d.style.gridArea = area; d.textContent = text; mv.append(d);
     return d;
   };
-  preSlot = slot('pre', 'PREVIEW'); slot('pgm', 'PROGRAM');
+  preSlot = slot('pre', '');
+  preBadge = document.createElement('span'); preBadge.className = 'badge'; preBadge.hidden = true;
+  preNote = document.createElement('span'); preNote.className = 'note';
+  preSlot.append(preBadge, preNote);
+  slot('pgm', 'PROGRAM');
   const cell = (area) => {
     const c = document.createElement('div'); c.className = 'gfx-cell'; c.style.gridArea = area;
     const g = document.createElement('div'); g.className = 'gfx'; c.append(g); mv.append(c);
@@ -113,7 +118,10 @@ function render() {
     t.querySelector('.badge').textContent = badgeText(areas[s.id], s.label);
   }
   const progLabel = lastState.sources.find((x) => x.id === lastState.program)?.label;
-  preSlot.textContent = lastState.preview === lastState.program ? `PREVIEW = PROGRAM (${progLabel})` : 'PREVIEW';
+  const same = lastState.preview === lastState.program;
+  preBadge.hidden = !same;
+  preBadge.textContent = badgeText('pre', progLabel ?? '');
+  preNote.textContent = same ? 'Es la misma cámara que está en PROGRAM' : 'PREVIEW';
   const splitEl = tiles.get('split')?.querySelector('.split-view');
   if (splitEl) renderSplitView(splitEl, lastState);
   splitPanel.render(lastState);
@@ -185,3 +193,18 @@ vtrSel.onchange = () => send({ type: 'VTR_SELECT', file: vtrSel.value });
 document.getElementById('vtr-play').onclick = () => send({ type: 'VTR_PLAY' });
 document.getElementById('vtr-pause').onclick = () => send({ type: 'VTR_PAUSE' });
 document.getElementById('vtr-next').onclick = () => send({ type: 'VTR_NEXT' });
+
+// Subir archivos al VTR
+const uploadInput = document.getElementById('vtr-upload');
+uploadInput.onchange = async () => {
+  const status = document.getElementById('vtr-upload-status');
+  const files = [...uploadInput.files];
+  uploadInput.value = '';
+  let ok = 0;
+  for (const f of files) {
+    status.textContent = `Subiendo ${f.name}…`;
+    try { await uploadFile(f); ok++; } catch (e) { alert(`No se pudo subir ${f.name}: ${e.message}`); }
+  }
+  status.textContent = ok ? `${ok} archivo(s) subido(s)` : '';
+  setTimeout(() => { status.textContent = ''; }, 4000);
+};

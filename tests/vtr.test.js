@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { startServer } from '../server/index.js';
 import { listMedia, vtrRoute, startVtrWatcher } from '../server/vtr.js';
-import { vtrPlan } from '../public/shared/vtr.js';
+import { vtrPlan, syncVtr } from '../public/shared/vtr.js';
 import { renderGraphic } from '../public/graphics/templates.js';
 import { syncGraphics } from '../public/graphics/layer.js';
 
@@ -93,4 +93,26 @@ test('la tabla a pantalla completa sale solo cuando el VTR está al aire con @ta
   syncGraphics(c, { ...st, program: 'vtr', preview: 'cam2' }, 'live');
   assert.deepEqual([...c.children].map((e) => e.dataset.gcId), ['vtr-standings']);
   assert.ok(renderGraphic('standings', { teams: [], full: true }).classList.contains('full'));
+});
+
+test('VTR sin archivo muestra un cartel visible (poster) en vez de quedar en negro', () => {
+  const { document } = parseHTML('<div></div>');
+  const v = document.createElement('video');
+  syncVtr(v, { current: null, playing: false, files: [] });
+  assert.match(v.getAttribute('poster'), /^data:image\/svg\+xml/);
+  assert.match(decodeURIComponent(v.getAttribute('poster')), /VTR/);
+  syncVtr(v, { current: 'logo.png', playing: false, files: ['logo.png'] });
+  assert.equal(v.getAttribute('poster'), '/vtr/logo.png');
+});
+
+test('/vtr sirve con cabeceras de seguridad (los SVG subidos no pueden ejecutar scripts)', async () => {
+  const d = tmp();
+  fs.writeFileSync(path.join(d, 'a.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
+  const config = { teams: Array.from({ length: 8 }, (_, i) => ({ name: `E${i}`, players: ['a', 'b'], source: { kind: 'vdo', room: `r${i}` } })) };
+  const srv = await startServer({ port: 0, config, publicDir: fileURLToPath(new URL('../public', import.meta.url)), extraRoutes: [vtrRoute(d)] });
+  try {
+    const res = await fetch(`http://127.0.0.1:${srv.port}/vtr/a.svg`);
+    assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+    assert.match(res.headers.get('content-security-policy'), /sandbox/);
+  } finally { await srv.close(); }
 });

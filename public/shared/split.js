@@ -54,3 +54,8 @@ export function toggleCam(cams, id) {
   if (cams.includes(id)) return cams.length > 1 ? cams.filter((c) => c !== id) : cams;
   return cams.length >= 9 ? cams : [...cams, id];
 }
+
+// Medidas en píxeles de cada recuadro (para encargar los fondos).
+export function slotPixels(slots, W = 1920, H = 1080) {
+  return slots.map((s) => ({ x: Math.round(s.x * W), y: Math.round(s.y * H), w: Math.round(s.w * W), h: Math.round(s.h * H) }));
+}

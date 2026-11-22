@@ -1,4 +1,6 @@
-import { slotStyle, activeSlots, splitBgFile, moveRect, resizeRect, slotNames, toggleCam } from '/shared/split.js';
+import { slotStyle, activeSlots, splitBgFile, moveRect, resizeRect, slotNames, toggleCam, slotPixels } from '/shared/split.js';
+import { uploadFile } from './upload.js';
+import { downloadMold } from './mold.js';
 
 const $ = (id) => document.getElementById(id);
 const MEDIA = /\.(png|jpe?g|svg|mp4|webm|mov)$/i;
@@ -13,9 +15,8 @@ export function initSplitPanel({ send }) {
   let lastSend = 0;
 
   const blurOnChange = (el) => { el.addEventListener('change', () => el.blur()); }; // para que las teclas 1-9 sigan funcionando
-  for (const id of ['sp-bg', 'sp-fights']) blurOnChange($(id));
+  blurOnChange($('sp-fights'));
 
-  $('sp-bg').onchange = (e) => send({ type: 'SPLIT_SET_BG', count: state.split.count, file: e.target.value || null });
   $('sp-reset').onclick = () => send({ type: 'SPLIT_RESET_LAYOUT' });
   $('sp-preview').onclick = () => send({ type: 'SET_PREVIEW', id: 'split' });
   const save = () => { const name = $('sp-name').value.trim(); if (name) { send({ type: 'SPLIT_SAVE_FIGHT', name }); $('sp-name').value = ''; } };
@@ -37,7 +38,7 @@ export function initSplitPanel({ send }) {
       const order = chosen.indexOf(c.id);
       const b = document.createElement('button');
       b.className = `chip${order >= 0 ? ' on' : ''}`;
-      b.textContent = `${c.id.slice(3)} · ${c.label}`;
+      b.textContent = c.label;
       if (order >= 0) { const n = document.createElement('b'); n.textContent = order + 1; b.append(n); }
       b.onclick = () => { send({ type: 'SPLIT_SET_CAMS', cams: toggleCam(chosen, c.id) }); b.blur(); };
       return b;
@@ -108,15 +109,68 @@ export function initSplitPanel({ send }) {
     }));
   }
 
-  function renderSelects() {
+  const isImage = (f) => /\.(png|jpe?g|svg)$/i.test(f);
+
+  function renderCards() {
     const sp = state.split;
     const media = state.vtr.files.filter((f) => MEDIA.test(f));
-    const bgKey = JSON.stringify(media);
-    if ($('sp-bg').dataset.key !== bgKey) {
-      $('sp-bg').dataset.key = bgKey;
-      $('sp-bg').replaceChildren(new Option('(sin fondo)', ''), ...media.map((f) => new Option(f, f)));
-    }
-    $('sp-bg').value = sp.bgs[sp.count] ?? '';
+    const key = JSON.stringify([sp.count, sp.layouts, sp.bgs, media]);
+    const box = $('sp-cards');
+    if (box.dataset.key === key) return;
+    box.dataset.key = key;
+    box.replaceChildren(...Object.keys(sp.layouts).map((k) => {
+      const n = Number(k);
+      const slots = sp.layouts[n];
+      const names = slotNames(n);
+      const bg = sp.bgs[n] ?? '';
+      const card = document.createElement('div');
+      card.className = `card${n === sp.count ? ' active' : ''}`;
+
+      const head = document.createElement('div'); head.className = 'card-head';
+      const title = document.createElement('strong'); title.textContent = `${n} ${n === 1 ? 'cámara' : 'cámaras'}`;
+      const use = document.createElement('button'); use.textContent = n === sp.count ? 'En edición' : 'Editar'; use.disabled = n === sp.count;
+      use.onclick = () => send({ type: 'SPLIT_SET_COUNT', count: n });
+      head.append(title, use);
+
+      const thumb = document.createElement('div'); thumb.className = 'thumb';
+      if (bg && isImage(bg)) thumb.style.backgroundImage = `url(/vtr/${encodeURIComponent(bg)})`;
+      slots.forEach((s, i) => {
+        const b = document.createElement('div'); b.className = 'tb'; Object.assign(b.style, slotStyle(s)); b.textContent = i + 1; thumb.append(b);
+      });
+
+      const sel = document.createElement('select');
+      sel.replaceChildren(new Option('(sin fondo)', ''), ...media.map((f) => new Option(f, f)));
+      sel.value = media.includes(bg) ? bg : '';
+      sel.onchange = () => { send({ type: 'SPLIT_SET_BG', count: n, file: sel.value || null }); sel.blur(); };
+
+      const actions = document.createElement('div'); actions.className = 'card-actions';
+      const up = document.createElement('label'); up.className = 'btn'; up.textContent = 'Cargar fondo';
+      const input = document.createElement('input'); input.type = 'file'; input.hidden = true; input.accept = '.png,.jpg,.jpeg,.svg,.mp4,.webm,.mov';
+      input.onchange = async () => {
+        const f = input.files[0]; if (!f) return;
+        up.firstChild.textContent = 'Subiendo…';
+        try { const name = await uploadFile(f); send({ type: 'SPLIT_SET_BG', count: n, file: name }); }
+        catch (e) { alert(`No se pudo subir: ${e.message}`); }
+        up.firstChild.textContent = 'Cargar fondo';
+      };
+      up.append(input);
+      const mold = document.createElement('button'); mold.textContent = 'Molde PNG'; mold.title = 'Descarga la guía con los recuadros y sus medidas';
+      mold.onclick = () => downloadMold(n, slots);
+      actions.append(up, mold);
+
+      const det = document.createElement('details');
+      const sum = document.createElement('summary'); sum.textContent = 'Medidas (px, lienzo 1920×1080)';
+      const ul = document.createElement('ul');
+      slotPixels(slots).forEach((p, i) => { const li = document.createElement('li'); li.textContent = `${i + 1} · ${names[i]}: ${p.w} × ${p.h} px (X ${p.x}, Y ${p.y})`; ul.append(li); });
+      det.append(sum, ul);
+
+      card.append(head, thumb, sel, actions, det);
+      return card;
+    }));
+  }
+
+  function renderSelects() {
+    const sp = state.split;
     const fKey = JSON.stringify(sp.fights.map((f) => [f.id, f.name, f.count]));
     if ($('sp-fights').dataset.key !== fKey) {
       const keep = $('sp-fights').value;
@@ -127,6 +181,6 @@ export function initSplitPanel({ send }) {
   }
 
   return {
-    render(s) { state = s; renderSelects(); renderChips(); renderSlots(); renderCanvas(); },
+    render(s) { state = s; renderSelects(); renderChips(); renderSlots(); renderCanvas(); renderCards(); },
   };
 }

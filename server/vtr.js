@@ -29,7 +29,10 @@ export function vtrRoute(dir) {
     let size;
     try { const st = fs.statSync(file); if (!st.isFile()) return notFound(); size = st.size; } catch { return notFound(); }
 
-    const headers = { 'content-type': MIME[extOf(name)], 'accept-ranges': 'bytes' };
+    const headers = {
+      'content-type': MIME[extOf(name)], 'accept-ranges': 'bytes',
+      'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox", // un SVG subido no puede ejecutar scripts
+    };
     const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
     if (!m) {
       res.writeHead(200, { ...headers, 'content-length': size });

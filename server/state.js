@@ -69,14 +69,15 @@ const withSlots = (state, fn) => {
 export function createState(config) {
   const sources = config.teams.map((t, i) => ({
     id: `cam${i + 1}`,
-    label: t.name,
+    label: `Cámara ${i + 1}`,
+    team: t.name, // el nombre del equipo se usa en los GC
     kind: t.source?.kind ?? 'vdo',
     status: 'live',
     players: t.players,
     logo: t.logo ?? null,
   }));
   if (config.aerial) {
-    sources.push({ id: `cam${sources.length + 1}`, label: config.aerial.name, kind: config.aerial.source.kind, status: 'live', players: undefined, logo: null });
+    sources.push({ id: `cam${sources.length + 1}`, label: `Cámara ${sources.length + 1}`, kind: config.aerial.source.kind, status: 'live', players: undefined, logo: null });
   }
   const camIds = sources.map((x) => x.id);
   sources.push({ id: 'vtr', label: 'VTR', kind: 'vtr', status: 'live' });
@@ -213,7 +214,7 @@ export function reduce(state, action) {
     case 'GC_NAME_PREVIEW': {
       const src = state.sources.find((x) => x.id === state.preview);
       if (!src || src.kind === 'vtr' || !Array.isArray(src.players)) return state;
-      const data = { team: src.label, player: src.players[state.gcPlayer] ?? src.players[0], logo: src.logo ?? null };
+      const data = { team: src.team ?? src.label, player: src.players[state.gcPlayer] ?? src.players[0], logo: src.logo ?? null };
       return { ...state, gc: { ...state.gc, name: { template: 'gc-name', data, state: 'preview' } } };
     }
 

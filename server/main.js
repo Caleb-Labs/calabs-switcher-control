@@ -5,6 +5,7 @@ import { loadConfig } from './config.js';
 import { sourcesRoute, teamsRoute, commandRoute } from './api.js';
 import { startSheetPoller } from './sheets.js';
 import { vtrRoute, startVtrWatcher } from './vtr.js';
+import { uploadRoute } from './upload.js';
 import { readProfiles, loadProfile } from './profiles.js';
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
@@ -15,7 +16,7 @@ if (cfgPath.endsWith('teams.example.json')) console.warn('Usando config/teams.ex
 const config = loadConfig(cfgPath);
 const port = Number(process.env.PORT ?? 3000);
 const profile = loadProfile(process.env.PROFILE ?? config.profile, readProfiles(here('../config/profiles.json')));
-const srv = await startServer({ port, host: process.env.HOST, splitFile: here('../data/split.json'), config, publicDir: here('../public'), extraRoutes: [sourcesRoute(config, profile), teamsRoute(config), commandRoute(), vtrRoute(here('../vtr'))] });
+const srv = await startServer({ port, host: process.env.HOST, splitFile: here('../data/split.json'), config, publicDir: here('../public'), extraRoutes: [sourcesRoute(config, profile), teamsRoute(config), commandRoute(), uploadRoute({ dir: here('../vtr') }), vtrRoute(here('../vtr'))] });
 console.log(`Control: http://localhost:${srv.port}/control/   Program (OBS): http://localhost:${srv.port}/program/`);
 
 if (config.sheet) {
