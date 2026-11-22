@@ -97,7 +97,11 @@ const withSlots = (state, fn) => {
   return slots ? { ...state, split: { ...state.split, layouts: { ...state.split.layouts, [n]: slots } } } : state;
 };
 
+// Lo que se guarda en disco (data/split.json) para sobrevivir a reinicios.
+export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile });
+
 export function createState(config) {
+  const saved = config.saved ?? { split: config.splitSaved, gcPos: config.gcPosSaved }; // compatibilidad con el formato anterior
   const sources = config.teams.map((t, i) => ({
     id: `cam${i + 1}`,
     label: `Cámara ${i + 1}`,
@@ -115,12 +119,13 @@ export function createState(config) {
   sources.push({ id: 'split', label: 'Pantalla dividida', kind: 'split', status: 'live' });
   return {
     sources,
-    split: withTeamTexts(normalizeSplit(config.splitSaved, camIds), sources),
+    split: withTeamTexts(normalizeSplit(saved.split, camIds), sources),
+    emergencyFile: typeof saved.emergencyFile === 'string' ? saved.emergencyFile : null,
     splitGc: 'off',
     fadeMs: 500,
     mixSel: camIds[0],
     toneSeq: 0,
-    gcPos: { name: cleanGcPos(config.gcPosSaved?.name), score: cleanGcPos(config.gcPosSaved?.score) },
+    gcPos: { name: cleanGcPos(saved.gcPos?.name), score: cleanGcPos(saved.gcPos?.score) },
     mix: Object.fromEntries(camIds.map((id) => [id, { level: 1, on: false }])),
     program: 'cam1',
     preview: 'cam2',
@@ -180,6 +185,9 @@ export function reduce(state, action) {
 
     case 'EMERGENCY':
       return { ...state, emergency: !!action.on };
+    case 'EMERGENCY_FILE':
+      if (action.file === null) return { ...state, emergencyFile: null };
+      return typeof action.file === 'string' && action.file !== '@tabla' && state.vtr.files.includes(action.file) ? { ...state, emergencyFile: action.file } : state;
 
     case 'VTR_FILES': {
       const files = Array.isArray(action.files) ? action.files : [];
@@ -192,7 +200,7 @@ export function reduce(state, action) {
         const found = cur && files.includes(cur) ? cur : files.find((f) => BG_FILE(n).test(f));
         if (found) bgs[n] = found;
       }
-      return { ...state, vtr: { ...state.vtr, files, current, playing: kept ? state.vtr.playing : false }, split: { ...state.split, bgs } };
+      return { ...state, emergencyFile: files.includes(state.emergencyFile) ? state.emergencyFile : null, vtr: { ...state.vtr, files, current, playing: kept ? state.vtr.playing : false }, split: { ...state.split, bgs } };
     }
     case 'VTR_SELECT':
       return state.vtr.files.includes(action.file) ? { ...state, vtr: { ...state.vtr, current: action.file } } : state;

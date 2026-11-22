@@ -34,8 +34,14 @@ const TEMPLATES = {
   nosignal: () => el('div', 'g-root nosignal', 'SIN SEÑAL'),
   emergency: (d) => {
     const root = el('div', 'g-root emergency');
-    if (d.logo) { const img = el('img', 'logo'); img.setAttribute('src', d.logo); root.append(img); }
-    else root.append(el('div', 'fallback', 'VOLVEMOS EN UN MOMENTO'));
+    const file = d.file ? `/vtr/${encodeURIComponent(d.file)}` : d.logo;
+    if (d.file && /\.(mp4|webm|mov)$/i.test(d.file)) {
+      const v = el('video', 'media');
+      v.setAttribute('src', file); v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
+      root.append(v);
+    } else if (file) {
+      const img = el('img', 'logo'); img.setAttribute('src', file); root.append(img);
+    } else root.append(el('div', 'fallback', 'VOLVEMOS EN UN MOMENTO'));
     return root;
   },
 };

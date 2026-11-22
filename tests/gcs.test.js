@@ -307,3 +307,65 @@ test('SPLIT_RESET_LAYOUT también devuelve los GC del recuadro a su posición or
   const other = apply(S(), { type: 'SPLIT_SET_COUNT', count: 3 }, { type: 'SPLIT_SET_GCPOS', index: 0, x: 0.4, y: 0.4 }, { type: 'SPLIT_SET_COUNT', count: 2 }, { type: 'SPLIT_RESET_LAYOUT' });
   assert.deepEqual(other.split.gcOffs[3][0], { x: 0.4, y: 0.4 }); // solo la cantidad en edición
 });
+
+// ---------- emergencia con foto o video ----------
+import { renderGraphic } from '../public/graphics/templates.js';
+import { persistable } from '../server/state.js';
+import { startServer } from '../server/index.js';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+test('EMERGENCY_FILE elige el archivo de la emergencia (solo archivos del VTR) y null lo quita', () => {
+  let s = apply(S(), { type: 'VTR_FILES', files: ['@tabla', 'emergencia.mp4', 'logo.png'] });
+  s = apply(s, { type: 'EMERGENCY_FILE', file: 'emergencia.mp4' });
+  assert.equal(s.emergencyFile, 'emergencia.mp4');
+  assert.equal(apply(s, { type: 'EMERGENCY_FILE', file: 'nope.png' }), s);
+  assert.equal(apply(s, { type: 'EMERGENCY_FILE', file: '@tabla' }), s);
+  assert.equal(apply(s, { type: 'EMERGENCY_FILE', file: null }).emergencyFile, null);
+  assert.equal(apply(s, { type: 'VTR_FILES', files: ['@tabla', 'logo.png'] }).emergencyFile, null); // si se borra el archivo, vuelve al logo/texto
+});
+
+test('la plantilla de emergencia usa el archivo elegido: video en bucle, imagen o, si no hay, el logo de la config', () => {
+  const { document } = parseHTML('<div></div>');
+  global.document = document;
+  const v = renderGraphic('emergency', { file: 'aviso.MP4', logo: '/vtr/logo.png' });
+  assert.equal(v.querySelector('video').getAttribute('src'), '/vtr/aviso.MP4');
+  assert.equal(v.querySelector('video').loop, true);
+  assert.equal(v.querySelector('img'), null);
+  const i = renderGraphic('emergency', { file: 'foto 1.png', logo: '/vtr/logo.png' });
+  assert.equal(i.querySelector('img').getAttribute('src'), '/vtr/foto%201.png');
+  assert.equal(renderGraphic('emergency', { logo: '/vtr/logo.png' }).querySelector('img').getAttribute('src'), '/vtr/logo.png');
+  assert.match(renderGraphic('emergency', {}).textContent, /VOLVEMOS/);
+});
+
+test('persistable agrupa lo que se guarda en disco y conserva referencias si nada cambió', () => {
+  const s = S();
+  const a = persistable(s);
+  assert.deepEqual(Object.keys(a).sort(), ['emergencyFile', 'gcPos', 'split']);
+  assert.equal(persistable(apply(s, { type: 'TAKE', mode: 'cut' })).split, a.split);
+});
+
+test('el servidor guarda y recupera la emergencia junto con lo demás', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'em-'));
+  const file = path.join(dir, 'show.json');
+  const publicDir = fileURLToPath(new URL('../public', import.meta.url));
+  try {
+    const a = await startServer({ port: 0, config, publicDir, splitFile: file, splitSaveDelayMs: 10 });
+    a.dispatch({ type: 'VTR_FILES', files: ['@tabla', 'aviso.mp4'] });
+    a.dispatch({ type: 'EMERGENCY_FILE', file: 'aviso.mp4' });
+    a.dispatch({ type: 'GC_SET_POS', gcId: 'name', x: 0.3, y: 0.4 });
+    await new Promise((r) => setTimeout(r, 120));
+    await a.close();
+    const b = await startServer({ port: 0, config, publicDir, splitFile: file });
+    assert.equal(b.getState().emergencyFile, 'aviso.mp4');
+    assert.deepEqual(b.getState().gcPos.name, { x: 0.3, y: 0.4 });
+    await b.close();
+    // formato antiguo (solo la pantalla dividida) sigue funcionando
+    fs.writeFileSync(file, JSON.stringify({ count: 4, layouts: {} }));
+    const c = await startServer({ port: 0, config, publicDir, splitFile: file });
+    assert.equal(c.getState().split.count, 4);
+    await c.close();
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});

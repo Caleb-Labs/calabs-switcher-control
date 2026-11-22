@@ -28,7 +28,7 @@ function wanted(state, which) {
       out.push({ id: 'vtr-standings', template: 'standings', data: { teams: state.scoreboard?.teams ?? [], full: true } });
     }
   }
-  if (which === 'live' && state.emergency) out.push({ id: 'emergency', template: 'emergency', data: { logo: state.emergencyLogo } });
+  if (which === 'live' && state.emergency) out.push({ id: 'emergency', template: 'emergency', data: { logo: state.emergencyLogo, file: state.emergencyFile } });
   return out;
 }
 

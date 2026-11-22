@@ -194,6 +194,7 @@ function render() {
     seenSeq = lt.seq;
   } else if (!lt && seenSeq === null) seenSeq = 0;
   syncVtrPanel();
+  syncEmergencyPanel();
   muteAll(); // el audio sale solo por /program (OBS); aquí todo en silencio
   const pct = (c) => (c.muted ? 'mute' : `${Math.round(c.level * 100)}%`);
   document.getElementById('vol').textContent = `🔊 cámara ${pct(lastState.audio.cam)} · VTR ${pct(lastState.audio.vtr)}`;
@@ -269,3 +270,18 @@ uploadInput.onchange = async () => {
   status.textContent = ok ? `${ok} archivo(s) subido(s)` : '';
   setTimeout(() => { status.textContent = ''; }, 4000);
 };
+
+// --- Archivo de la emergencia (foto o video)
+const emSel = document.getElementById('em-file');
+emSel.onchange = () => { send({ type: 'EMERGENCY_FILE', file: emSel.value || null }); emSel.blur(); };
+document.getElementById('em-upload').onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try { send({ type: 'EMERGENCY_FILE', file: await uploadFile(f) }); } catch (err) { alert(`No se pudo subir: ${err.message}`); }
+};
+function syncEmergencyPanel() {
+  const media = lastState.vtr.files.filter((f) => f !== '@tabla');
+  const key = JSON.stringify(media);
+  if (emSel.dataset.key !== key) { emSel.dataset.key = key; emSel.replaceChildren(new Option('(logo / texto)', ''), ...media.map((f) => new Option(f, f))); }
+  emSel.value = lastState.emergencyFile ?? '';
+}

@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { WebSocketServer } from 'ws';
-import { createState, reduce } from './state.js';
+import { createState, reduce, persistable } from './state.js';
 import { originAllowed } from './origin.js';
 import { loadSplit, saveSplit } from './splitStore.js';
 
@@ -37,16 +37,16 @@ const CLIENT_ACTIONS = new Set([
   'SPLIT_SET_COUNT', 'SPLIT_SET_CAMS', 'SPLIT_SET_CAM', 'SPLIT_SET_RECT', 'SPLIT_RESET_LAYOUT', 'SPLIT_SET_BG',
   'SPLIT_SAVE_FIGHT', 'SPLIT_LOAD_FIGHT', 'SPLIT_DELETE_FIGHT',
   'SPLIT_SET_TEXT', 'SPLIT_SET_GCPOS', 'SPLIT_GC', 'GC_SET_POS', 'GC_RESET_POS', 'MIX_TOGGLE', 'MIX_LEVEL', 'SET_VOLUME',
-  'FADE_TIME', 'FADE_STEP', 'MIX_SELECT', 'MIX_ADJUST', 'MIX_SEL_TOGGLE', 'TEST_TONE',
+  'EMERGENCY_FILE', 'FADE_TIME', 'FADE_STEP', 'MIX_SELECT', 'MIX_ADJUST', 'MIX_SEL_TOGGLE', 'TEST_TONE',
 ]);
 
 export async function startServer({ port = 3000, host = '127.0.0.1', config, publicDir, extraRoutes = [], splitFile = null, splitSaveDelayMs = 500 }) {
   const saved = splitFile ? loadSplit(splitFile) : null;
-  let state = createState({ ...config, splitSaved: saved?.split ?? (saved?.layouts ? saved : null), gcPosSaved: saved?.gcPos });
+  let state = createState({ ...config, saved: saved?.layouts ? { split: saved } : saved });
   let saveTimer = null;
   const flushSplit = () => {
     clearTimeout(saveTimer); saveTimer = null;
-    try { saveSplit(splitFile, { split: state.split, gcPos: state.gcPos }); } catch (e) { console.error('no se pudo guardar la pantalla dividida:', e.message); }
+    try { saveSplit(splitFile, persistable(state)); } catch (e) { console.error('no se pudo guardar la pantalla dividida:', e.message); }
   };
   const root = path.resolve(publicDir);
 
@@ -73,7 +73,8 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
   const dispatch = (action) => {
     const next = reduce(state, action);
     if (next === state) return;
-    const splitChanged = next.split !== state.split || next.gcPos !== state.gcPos;
+    const before = Object.values(persistable(state));
+    const splitChanged = Object.values(persistable(next)).some((v, i) => v !== before[i]);
     state = next;
     broadcast();
     if (splitFile && splitChanged) { clearTimeout(saveTimer); saveTimer = setTimeout(flushSplit, splitSaveDelayMs); }
