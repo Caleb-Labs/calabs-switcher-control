@@ -342,8 +342,11 @@ export function reduce(state, action) {
       if (!rect) return state;
       return withSlots(state, (slots) => slots.map((s, i) => (i === action.index ? { cam: s.cam, ...rect } : s)));
     }
-    case 'SPLIT_RESET_LAYOUT':
-      return withSlots(state, (slots) => defaultSlots(state.split.count, camIdsOf(state)).map((d, i) => ({ ...d, cam: slots[i].cam })));
+    case 'SPLIT_RESET_LAYOUT': {
+      const n = state.split.count;
+      const moved = withSlots(state, (slots) => defaultSlots(n, camIdsOf(state)).map((d, i) => ({ ...d, cam: slots[i].cam })));
+      return { ...moved, split: { ...moved.split, gcOffs: { ...moved.split.gcOffs, [n]: cleanOffs(null, n) } } }; // los GC de los recuadros también vuelven a su sitio
+    }
     case 'SPLIT_SET_BG': {
       if (!COUNTS.includes(action.count)) return state;
       const bgs = { ...state.split.bgs };

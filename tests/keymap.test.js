@@ -11,9 +11,9 @@ test('keyToAction: 1-9 eligen cámara (9 = aérea), 0 el VTR, s la pantalla divi
   assert.deepEqual(keyToAction('s'), { type: 'SET_PREVIEW', id: 'split' });
 });
 
-test('keyToAction: Enter = CUT, Espacio = FADE', () => {
-  assert.deepEqual(keyToAction('Enter'), { type: 'TAKE', mode: 'cut' });
-  assert.deepEqual(keyToAction(' '), { type: 'TAKE', mode: 'fade' });
+test('keyToAction: Espacio = CUT, Enter = FADE', () => {
+  assert.deepEqual(keyToAction(' '), { type: 'TAKE', mode: 'cut' });
+  assert.deepEqual(keyToAction('Enter'), { type: 'TAKE', mode: 'fade' });
 });
 
 test('keyToAction: teclas desconocidas -> null', () => {

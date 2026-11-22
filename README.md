@@ -27,7 +27,7 @@ Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920,
 | `9` | cámara aérea a Preview |
 | `0` | VTR a Preview |
 | `s` | pantalla dividida a Preview |
-| `Enter` / `Espacio` | CUT / FADE (Preview ↔ Program) |
+| `Espacio` / `Enter` | CUT / FADE (Preview ↔ Program) |
 
 - El panel es fluido: se adapta al tamaño de la ventana del navegador. El slider de arriba ajusta qué tan grandes son Preview/Program (se recuerda en el navegador; `↺` vuelve al valor por defecto).
 - **Fade:** el slider "Duración" (arriba, 0.1 a 5 s) y los comandos `fade-longer` / `fade-shorter` para un dial. El fade se ve en `/program` y también en el panel.

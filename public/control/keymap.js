@@ -4,8 +4,8 @@ export function keyToAction(key) {
   if (/^[1-9]$/.test(key)) return { type: 'SET_PREVIEW', id: `cam${key}` }; // 9 = cámara aérea (si existe)
   if (key === '0') return { type: 'SET_PREVIEW', id: 'vtr' };
   if (key === 's') return { type: 'SET_PREVIEW', id: 'split' };
-  if (key === 'Enter') return { type: 'TAKE', mode: 'cut' };
-  if (key === ' ') return { type: 'TAKE', mode: 'fade' };
+  if (key === ' ') return { type: 'TAKE', mode: 'cut' };
+  if (key === 'Enter') return { type: 'TAKE', mode: 'fade' };
   if (key === ']') return { type: 'PREVIEW_STEP', dir: 1 };
   if (key === '[') return { type: 'PREVIEW_STEP', dir: -1 };
   if (key === '=') return { type: 'ADJUST_VOLUME', target: 'cam', delta: 0.05 };

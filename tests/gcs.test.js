@@ -299,3 +299,11 @@ test('comandos del macropad: fade más largo/corto, selección de cámara de aud
   assert.deepEqual(commandToAction('mix-toggle'), { type: 'MIX_SEL_TOGGLE' });
   assert.deepEqual(commandToAction('test-tone'), { type: 'TEST_TONE' });
 });
+
+test('SPLIT_RESET_LAYOUT también devuelve los GC del recuadro a su posición original', () => {
+  let s = apply(S(), { type: 'SPLIT_SET_GCPOS', index: 0, x: 0.5, y: 0.5 }, { type: 'SPLIT_SET_RECT', index: 0, x: 0.3, y: 0.3, w: 0.2, h: 0.2 }, { type: 'SPLIT_RESET_LAYOUT' });
+  assert.deepEqual(s.split.gcOffs[2][0], { x: 0.03, y: 0.78 });
+  assert.deepEqual(s.split.layouts[2][0], { cam: 'cam1', x: 0.01, y: 0.26, w: 0.48, h: 0.48 });
+  const other = apply(S(), { type: 'SPLIT_SET_COUNT', count: 3 }, { type: 'SPLIT_SET_GCPOS', index: 0, x: 0.4, y: 0.4 }, { type: 'SPLIT_SET_COUNT', count: 2 }, { type: 'SPLIT_RESET_LAYOUT' });
+  assert.deepEqual(other.split.gcOffs[3][0], { x: 0.4, y: 0.4 }); // solo la cantidad en edición
+});

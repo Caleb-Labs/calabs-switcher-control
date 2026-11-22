@@ -204,25 +204,14 @@ function render() {
 
 // --- Panel de GC: el texto es libre; elegir equipo/jugador solo rellena los campos
 const teamSel = document.getElementById('gc-team');
-const playerSel = document.getElementById('gc-player');
 const titleIn = document.getElementById('gc-title');
 const subIn = document.getElementById('gc-sub');
-function fillText() {
-  const t = teams[teamSel.selectedIndex];
-  titleIn.value = t?.name ?? '';
-  subIn.value = playerSel.value ?? '';
-}
-function fillPlayers() {
-  const t = teams[teamSel.selectedIndex];
-  playerSel.replaceChildren(...(t?.players ?? []).map((p) => new Option(p, p)));
-  fillText();
-}
-teamSel.onchange = () => { fillPlayers(); teamSel.blur(); };
-playerSel.onchange = () => { subIn.value = playerSel.value; playerSel.blur(); };
+function fillText() { titleIn.value = teams[teamSel.selectedIndex]?.name ?? ''; } // solo rellena el título; el subtítulo es libre
+teamSel.onchange = () => { fillText(); teamSel.blur(); };
 fetch('/api/teams').then((r) => r.json()).then((list) => {
   teams = list;
   teamSel.replaceChildren(...list.map((t) => new Option(t.name, t.id)));
-  fillPlayers();
+  fillText();
 });
 document.querySelectorAll('[data-gc]').forEach((b) => {
   b.onclick = () => {
