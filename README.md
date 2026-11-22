@@ -27,6 +27,7 @@ Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920,
 | `9` | VTR a Preview |
 | `Enter` / `Espacio` | CUT / FADE (Preview ↔ Program) |
 
+- Los sliders de arriba ajustan el tamaño de las ventanas grandes (Preview/Program) y de las cámaras chicas; se recuerdan en el navegador y `↺` vuelve a los valores por defecto.
 - Click en un tile = a Preview. `⚠` marca una cámara "sin señal" a mano; `🔊` = audio master.
 - **GC**: elige equipo/jugador → "a preview" (se ve solo en el tile PREVIEW) → "al aire" → "bajar".
 - **EMERGENCIA** pone el logo de emergencia (`"emergencyLogo": "/vtr/emergencia.png"` en la config).

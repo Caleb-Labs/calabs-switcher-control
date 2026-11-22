@@ -1,7 +1,7 @@
 import { connect } from '/shared/client.js';
 import { createSourceElement, applyVolumes } from '/shared/sources.js';
 import { keyToAction, shouldHandleKey } from './keymap.js';
-import { assignAreas } from './layout.js';
+import { assignAreas, gridTemplate, clampSizes, badgeText } from './layout.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
@@ -26,14 +26,30 @@ document.addEventListener('keydown', (e) => {
   if (action) { e.preventDefault(); send(action); }
 });
 
-function gridTemplate(ids) {
-  const top = `"${Array(9).fill('pre').join(' ')} ${Array(9).fill('pgm').join(' ')}"`;
-  const bottom = `"${ids.map((id) => `s-${id} s-${id}`).join(' ')}"`;
-  return `${top} ${bottom}`;
+// --- Tamaño de las ventanas (se recuerda en este navegador)
+let sizes = clampSizes(null);
+try { sizes = clampSizes(JSON.parse(localStorage.getItem('multicam.sizes'))); } catch { /* sin almacenamiento: valores por defecto */ }
+const bigInput = document.getElementById('sz-big');
+const smallInput = document.getElementById('sz-small');
+function applySizes() {
+  mv.style.setProperty('--u', `${sizes.smallPx / 2}px`);
+  if (lastState) mv.style.gridTemplateAreas = gridTemplate(lastState.sources.map((s) => s.id), sizes.bigCols);
+  bigInput.value = sizes.bigCols; smallInput.value = sizes.smallPx;
+  if (preGfx) { applyScale(preGfx); applyScale(pgmGfx); }
 }
+function onSizeInput() {
+  sizes = clampSizes({ bigCols: bigInput.value, smallPx: smallInput.value });
+  try { localStorage.setItem('multicam.sizes', JSON.stringify(sizes)); } catch { /* sin almacenamiento */ }
+  applySizes();
+}
+for (const el of [bigInput, smallInput]) {
+  el.oninput = onSizeInput;
+  el.onchange = () => el.blur(); // si no, el slider se queda con el foco y las teclas 1-9/Enter dejan de funcionar
+}
+document.getElementById('sz-reset').onclick = () => { sizes = clampSizes(null); try { localStorage.removeItem('multicam.sizes'); } catch { /* nada */ } applySizes(); };
 
 function build(state) {
-  mv.style.gridTemplateAreas = gridTemplate(state.sources.map((s) => s.id));
+  applySizes();
   const slot = (area, text) => {
     const d = document.createElement('div');
     d.className = 'slot'; d.style.gridArea = area; d.textContent = text; mv.append(d);
@@ -53,6 +69,7 @@ function build(state) {
     tile.className = 'tile';
     tile.append(createSourceElement(meta, { url: meta.url }));
     const label = document.createElement('span'); label.className = 'label'; label.textContent = s.label;
+    const badge = document.createElement('span'); badge.className = 'badge';
     const hit = document.createElement('div'); hit.className = 'hit';
     hit.onclick = () => send({ type: 'SET_PREVIEW', id: s.id });
     const sig = document.createElement('button');
@@ -69,7 +86,7 @@ function build(state) {
       send({ type: 'SET_AUDIO_MASTER', id: lastState.audioMaster === s.id ? null : s.id });
     };
     if (s.kind !== 'vtr') tile.append(aud);
-    tile.append(label, hit, sig);
+    tile.append(label, badge, hit, sig);
     mv.append(tile); tiles.set(s.id, tile);
   }
 }
@@ -87,6 +104,7 @@ function render() {
     t.classList.toggle('pgm', areas[s.id] === 'pgm');
     t.classList.toggle('pre', areas[s.id] === 'pre');
     t.classList.toggle('nosignal', s.status === 'nosignal');
+    t.querySelector('.badge').textContent = badgeText(areas[s.id], s.label);
   }
   syncGraphics(preGfx, lastState, 'preview'); applyScale(preGfx);
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);

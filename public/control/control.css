@@ -6,7 +6,7 @@ button:hover { border-color: var(--accent); }
 .take { font-weight: 600; }
 kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 #warn { color: var(--warn); margin-left: auto; }
-#mv { display: grid; grid-template-columns: repeat(18, 1fr); gap: 6px; padding: 8px; align-items: start; }
+#mv { --u: 75px; display: grid; grid-template-columns: repeat(18, var(--u)); justify-content: start; gap: 6px; padding: 8px; align-items: start; }
 .slot, .tile { aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; position: relative; }
 .slot { background: var(--panel); border: 1px dashed var(--line); display: grid; place-items: center; color: var(--muted); font-size: 12px; }
 .tile { border: 2px solid var(--line); background: #000; cursor: pointer; z-index: 1; }
@@ -32,3 +32,11 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 #vtrpanel { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
 #vtrpanel select { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px; min-width: 220px; }
 #vtr-empty { color: var(--muted); }
+
+.sizes { display: inline-flex; align-items: center; gap: 12px; margin-left: 16px; color: var(--muted); font-size: 12px; }
+.sizes input { vertical-align: middle; width: 110px; }
+.tile .badge { position: absolute; left: 0; top: 0; z-index: 6; padding: 3px 10px; font-weight: 700; font-size: 13px; letter-spacing: .04em; background: #000b; border-bottom-right-radius: 6px; }
+.tile .badge:empty { display: none; }
+.tile.pgm .badge { background: var(--live); color: #111; }
+.tile.pre .badge { background: var(--ok); color: #111; }
+.tile.pgm .label, .tile.pre .label { display: none; }
