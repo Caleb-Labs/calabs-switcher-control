@@ -41,7 +41,8 @@ export function reduce(state, action) {
     }
 
     case 'SET_AUDIO_MASTER':
-      return hasSource(state, action.id) ? { ...state, audioMaster: action.id } : state;
+      if (action.id === null) return { ...state, audioMaster: null };
+      return hasSource(state, action.id) && action.id !== 'vtr' ? { ...state, audioMaster: action.id } : state;
 
     case 'SOURCE_STATUS':
       if (!hasSource(state, action.id) || !['live', 'nosignal'].includes(action.status)) return state;

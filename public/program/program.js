@@ -1,5 +1,5 @@
 import { connect } from '/shared/client.js';
-import { createSourceElement, mountOnly, neededIds } from '/shared/sources.js';
+import { createSourceElement, mountOnly, neededIds, volumeFor, applyVolumes, markAudioOnly } from '/shared/sources.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 
 const FADE_MS = 500;
@@ -38,9 +38,15 @@ function render(state) {
   } else if (!fading) {
     mountOnly(stage, neededIds(state, false), make, statusOf);
   }
+  const visible = fading ? neededIds({ ...state, audioMaster: null }, true) : [state.program];
+  markAudioOnly(stage, visible);
+  applyVolumes(stage, (id) => volumeFor(state, id));
   lastSeq = state.lastTake?.seq ?? 0;
   initialized = true;
 }
+
+// Los iframes recién cargados necesitan recibir su volumen otra vez.
+stage.addEventListener('load', () => { if (lastState) applyVolumes(stage, (id) => volumeFor(lastState, id)); }, true);
 
 connect((state) => { lastState = state; render(state); });
 fetch('/api/sources').then((r) => r.json()).then((list) => { sources = list; if (lastState) render(lastState); });

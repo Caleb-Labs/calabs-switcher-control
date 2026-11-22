@@ -1,5 +1,5 @@
 import { connect } from '/shared/client.js';
-import { createSourceElement } from '/shared/sources.js';
+import { createSourceElement, applyVolumes } from '/shared/sources.js';
 import { keyToAction } from './keymap.js';
 import { assignAreas } from './layout.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
@@ -61,10 +61,20 @@ function build(state) {
       const cur = lastState.sources.find((x) => x.id === s.id)?.status;
       send({ type: 'SOURCE_STATUS', id: s.id, status: cur === 'nosignal' ? 'live' : 'nosignal' });
     };
+    const aud = document.createElement('button');
+    aud.className = 'aud'; aud.textContent = '🔊'; aud.title = 'Audio master';
+    aud.onclick = (e) => {
+      e.stopPropagation();
+      send({ type: 'SET_AUDIO_MASTER', id: lastState.audioMaster === s.id ? null : s.id });
+    };
+    if (s.kind !== 'vtr') tile.append(aud);
     tile.append(label, hit, sig);
     mv.append(tile); tiles.set(s.id, tile);
   }
 }
+
+const muteAll = () => { for (const t of tiles.values()) applyVolumes(t, () => 0); };
+mv.addEventListener('load', muteAll, true); // iframes recién cargados
 
 function render() {
   if (!sources || !lastState) return;
@@ -80,6 +90,8 @@ function render() {
   syncGraphics(preGfx, lastState, 'preview'); applyScale(preGfx);
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);
   document.getElementById('btn-emergency').classList.toggle('on', lastState.emergency);
+  for (const s of lastState.sources) tiles.get(s.id)?.classList.toggle('master', lastState.audioMaster === s.id);
+  muteAll(); // el audio sale solo por /program (OBS); aquí todo en silencio
   const warn = document.getElementById('warn');
   warn.hidden = !lastState.scoreboard.stale;
   warn.textContent = 'marcador sin actualizar';

@@ -106,3 +106,11 @@ test('SCOREBOARD_UPDATE con los mismos datos y sin stale no genera un estado nue
   assert.equal(reduce(stale, { type: 'SCOREBOARD_STALE' }), stale);
   assert.equal(reduce(stale, { type: 'SCOREBOARD_UPDATE', teams }).scoreboard.stale, false);
 });
+
+test('audio master: solo cámaras; id null lo limpia; el vtr no puede ser master', () => {
+  let s = reduce(createState(config), { type: 'SET_AUDIO_MASTER', id: 'cam2' });
+  s = reduce(s, { type: 'SET_AUDIO_MASTER', id: 'vtr' });
+  assert.equal(s.audioMaster, 'cam2');
+  s = reduce(s, { type: 'SET_AUDIO_MASTER', id: null });
+  assert.equal(s.audioMaster, null);
+});

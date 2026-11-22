@@ -26,3 +26,6 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 
 .tile .sig { position: absolute; right: 4px; top: 4px; z-index: 6; padding: 0 6px; font-size: 12px; opacity: .55; }
 .tile .sig:hover { opacity: 1; }
+
+.tile .aud { position: absolute; right: 4px; top: 30px; z-index: 6; padding: 0 6px; font-size: 12px; opacity: .45; }
+.tile.master .aud { opacity: 1; border-color: var(--accent); }
