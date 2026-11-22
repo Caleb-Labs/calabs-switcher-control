@@ -89,6 +89,9 @@ function build(state) {
     return g;
   };
   preGfx = cell('pre'); pgmGfx = cell('pgm');
+  const safe = document.createElement('div'); safe.className = 'safe'; // guías de zona segura: solo en Preview
+  safe.innerHTML = '<i class="sa" title="Acción segura"></i><i class="st" title="Título seguro"></i><i class="sx"></i>';
+  preGfx.parentElement.append(safe);
   for (const s of activeSrc(state)) slotEls.set(s.id, slot(`s-${s.id}`, s.label));
   for (const s of activeSrc(state)) {
     const meta = sources.find((x) => x.id === s.id) ?? s;
@@ -327,6 +330,13 @@ function syncEmergencyPanel() {
   if (emSel.dataset.key !== key) { emSel.dataset.key = key; emSel.replaceChildren(new Option('(logo / texto)', ''), ...media.map((f) => new Option(f, f))); }
   emSel.value = lastState.emergencyFile ?? '';
 }
+
+// --- Zona segura en Preview (preferencia de este navegador)
+const safeChk = document.getElementById('safe-on');
+try { safeChk.checked = localStorage.getItem('multicam.safe') === '1'; } catch { /* sin almacenamiento: apagada */ }
+const applySafe = () => mv.classList.toggle('show-safe', safeChk.checked);
+safeChk.onchange = () => { applySafe(); try { localStorage.setItem('multicam.safe', safeChk.checked ? '1' : '0'); } catch { /* nada */ } safeChk.blur(); };
+applySafe();
 
 // --- Cuántas cámaras se ven (la aérea cuenta como una más)
 const camCountSel = document.getElementById('cam-count');
