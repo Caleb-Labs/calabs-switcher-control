@@ -7,6 +7,6 @@ import { pushLink } from './links.js';
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const real = here('../config/teams.json');
 const config = loadConfig(process.env.CONFIG ?? (fs.existsSync(real) ? real : here('../config/teams.example.json')));
-for (const t of config.teams) {
+for (const t of config.aerial ? [...config.teams, config.aerial] : config.teams) {
   console.log(`${t.name}\n  ${t.source.kind === 'vdo' ? pushLink(t) : `(Twitch: ${t.source.channel})`}\n`);
 }

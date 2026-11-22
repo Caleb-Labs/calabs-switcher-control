@@ -4,3 +4,4 @@ node_modules/
 config/teams.json
 vtr/*
 !vtr/.gitkeep
+data/

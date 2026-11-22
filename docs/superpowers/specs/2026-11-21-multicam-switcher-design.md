@@ -96,3 +96,9 @@ muestre un **multiview** y un **program**, permita cambiar de cámara con cortes
 - Decidir cómo se captura el macropad si no manda teclas estándar.
 - Definir el diseño visual de los gráficos con el usuario.
 - Marcador y tabla: **decidido por el usuario, vienen de Google Sheets** (todos están en lugares distintos). Detalles míos a confirmar en el plan: la hoja se comparte como "cualquiera con el link puede ver" y los editores tienen permiso de edición; el programa la lee con la API de Google Sheets (clave de API) cada 2–5 s, porque la opción "publicar en la web" puede tardar minutos en actualizar. La tabla de posiciones se calcula con fórmulas en la hoja y el programa solo muestra. Si se cae el internet, el programa deja el último dato recibido y avisa en `/control`. Se puede crear una hoja plantilla con las columnas fijas (equipo, puntos, posición, etc.).
+
+## Ampliaciones posteriores (2026-11-21)
+- **Cámara aérea:** 9.ª cámara opcional (`aerial` en la config), id `cam9`, puede ser audio master.
+- **Panel fluido:** `/control` se adapta al ancho de la ventana; el tamaño de Preview/Program es una proporción, no píxeles.
+- **Pantalla dividida:** fuente virtual `split` (preview/program/CUT/FADE). 2–6 cámaras, cada cantidad con su arreglo (posición/tamaño editables arrastrando), su fondo (`vtr/split-N.*` o elegido) y "peleas" guardadas por nombre. Persistida en `data/split.json`. En `/control` se muestra como esquema; el compuesto real solo en `/program`, que monta las cámaras de la dividida (más conexiones por jugador mientras está en preview o al aire).
+- **Macropad SS-552:** comandos HTTP `POST /api/do/<comando>` y teclas extra; diales para preview, audio master, volumen y VTR.

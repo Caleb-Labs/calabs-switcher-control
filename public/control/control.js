@@ -1,7 +1,9 @@
 import { connect } from '/shared/client.js';
 import { createSourceElement, applyVolumes } from '/shared/sources.js';
 import { keyToAction, shouldHandleKey } from './keymap.js';
-import { assignAreas, gridTemplate, clampSizes, badgeText } from './layout.js';
+import { assignAreas, gridTemplate, clampSizes, bigColsFor, badgeText } from './layout.js';
+import { renderSplitView } from './splitview.js';
+import { initSplitPanel } from './splitpanel.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
@@ -11,7 +13,7 @@ const tiles = new Map();
 let sources = null;
 let lastState = null;
 let teams = [];
-let preGfx = null, pgmGfx = null;
+let preGfx = null, pgmGfx = null, preSlot = null;
 
 const conn = connect((state) => { lastState = state; render(); }, {
   onStatus: (on) => document.getElementById('conn').classList.toggle('on', on),
@@ -26,35 +28,38 @@ document.addEventListener('keydown', (e) => {
   if (action) { e.preventDefault(); send(action); }
 });
 
-// --- Tamaño de las ventanas (se recuerda en este navegador)
+// --- Tamaño de las ventanas grandes: proporción del ancho de la ventana (se recuerda en este navegador)
 let sizes = clampSizes(null);
 try { sizes = clampSizes(JSON.parse(localStorage.getItem('multicam.sizes'))); } catch { /* sin almacenamiento: valores por defecto */ }
 const bigInput = document.getElementById('sz-big');
-const smallInput = document.getElementById('sz-small');
 function applySizes() {
-  mv.style.setProperty('--u', `${sizes.smallPx / 2}px`);
-  if (lastState) mv.style.gridTemplateAreas = gridTemplate(lastState.sources.map((s) => s.id), sizes.bigCols);
-  bigInput.value = sizes.bigCols; smallInput.value = sizes.smallPx;
+  if (lastState) {
+    const ids = lastState.sources.map((s) => s.id);
+    mv.style.setProperty('--cols', ids.length * 2);
+    mv.style.gridTemplateAreas = gridTemplate(ids, bigColsFor(sizes.bigShare, ids.length));
+  }
+  bigInput.value = sizes.bigShare;
   if (preGfx) { applyScale(preGfx); applyScale(pgmGfx); }
 }
-function onSizeInput() {
-  sizes = clampSizes({ bigCols: bigInput.value, smallPx: smallInput.value });
+bigInput.oninput = () => {
+  sizes = clampSizes({ bigShare: bigInput.value });
   try { localStorage.setItem('multicam.sizes', JSON.stringify(sizes)); } catch { /* sin almacenamiento */ }
   applySizes();
-}
-for (const el of [bigInput, smallInput]) {
-  el.oninput = onSizeInput;
-  el.onchange = () => el.blur(); // si no, el slider se queda con el foco y las teclas 1-9/Enter dejan de funcionar
-}
+};
+bigInput.onchange = () => bigInput.blur(); // si no, el slider se queda con el foco y las teclas 1-9/Enter dejan de funcionar
 document.getElementById('sz-reset').onclick = () => { sizes = clampSizes(null); try { localStorage.removeItem('multicam.sizes'); } catch { /* nada */ } applySizes(); };
+window.addEventListener('resize', () => { if (preGfx) { applyScale(preGfx); applyScale(pgmGfx); } });
+
+const splitPanel = initSplitPanel({ send });
 
 function build(state) {
   applySizes();
   const slot = (area, text) => {
     const d = document.createElement('div');
     d.className = 'slot'; d.style.gridArea = area; d.textContent = text; mv.append(d);
+    return d;
   };
-  slot('pre', 'PREVIEW'); slot('pgm', 'PROGRAM');
+  preSlot = slot('pre', 'PREVIEW'); slot('pgm', 'PROGRAM');
   const cell = (area) => {
     const c = document.createElement('div'); c.className = 'gfx-cell'; c.style.gridArea = area;
     const g = document.createElement('div'); g.className = 'gfx'; c.append(g); mv.append(c);
@@ -85,8 +90,9 @@ function build(state) {
       e.stopPropagation();
       send({ type: 'SET_AUDIO_MASTER', id: lastState.audioMaster === s.id ? null : s.id });
     };
-    if (s.kind !== 'vtr') tile.append(aud);
-    tile.append(label, badge, hit, sig);
+    const isCam = s.kind === 'vdo' || s.kind === 'twitch';
+    if (isCam) tile.append(aud, sig);
+    tile.append(label, badge, hit);
     mv.append(tile); tiles.set(s.id, tile);
   }
 }
@@ -106,6 +112,11 @@ function render() {
     t.classList.toggle('nosignal', s.status === 'nosignal');
     t.querySelector('.badge').textContent = badgeText(areas[s.id], s.label);
   }
+  const progLabel = lastState.sources.find((x) => x.id === lastState.program)?.label;
+  preSlot.textContent = lastState.preview === lastState.program ? `PREVIEW = PROGRAM (${progLabel})` : 'PREVIEW';
+  const splitEl = tiles.get('split')?.querySelector('.split-view');
+  if (splitEl) renderSplitView(splitEl, lastState);
+  splitPanel.render(lastState);
   syncGraphics(preGfx, lastState, 'preview'); applyScale(preGfx);
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);
   document.getElementById('btn-emergency').classList.toggle('on', lastState.emergency);

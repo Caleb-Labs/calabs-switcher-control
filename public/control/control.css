@@ -6,7 +6,7 @@ button:hover { border-color: var(--accent); }
 .take { font-weight: 600; }
 kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 #warn { color: var(--warn); margin-left: auto; }
-#mv { --u: 75px; display: grid; grid-template-columns: repeat(18, var(--u)); justify-content: start; gap: 6px; padding: 8px; align-items: start; }
+#mv { display: grid; grid-template-columns: repeat(var(--cols, 20), minmax(0, 1fr)); gap: 6px; padding: 8px; align-items: start; }
 .slot, .tile { aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; position: relative; }
 .slot { background: var(--panel); border: 1px dashed var(--line); display: grid; place-items: center; color: var(--muted); font-size: 12px; }
 .tile { border: 2px solid var(--line); background: #000; cursor: pointer; z-index: 1; }
@@ -41,3 +41,17 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .tile.pre .badge { background: var(--ok); color: #111; }
 .tile.pgm .label, .tile.pre .label { display: none; }
 #vol { margin-left: 16px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.src.split-view { background: #111 center / cover no-repeat; container-type: inline-size; }
+.sv-box { position: absolute; border: 1px solid #6f8fb0; background: #6f8fb033; display: grid; place-items: center; text-align: center; font-size: max(8px, 3.2cqw); overflow: hidden; padding: 1px; }
+#splitpanel { padding: 8px 12px 20px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.sp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sp-row select, .sp-row input[type=text], #sp-name, #sp-slots select { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px; font: inherit; }
+.chk { color: var(--muted); }
+.sp-editor { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+#sp-slots { display: grid; gap: 8px; min-width: 220px; }
+#sp-slots label { display: grid; gap: 2px; color: var(--muted); font-size: 12px; }
+#sp-canvas { position: relative; width: min(640px, 100%); aspect-ratio: 16 / 9; background: #111 center / cover no-repeat; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; touch-action: none; user-select: none; }
+.sp-box { position: absolute; border: 2px solid var(--accent); background: #6f8fb040; cursor: move; display: grid; place-items: center; font-size: 13px; text-shadow: 0 1px 2px #000; }
+.sp-box:hover { background: #6f8fb066; }
+.sp-handle { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; background: var(--accent); cursor: nwse-resize; }

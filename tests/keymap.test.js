@@ -1,12 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { keyToAction, shouldHandleKey } from '../public/control/keymap.js';
-import { assignAreas, gridTemplate, clampSizes, badgeText, DEFAULT_SIZES } from '../public/control/layout.js';
+import { assignAreas, gridTemplate, clampSizes, bigColsFor, badgeText, DEFAULT_SIZES } from '../public/control/layout.js';
 
-test('keyToAction: 1-8 eligen cámara en preview, 9 el VTR', () => {
+test('keyToAction: 1-9 eligen cámara (9 = aérea), 0 el VTR, s la pantalla dividida', () => {
   assert.deepEqual(keyToAction('3'), { type: 'SET_PREVIEW', id: 'cam3' });
   assert.deepEqual(keyToAction('8'), { type: 'SET_PREVIEW', id: 'cam8' });
-  assert.deepEqual(keyToAction('9'), { type: 'SET_PREVIEW', id: 'vtr' });
+  assert.deepEqual(keyToAction('9'), { type: 'SET_PREVIEW', id: 'cam9' });
+  assert.deepEqual(keyToAction('0'), { type: 'SET_PREVIEW', id: 'vtr' });
+  assert.deepEqual(keyToAction('s'), { type: 'SET_PREVIEW', id: 'split' });
 });
 
 test('keyToAction: Enter = CUT, Espacio = FADE', () => {
@@ -15,7 +17,7 @@ test('keyToAction: Enter = CUT, Espacio = FADE', () => {
 });
 
 test('keyToAction: teclas desconocidas -> null', () => {
-  for (const k of ['0', 'a', 'Escape', '', undefined, '10']) assert.equal(keyToAction(k), null);
+  for (const k of ['a', 'Escape', '', undefined, '10']) assert.equal(keyToAction(k), null);
 });
 
 const ids = ['cam1', 'cam2', 'cam3', 'cam4', 'cam5', 'cam6', 'cam7', 'cam8', 'vtr'];
@@ -71,16 +73,24 @@ test('gridTemplate con bigCols 9 llena toda la fila (como el diseño original)',
   assert.equal(top.filter((c) => c === '.').length, 0);
 });
 
-test('clampSizes: valores por defecto, límites y basura', () => {
+test('clampSizes: valor por defecto, límites y basura (tamaño relativo a la ventana, no en píxeles)', () => {
   assert.deepEqual(clampSizes(undefined), DEFAULT_SIZES);
-  assert.deepEqual(clampSizes({ bigCols: 99, smallPx: 5 }), { bigCols: 9, smallPx: 100 });
-  assert.deepEqual(clampSizes({ bigCols: 1, smallPx: 9999 }), { bigCols: 4, smallPx: 260 });
-  assert.deepEqual(clampSizes({ bigCols: '6', smallPx: '180' }), { bigCols: 6, smallPx: 180 });
-  assert.deepEqual(clampSizes({ bigCols: 'x', smallPx: null }), DEFAULT_SIZES);
+  assert.deepEqual(clampSizes({ bigShare: 5 }), { bigShare: 0.5 });
+  assert.deepEqual(clampSizes({ bigShare: 0.01 }), { bigShare: 0.2 });
+  assert.deepEqual(clampSizes({ bigShare: '0.4' }), { bigShare: 0.4 });
+  assert.deepEqual(clampSizes({ bigShare: 'x' }), DEFAULT_SIZES);
+  assert.deepEqual(clampSizes({ bigShare: null }), DEFAULT_SIZES);
 });
 
-test('los tamaños por defecto son más chicos que antes (preview/program ya no ocupan media pantalla)', () => {
-  assert.ok(DEFAULT_SIZES.bigCols < 9);
+test('bigColsFor convierte la proporción en columnas según cuántas fuentes hay (2 columnas por tile)', () => {
+  assert.equal(bigColsFor(0.5, 9), 9);
+  assert.equal(bigColsFor(0.33, 11), 7);
+  assert.equal(bigColsFor(0.2, 4), 2);
+  assert.equal(bigColsFor(0.5, 11), 11);
+});
+
+test('el tamaño por defecto deja a Preview y Program bastante menores que media pantalla', () => {
+  assert.ok(DEFAULT_SIZES.bigShare < 0.45);
 });
 
 test('badgeText: nombre de la ventana + de la fuente solo en preview/program', () => {

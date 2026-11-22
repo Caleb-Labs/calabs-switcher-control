@@ -23,15 +23,30 @@ Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920,
 ## Operación
 | Tecla | Acción |
 |---|---|
-| `1`–`8` | cámara a Preview |
-| `9` | VTR a Preview |
+| `1`–`8` | cámara de cada equipo a Preview |
+| `9` | cámara aérea a Preview |
+| `0` | VTR a Preview |
+| `s` | pantalla dividida a Preview |
 | `Enter` / `Espacio` | CUT / FADE (Preview ↔ Program) |
 
-- Los sliders de arriba ajustan el tamaño de las ventanas grandes (Preview/Program) y de las cámaras chicas; se recuerdan en el navegador y `↺` vuelve a los valores por defecto.
+- El panel es fluido: se adapta al tamaño de la ventana del navegador. El slider de arriba ajusta qué tan grandes son Preview/Program (se recuerda en el navegador; `↺` vuelve al valor por defecto).
 - Click en un tile = a Preview. `⚠` marca una cámara "sin señal" a mano; `🔊` = audio master.
 - **GC**: elige equipo/jugador → "a preview" (se ve solo en el tile PREVIEW) → "al aire" → "bajar".
 - **EMERGENCIA** pone el logo de emergencia (`"emergencyLogo": "/vtr/emergencia.png"` en la config).
 - **VTR**: pon videos (`.mp4 .webm .mov`) e imágenes (`.png .jpg .svg`) en la carpeta `vtr/`. "Tabla de posiciones" sale por el VTR.
+
+## Cámara aérea
+En `config\teams.json` agrega `"aerial": {"name": "Cámara aérea", "source": {"kind": "vdo", "room": "sala-aerea"}}`.
+Aparece como la cámara 9 (tecla `9`, comando `cam9`), entra en `npm run links` y puede ser audio master.
+
+## Pantalla dividida (peleas)
+Es una fuente más (`s`, comando `split`): se manda a Preview y se toma con CUT/FADE como cualquier cámara. En el panel "Pantalla dividida":
+1. Elige **cuántas cámaras** (2 a 6) y **quién va en cada recuadro** (por ejemplo, equipo 2 y equipo 6).
+2. **Arrastra** los recuadros del lienzo para moverlos y usa la esquina para cambiar el tamaño ("mantener 16:9" evita franjas negras). `/program` se actualiza en vivo si está al aire.
+3. **Fondo por cantidad:** cada cantidad (2, 3, 4…) tiene su fondo. Se detecta solo si pones en `vtr/` un archivo llamado `split-2.png`, `split-3.png`, `split-4.png`… (también `.jpg .svg .mp4 .webm .mov`), o lo eliges en el menú "Fondo".
+4. **Peleas:** escribe un nombre ("Pelea 1") y "Guardar" para recordar cámaras + posiciones. Después "Cargar" y listo; así no necesitas un macro por cada combinación.
+Cada cantidad recuerda su propio arreglo. Todo se guarda en `data/split.json` y sobrevive a reinicios.
+En el panel la dividida se ve como un esquema (fondo + recuadros con nombres); el video real solo se compone en `/program`.
 
 ## Macropad Redragon SS-552 (10 teclas + 4 diales)
 Hay dos formas; usa la que permita tu Redragon Station (no pude comprobar cuál admite):
@@ -48,7 +63,7 @@ Propuesta de asignación:
 | Dial 4 (VTR) | `vtr-next` | `vtr-prev` | `vtr-toggle` |
 
 Teclas: `cut`, `fade`, `gc-name-preview`, `gc-name-live`, `gc-name-off`, `gc-score-live`, `gc-score-off`, `vtr-toggle`, `gc-player-next`, `emergency-toggle`.
-Otros comandos: `cam1`…`cam8`, `vtr`, `audio-clear`, `vtr-vol-up`, `vtr-vol-down`, `vtr-mute`, `vtr-play`, `vtr-pause`, `gc-score-preview`, `emergency-on`, `emergency-off`.
+Otros comandos: `cam1`…`cam9`, `vtr`, `split`, `audio-clear`, `vtr-vol-up`, `vtr-vol-down`, `vtr-mute`, `vtr-play`, `vtr-pause`, `gc-score-preview`, `emergency-on`, `emergency-off`.
 `gc-name-preview` arma el GC con el equipo que esté en Preview; `gc-player-next` alterna entre sus 2 jugadores.
 Cada paso de volumen es 5 %. El volumen y el mute se ven arriba en el panel.
 

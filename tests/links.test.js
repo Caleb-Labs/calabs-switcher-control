@@ -65,3 +65,11 @@ test('viewLink con noAudio agrega noaudio; sin él no', () => {
   assert.ok(new URL(viewLink(vdo('x'), { noAudio: true })).searchParams.has('noaudio'));
   assert.ok(!new URL(viewLink(vdo('x'))).searchParams.has('noaudio'));
 });
+
+test('parseConfig acepta una cámara aérea opcional y la valida', () => {
+  const aerial = { name: 'Aérea', source: { kind: 'vdo', room: 'aerea' } };
+  assert.deepEqual(parseConfig({ teams: eight(), aerial }).aerial, aerial);
+  assert.equal(parseConfig({ teams: eight() }).aerial, null);
+  assert.throws(() => parseConfig({ teams: eight(), aerial: { name: 'x', source: { kind: 'vdo' } } }), /aérea.*room/);
+  assert.throws(() => parseConfig({ teams: eight(), aerial: { source: { kind: 'vdo', room: 'a' } } }), /aérea.*nombre/);
+});

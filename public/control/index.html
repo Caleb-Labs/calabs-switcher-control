@@ -12,8 +12,7 @@
   <button id="btn-cut" class="take">CUT <kbd>Enter</kbd></button>
   <button id="btn-fade" class="take">FADE <kbd>Espacio</kbd></button>
   <span class="sizes">
-    <label>Ventanas grandes <input id="sz-big" type="range" min="4" max="9" step="1"></label>
-    <label>Cámaras chicas <input id="sz-small" type="range" min="100" max="260" step="10"></label>
+    <label>Tamaño de Preview/Program <input id="sz-big" type="range" min="0.2" max="0.5" step="0.01"></label>
     <button id="sz-reset" title="Tamaños por defecto">↺</button>
   </span>
   <span id="vol" title="Volumen (diales del macropad o teclas - =  m)"></span>
@@ -41,4 +40,28 @@
   <span id="vtr-empty" hidden>sin archivos en la carpeta vtr/</span>
 </section>
 <main id="mv"></main>
+<section id="splitpanel">
+  <div class="sp-row">
+    <strong>Pantalla dividida</strong>
+    <label>Cámaras
+      <select id="sp-count"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+    </label>
+    <label>Fondo <select id="sp-bg"></select></label>
+    <label class="chk"><input type="checkbox" id="sp-lock" checked> mantener 16:9</label>
+    <button id="sp-reset">Restablecer posiciones</button>
+    <button id="sp-preview">Dividida a Preview</button>
+  </div>
+  <div class="sp-row">
+    <strong>Peleas</strong>
+    <input id="sp-name" placeholder="Nombre (ej. Pelea 1)" maxlength="40">
+    <button id="sp-save">Guardar</button>
+    <select id="sp-fights"></select>
+    <button id="sp-load">Cargar</button>
+    <button id="sp-delete">Borrar</button>
+  </div>
+  <div class="sp-editor">
+    <div id="sp-slots"></div>
+    <div id="sp-canvas"></div>
+  </div>
+</section>
 <script type="module" src="/control/control.js"></script>

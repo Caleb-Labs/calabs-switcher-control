@@ -92,5 +92,12 @@
   ],
   "sheet": null,
   "emergencyLogo": "/vtr/emergencia.png",
-  "vtrDefault": "standby.png"
+  "vtrDefault": "standby.png",
+  "aerial": {
+    "name": "Cámara aérea",
+    "source": {
+      "kind": "vdo",
+      "room": "sot-torneo-aerea"
+    }
+  }
 }

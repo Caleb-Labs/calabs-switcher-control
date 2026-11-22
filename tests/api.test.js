@@ -16,11 +16,14 @@ test('/api/sources lista 8 cámaras con su url (vdo o twitch) y el vtr sin url',
   const res = await fetch(`http://127.0.0.1:${srv.port}/api/sources`);
   assert.equal(res.status, 200);
   const list = await res.json();
-  assert.equal(list.length, 9);
+  assert.equal(list.length, 11); // 8 equipos + aérea + vtr + split
   assert.equal(list[0].id, 'cam1');
   assert.match(list[0].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-eq1/);
   assert.match(list[6].url, /^https:\/\/player\.twitch\.tv\//);
-  assert.deepEqual(list[8], { id: 'vtr', kind: 'vtr', url: null });
+  assert.equal(list[8].id, 'cam9');
+  assert.match(list[8].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-aerea/);
+  assert.deepEqual(list[9], { id: 'vtr', kind: 'vtr', url: null });
+  assert.deepEqual(list[10], { id: 'split', kind: 'split', url: null });
 });
 
 test('/api/teams lista nombre, jugadores y logo de cada equipo', async () => {

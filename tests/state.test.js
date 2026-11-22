@@ -5,9 +5,9 @@ import { createState, reduce } from '../server/state.js';
 const team = (i) => ({ name: `Equipo ${i}`, players: ['a', 'b'], source: { kind: 'vdo', room: `r${i}` } });
 const config = { teams: Array.from({ length: 8 }, (_, i) => team(i + 1)) };
 
-test('createState arma 9 fuentes, program=cam1 y preview=cam2', () => {
+test('createState arma 10 fuentes (8 cámaras + vtr + split), program=cam1 y preview=cam2', () => {
   const s = createState(config);
-  assert.deepEqual(s.sources.map((x) => x.id), ['cam1','cam2','cam3','cam4','cam5','cam6','cam7','cam8','vtr']);
+  assert.deepEqual(s.sources.map((x) => x.id), ['cam1','cam2','cam3','cam4','cam5','cam6','cam7','cam8','vtr','split']);
   assert.equal(s.program, 'cam1');
   assert.equal(s.preview, 'cam2');
   assert.equal(s.sources[8].kind, 'vtr');

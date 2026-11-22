@@ -2,6 +2,7 @@
 const STEP = 0.05;
 const table = {
   vtr: { type: 'SET_PREVIEW', id: 'vtr' },
+  split: { type: 'SET_PREVIEW', id: 'split' },
   cut: { type: 'TAKE', mode: 'cut' },
   fade: { type: 'TAKE', mode: 'fade' },
   'preview-next': { type: 'PREVIEW_STEP', dir: 1 },
@@ -31,7 +32,7 @@ const table = {
   'emergency-on': { type: 'EMERGENCY', on: true },
   'emergency-off': { type: 'EMERGENCY', on: false },
 };
-for (let i = 1; i <= 8; i++) table[`cam${i}`] = { type: 'SET_PREVIEW', id: `cam${i}` };
+for (let i = 1; i <= 9; i++) table[`cam${i}`] = { type: 'SET_PREVIEW', id: `cam${i}` };
 
 export const COMMANDS = Object.keys(table);
 

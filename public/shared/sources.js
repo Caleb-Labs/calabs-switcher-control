@@ -1,9 +1,25 @@
 import { renderGraphic } from '../graphics/templates.js';
+import { splitCamIds, splitBgFile } from './split.js';
 
 // Montaje de fuentes. Regla clave: /program nunca mantiene montadas más fuentes de las necesarias
 // (cada iframe de VDO.Ninja abre su propia conexión al jugador).
 
 export function createSourceElement(source, { url } = {}) {
+  if (source.kind === 'bg') { // fondo de la pantalla dividida: imagen o video
+    const isVideo = /\.(mp4|webm|mov)$/i.test(url ?? '');
+    const bg = document.createElement(isVideo ? 'video' : 'img');
+    bg.dataset.sourceId = source.id;
+    bg.className = 'src split-bg';
+    if (isVideo) { bg.muted = true; bg.loop = true; bg.autoplay = true; bg.playsInline = true; }
+    if (url) bg.setAttribute('src', url);
+    return bg;
+  }
+  if (source.kind === 'split') { // vista esquemática (en /control); el compuesto real solo existe en /program
+    const v = document.createElement('div');
+    v.dataset.sourceId = source.id;
+    v.className = 'src split-view';
+    return v;
+  }
   if (source.status === 'nosignal' && source.kind !== 'vtr') {
     const ns = renderGraphic('nosignal', {});
     ns.dataset.sourceId = source.id;
@@ -24,21 +40,28 @@ export function createSourceElement(source, { url } = {}) {
 }
 
 // Fuentes que deben existir en el DOM: la al aire y, durante un fade, la saliente.
+// Ids de elementos que necesita una fuente: la dividida son sus cámaras + su fondo ('split-bg').
+export function idsFor(state, id) {
+  if (id !== 'split') return [id];
+  return [...splitCamIds(state), ...(splitBgFile(state) ? ['split-bg'] : [])];
+}
+
+const uniq = (arr) => [...new Set(arr)];
+
 // Se montan: la al aire, la saliente (en fade), el preview y el audio master (estas dos ocultas): una conexión extra por jugador.
 export function neededIds(state, fading) {
-  const ids = [state.program];
-  if (fading && state.lastTake && state.lastTake.from !== state.program) ids.push(state.lastTake.from);
-  // El preview se precarga (oculto) para que el CUT/FADE no muestre negro mientras conecta WebRTC.
-  if (state.preview && !ids.includes(state.preview)) ids.push(state.preview);
-  if (state.audioMaster && !ids.includes(state.audioMaster)) ids.push(state.audioMaster);
-  return ids;
+  const ids = [...idsFor(state, state.program)];
+  if (fading && state.lastTake) ids.push(...idsFor(state, state.lastTake.from));
+  if (state.preview) ids.push(...idsFor(state, state.preview)); // precarga (oculta) para que el CUT/FADE no muestre negro
+  if (state.audioMaster) ids.push(state.audioMaster);
+  return uniq(ids);
 }
 
 // Lo que realmente se ve: la al aire y, durante un fade, la saliente. El resto va oculto (solo-audio/precarga).
 export function visibleIds(state, fading) {
-  const ids = [state.program];
-  if (fading && state.lastTake && state.lastTake.from !== state.program) ids.push(state.lastTake.from);
-  return ids;
+  const ids = [...idsFor(state, state.program)];
+  if (fading && state.lastTake) ids.push(...idsFor(state, state.lastTake.from));
+  return uniq(ids);
 }
 
 // Quita opacity/zIndex en línea que dejó un fade (si no, un fade de vuelta queda tapado y el audio-only se ve).
@@ -80,5 +103,19 @@ export function mountOnly(container, ids, create, variantOf = () => '') {
     const el = create(id);
     el.dataset.variant = variantOf(id);
     container.append(el);
+  }
+}
+
+// Posiciona las cámaras de la pantalla dividida en su recuadro y limpia a las demás.
+export function applyPlacement(container, placement) {
+  for (const el of container.children) {
+    const id = el.dataset.sourceId;
+    const st = Object.hasOwn(placement, id) ? placement[id] : null;
+    if (st) {
+      el.style.left = st.left; el.style.top = st.top; el.style.width = st.width; el.style.height = st.height;
+    } else {
+      el.style.left = ''; el.style.top = ''; el.style.width = ''; el.style.height = '';
+    }
+    el.classList.toggle('split-cam', !!st);
   }
 }

@@ -50,9 +50,9 @@ test('PREVIEW_STEP recorre las fuentes, da la vuelta y salta la que está al air
   s = apply(s, { type: 'PREVIEW_STEP', dir: 1 });
   assert.equal(s.preview, 'cam3');
   s = apply(s, { type: 'PREVIEW_STEP', dir: -1 }, { type: 'PREVIEW_STEP', dir: -1 });
-  assert.equal(s.preview, 'vtr'); // cam2 -> cam1 (al aire, se salta) -> vtr (da la vuelta)
+  assert.equal(s.preview, 'split'); // cam2 -> cam1 (al aire, se salta) -> split (da la vuelta)
   s = apply(s, { type: 'PREVIEW_STEP', dir: 1 });
-  assert.equal(s.preview, 'cam2'); // vtr -> cam1 (salta) -> cam2
+  assert.equal(s.preview, 'cam2'); // split -> cam1 (salta) -> cam2
 });
 
 test('AUDIO_MASTER_STEP recorre solo cámaras; sin master empieza en cam1 (+1) o cam8 (-1)', () => {
@@ -130,6 +130,8 @@ test('parseConfig conserva vtrDefault', () => {
 test('commandToAction: cámaras, corte, navegación, volumen, VTR, GC, emergencia', () => {
   assert.deepEqual(commandToAction('cam3'), { type: 'SET_PREVIEW', id: 'cam3' });
   assert.deepEqual(commandToAction('vtr'), { type: 'SET_PREVIEW', id: 'vtr' });
+  assert.deepEqual(commandToAction('split'), { type: 'SET_PREVIEW', id: 'split' });
+  assert.deepEqual(commandToAction('cam9'), { type: 'SET_PREVIEW', id: 'cam9' });
   assert.deepEqual(commandToAction('cut'), { type: 'TAKE', mode: 'cut' });
   assert.deepEqual(commandToAction('fade'), { type: 'TAKE', mode: 'fade' });
   assert.deepEqual(commandToAction('preview-next'), { type: 'PREVIEW_STEP', dir: 1 });
@@ -154,7 +156,7 @@ test('commandToAction: cámaras, corte, navegación, volumen, VTR, GC, emergenci
 });
 
 test('commandToAction: desconocidos o heredados -> null; COMMANDS lista los nombres', () => {
-  for (const n of ['nope', '', 'cam9', 'cam0', 'toString', '__proto__', undefined]) assert.equal(commandToAction(n), null);
+  for (const n of ['nope', '', 'cam10', 'cam0', 'toString', '__proto__', undefined]) assert.equal(commandToAction(n), null);
   assert.ok(COMMANDS.includes('cut') && COMMANDS.includes('cam8') && COMMANDS.includes('vtr-toggle'));
 });
 

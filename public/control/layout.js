@@ -10,23 +10,24 @@ export function assignAreas(state) {
   return areas;
 }
 
-// --- Tamaños de las ventanas (ajustables por el operador) ---
-// La grilla tiene 18 columnas de ancho --u; cada cámara chica ocupa 2 columnas y cada ventana grande `bigCols`.
-export const DEFAULT_SIZES = { bigCols: 5, smallPx: 150 };
+// --- Tamaño de las ventanas grandes: proporción del ancho de la ventana del navegador (el panel es fluido) ---
+export const DEFAULT_SIZES = { bigShare: 0.33 };
 
 export function clampSizes(raw) {
-  const num = (v, min, max, def) => {
-    const n = Number(v);
-    return Number.isFinite(n) && v !== null && v !== '' ? Math.min(max, Math.max(min, Math.round(n))) : def;
-  };
-  return {
-    bigCols: num(raw?.bigCols, 4, 9, DEFAULT_SIZES.bigCols),
-    smallPx: num(raw?.smallPx, 100, 260, DEFAULT_SIZES.smallPx),
-  };
+  const v = raw?.bigShare;
+  const n = Number(v);
+  if (v === null || v === undefined || v === '' || !Number.isFinite(n)) return { ...DEFAULT_SIZES };
+  return { bigShare: Math.round(Math.min(0.5, Math.max(0.2, n)) * 100) / 100 };
+}
+
+// La grilla tiene 2 columnas por fuente; cada ventana grande ocupa `share` del ancho (máximo la mitad).
+export function bigColsFor(share, sourceCount) {
+  return Math.min(sourceCount, Math.max(2, Math.round(share * 2 * sourceCount)));
 }
 
 export function gridTemplate(ids, bigCols) {
-  const top = [...Array(bigCols).fill('pre'), ...Array(bigCols).fill('pgm'), ...Array(18 - 2 * bigCols).fill('.')];
+  const total = ids.length * 2;
+  const top = [...Array(bigCols).fill('pre'), ...Array(bigCols).fill('pgm'), ...Array(total - 2 * bigCols).fill('.')];
   const bottom = ids.flatMap((id) => [`s-${id}`, `s-${id}`]);
   return `"${top.join(' ')}" "${bottom.join(' ')}"`;
 }

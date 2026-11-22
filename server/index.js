@@ -4,6 +4,7 @@ import path from 'node:path';
 import { WebSocketServer } from 'ws';
 import { createState, reduce } from './state.js';
 import { originAllowed } from './origin.js';
+import { loadSplit, saveSplit } from './splitStore.js';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -33,10 +34,17 @@ const CLIENT_ACTIONS = new Set([
   'EMERGENCY', 'VTR_SELECT', 'VTR_PLAY', 'VTR_PAUSE', 'VTR_NEXT',
   'VTR_PREV', 'VTR_TOGGLE', 'PREVIEW_STEP', 'AUDIO_MASTER_STEP', 'ADJUST_VOLUME', 'TOGGLE_MUTE',
   'EMERGENCY_TOGGLE', 'GC_NAME_PREVIEW', 'GC_PLAYER_NEXT',
+  'SPLIT_SET_COUNT', 'SPLIT_SET_CAM', 'SPLIT_SET_RECT', 'SPLIT_RESET_LAYOUT', 'SPLIT_SET_BG',
+  'SPLIT_SAVE_FIGHT', 'SPLIT_LOAD_FIGHT', 'SPLIT_DELETE_FIGHT',
 ]);
 
-export async function startServer({ port = 3000, host = '127.0.0.1', config, publicDir, extraRoutes = [] }) {
-  let state = createState(config);
+export async function startServer({ port = 3000, host = '127.0.0.1', config, publicDir, extraRoutes = [], splitFile = null, splitSaveDelayMs = 500 }) {
+  let state = createState({ ...config, splitSaved: splitFile ? loadSplit(splitFile) : null });
+  let saveTimer = null;
+  const flushSplit = () => {
+    clearTimeout(saveTimer); saveTimer = null;
+    try { saveSplit(splitFile, state.split); } catch (e) { console.error('no se pudo guardar la pantalla dividida:', e.message); }
+  };
   const root = path.resolve(publicDir);
 
   const server = http.createServer(async (req, res) => {
@@ -61,7 +69,11 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
   };
   const dispatch = (action) => {
     const next = reduce(state, action);
-    if (next !== state) { state = next; broadcast(); }
+    if (next === state) return;
+    const splitChanged = next.split !== state.split;
+    state = next;
+    broadcast();
+    if (splitFile && splitChanged) { clearTimeout(saveTimer); saveTimer = setTimeout(flushSplit, splitSaveDelayMs); }
   };
 
   wss.on('connection', (ws) => {
@@ -81,6 +93,7 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
     getState: () => state,
     dispatch,
     close: () => new Promise((resolve) => {
+      if (splitFile && saveTimer) flushSplit();
       for (const c of wss.clients) c.terminate();
       wss.close(() => server.close(() => resolve()));
     }),

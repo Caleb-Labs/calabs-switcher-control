@@ -9,8 +9,10 @@ export function sourcesRoute(config, profile = { tileBitrate: 2000, programBitra
     if (url.pathname !== '/api/sources') return false;
     const control = url.searchParams.get('for') === 'control';
     const opts = { bitrate: control ? profile.tileBitrate : profile.programBitrate, noAudio: control };
-    const list = config.teams.map((t, i) => ({ id: `cam${i + 1}`, kind: t.source.kind, url: viewLink(t, opts) }));
+    const cams = config.aerial ? [...config.teams, config.aerial] : config.teams;
+    const list = cams.map((t, i) => ({ id: `cam${i + 1}`, kind: t.source.kind, url: viewLink(t, opts) }));
     list.push({ id: 'vtr', kind: 'vtr', url: null });
+    list.push({ id: 'split', kind: 'split', url: null });
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify(list));
     return true;
