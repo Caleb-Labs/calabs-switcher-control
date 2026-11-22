@@ -45,6 +45,7 @@ const DEFAULT_OFF = { x: 0.03, y: 0.78 }; // dónde nace el GC dentro de su recu
 const str = (v) => (typeof v === 'string' ? v.slice(0, 60) : '');
 const clampPos = (v) => Math.min(0.95, Math.max(0, v));
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
+const cleanAudio = (raw, n) => Array.from({ length: n }, (_, i) => raw?.[i] === true);
 const cleanTexts = (raw, n) => Array.from({ length: n }, (_, i) => ({ title: str(raw?.[i]?.title), subtitle: str(raw?.[i]?.subtitle) }));
 const cleanOffs = (raw, n) => Array.from({ length: n }, (_, i) => (isNum(raw?.[i]?.x) && isNum(raw?.[i]?.y) ? { x: clampPos(raw[i].x), y: clampPos(raw[i].y) } : { ...DEFAULT_OFF }));
 
@@ -57,7 +58,9 @@ export function normalizeSplit(raw, camIds) {
   if (isPlainObj(r.bgs)) for (const n of COUNTS) if (typeof r.bgs[n] === 'string' && r.bgs[n]) bgs[n] = r.bgs[n];
   const texts = {};
   const gcOffs = {};
+  const audioOn = {};
   for (const n of COUNTS) {
+    audioOn[n] = cleanAudio(isPlainObj(r.audioOn) ? r.audioOn[n] : null, n);
     texts[n] = cleanTexts(isPlainObj(r.texts) ? r.texts[n] : null, n);
     gcOffs[n] = cleanOffs(isPlainObj(r.gcOffs) ? r.gcOffs[n] : null, n);
   }
@@ -65,11 +68,11 @@ export function normalizeSplit(raw, camIds) {
   if (Array.isArray(r.fights)) {
     for (const f of r.fights) {
       if (!isPlainObj(f) || typeof f.id !== 'string' || !f.id || typeof f.name !== 'string' || !COUNTS.includes(f.count)) continue;
-      fights.push({ id: f.id, name: f.name, count: f.count, slots: cleanSlots(f.slots, f.count, camIds), texts: cleanTexts(f.texts, f.count), offs: cleanOffs(f.offs, f.count) });
+      fights.push({ id: f.id, name: f.name, count: f.count, slots: cleanSlots(f.slots, f.count, camIds), texts: cleanTexts(f.texts, f.count), offs: cleanOffs(f.offs, f.count), audio: cleanAudio(f.audio, f.count) });
       if (fights.length >= MAX_FIGHTS) break;
     }
   }
-  return { count: COUNTS.includes(r.count) ? r.count : 2, layouts, bgs, texts, gcOffs, fights };
+  return { count: COUNTS.includes(r.count) ? r.count : 2, layouts, bgs, texts, gcOffs, audioOn, fights };
 }
 
 const slug = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pelea';
@@ -355,6 +358,12 @@ export function reduce(state, action) {
       const texts = state.split.texts[n].map((t, i) => (i === action.index ? { title: str(action.title), subtitle: str(action.subtitle) } : t));
       return { ...state, split: { ...state.split, texts: { ...state.split.texts, [n]: texts } } };
     }
+    case 'SPLIT_AUDIO_TOGGLE': {
+      const n = state.split.count;
+      if (!Number.isInteger(action.index) || action.index < 0 || action.index >= n) return state;
+      const audio = state.split.audioOn[n].map((v, i) => (i === action.index ? !v : v));
+      return { ...state, split: { ...state.split, audioOn: { ...state.split.audioOn, [n]: audio } } };
+    }
     case 'SPLIT_SET_GCPOS': {
       const n = state.split.count;
       if (!Number.isInteger(action.index) || action.index < 0 || action.index >= n || !isNum(action.x) || !isNum(action.y)) return state;
@@ -469,7 +478,7 @@ export function reduce(state, action) {
       const name = typeof action.name === 'string' ? action.name.trim().slice(0, 40) : '';
       if (!name) return state;
       const n = state.split.count;
-      const fight = { id: slug(name), name, count: n, slots: clone(state.split.layouts[n]), texts: clone(state.split.texts[n]), offs: clone(state.split.gcOffs[n]) };
+      const fight = { id: slug(name), name, count: n, slots: clone(state.split.layouts[n]), texts: clone(state.split.texts[n]), offs: clone(state.split.gcOffs[n]), audio: clone(state.split.audioOn[n]) };
       const exists = state.split.fights.some((f) => f.id === fight.id);
       if (!exists && state.split.fights.length >= MAX_FIGHTS) return state;
       const fights = exists ? state.split.fights.map((f) => (f.id === fight.id ? fight : f)) : [...state.split.fights, fight];
@@ -478,7 +487,7 @@ export function reduce(state, action) {
     case 'SPLIT_LOAD_FIGHT': {
       const f = state.split.fights.find((x) => x.id === action.id);
       if (!f) return state;
-      return { ...state, split: { ...state.split, count: f.count, layouts: { ...state.split.layouts, [f.count]: clone(f.slots) }, texts: { ...state.split.texts, [f.count]: cleanTexts(f.texts, f.count) }, gcOffs: { ...state.split.gcOffs, [f.count]: cleanOffs(f.offs, f.count) } } };
+      return { ...state, split: { ...state.split, count: f.count, layouts: { ...state.split.layouts, [f.count]: clone(f.slots) }, texts: { ...state.split.texts, [f.count]: cleanTexts(f.texts, f.count) }, gcOffs: { ...state.split.gcOffs, [f.count]: cleanOffs(f.offs, f.count) }, audioOn: { ...state.split.audioOn, [f.count]: cleanAudio(f.audio, f.count) } } };
     }
     case 'SPLIT_DELETE_FIGHT': {
       const fights = state.split.fights.filter((f) => f.id !== action.id);

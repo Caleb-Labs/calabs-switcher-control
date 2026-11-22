@@ -1,5 +1,5 @@
 import { renderGraphic } from '../graphics/templates.js';
-import { splitCamIds, splitBgFile } from './split.js';
+import { splitCamIds, splitBgFile, activeSlots } from './split.js';
 
 // Montaje de fuentes. Regla clave: /program nunca mantiene montadas más fuentes de las necesarias
 // (cada iframe de VDO.Ninja abre su propia conexión al jugador).
@@ -49,7 +49,15 @@ export function idsFor(state, id) {
 const uniq = (arr) => [...new Set(arr)];
 
 // Cámaras que suenan: el audio master y las encendidas en el mezclador.
-export const audibleCams = (state) => uniq([state.audioMaster, ...Object.entries(state.mix ?? {}).filter(([, m]) => m.on).map(([id]) => id)].filter(Boolean));
+export function audibleCams(state) {
+  // Con la pantalla dividida al aire y cámaras con audio elegido en sus recuadros, suena solo eso (el mezclador queda en pausa y vuelve al salir).
+  if (state.program === 'split' && state.split?.audioOn) {
+    const n = state.split.count;
+    const picked = uniq(activeSlots(state).filter((_, i) => state.split.audioOn[n]?.[i]).map((s) => s.cam));
+    if (picked.length) return picked;
+  }
+  return uniq([state.audioMaster, ...Object.entries(state.mix ?? {}).filter(([, m]) => m.on).map(([id]) => id)].filter(Boolean));
+}
 
 // Se montan: la al aire, la saliente (en fade), el preview y el audio master (estas dos ocultas): una conexión extra por jugador.
 export function neededIds(state, fading) {

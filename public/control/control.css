@@ -135,3 +135,6 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .gs-tpl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .gs-tpl .hint { color: var(--muted); font-size: 12px; max-width: 620px; }
 #gs-preview { position: relative; width: min(480px, 100%); aspect-ratio: 16 / 9; background: #2a2f3a repeating-conic-gradient(#323845 0 25%, #262b35 0 50%) 0 0 / 24px 24px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+
+.sp-aud { opacity: .5; }
+.sp-aud.on { opacity: 1; border-color: var(--ok); background: #6fa08a33; }

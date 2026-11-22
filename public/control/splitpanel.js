@@ -71,13 +71,16 @@ export function initSplitPanel({ send }) {
         let timer = null;
         const push = () => { clearTimeout(timer); timer = setTimeout(() => send({ type: 'SPLIT_SET_TEXT', index: i, title: title.value, subtitle: sub.value }), 250); };
         title.oninput = push; sub.oninput = push;
-        row.append(lab, title, sub);
+        const aud = document.createElement('button'); aud.className = 'sp-aud'; aud.textContent = '🔊'; aud.title = 'Audio de esta cámara cuando la pantalla dividida esté al aire';
+        aud.onclick = () => { send({ type: 'SPLIT_AUDIO_TOGGLE', index: i }); aud.blur(); };
+        row.append(lab, title, sub, aud);
         return row;
       }));
     }
     const n = state.split.count;
     [...box.children].forEach((row, i) => {
-      const [lab, title, sub] = row.children;
+      const [lab, title, sub, aud] = row.children;
+      aud.classList.toggle('on', !!state.split.audioOn[n][i]);
       const sel = lab.querySelector('select');
       if (document.activeElement !== sel && slots[i]) sel.value = slots[i].cam;
       const t = state.split.texts[n][i];
@@ -99,7 +102,7 @@ export function initSplitPanel({ send }) {
       el.className = 'sp-box';
       el.dataset.index = i;
       applyBox(el, slot);
-      const name = document.createElement('span'); name.textContent = `${i + 1} · ${labels[slot.cam] ?? slot.cam}`;
+      const name = document.createElement('span'); name.textContent = `${i + 1} · ${labels[slot.cam] ?? slot.cam}${state.split.audioOn[state.split.count][i] ? ' 🔊' : ''}`;
       const handle = document.createElement('div'); handle.className = 'sp-handle'; handle.title = 'Arrastra para cambiar el tamaño';
       const gc = document.createElement('div'); gc.className = 'sp-gc';
       const off = state.split.gcOffs[state.split.count][i];

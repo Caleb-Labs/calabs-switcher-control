@@ -126,6 +126,16 @@ function build(state) {
       else send({ type: 'MIX_TOGGLE', id: s.id });
     };
     const isCam = s.kind === 'vdo' || s.kind === 'twitch';
+    if (s.kind === 'vtr') { // el VTR también tiene su fader de volumen
+      tile.classList.add('cam');
+      const vv = document.createElement('input');
+      vv.type = 'range'; vv.min = 0; vv.max = 100; vv.step = 1; vv.className = 'tvol'; vv.title = 'Volumen del VTR';
+      let tv = 0;
+      vv.oninput = () => { const now = Date.now(); if (now - tv > 60) { tv = now; send({ type: 'SET_VOLUME', target: 'vtr', level: Number(vv.value) / 100 }); } };
+      vv.onchange = () => { send({ type: 'SET_VOLUME', target: 'vtr', level: Number(vv.value) / 100 }); vv.blur(); };
+      vv.onpointerdown = (e) => e.stopPropagation();
+      tile.append(vv);
+    }
     if (isCam) {
       tile.classList.add('cam');
       const vol = document.createElement('input');
@@ -211,7 +221,7 @@ function render() {
     t.classList.toggle('master', lastState.audioMaster === s.id || !!m?.on);
     t.classList.toggle('sel', lastState.mixSel === s.id);
     const vol = t.querySelector('.tvol');
-    if (vol && document.activeElement !== vol) vol.value = Math.round((m?.level ?? 1) * 100);
+    if (vol && document.activeElement !== vol) vol.value = Math.round((s.kind === 'vtr' ? lastState.audio.vtr.level : (m?.level ?? 1)) * 100);
   }
   syncMirror();
   const fade = document.getElementById('fade-ms');

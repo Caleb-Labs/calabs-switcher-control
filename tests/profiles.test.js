@@ -19,10 +19,11 @@ test('el perfil 720p queda entre 2 y 4 Mbps y los perfiles bajan de más a menos
 test('loadProfile: perfil desconocido o vacío cae al por defecto y avisa en consola', () => {
   const warnings = [];
   const p = loadProfile('no-existe', profiles, (m) => warnings.push(m));
-  assert.deepEqual(p, loadProfile('720p', profiles));
+  assert.deepEqual(p, loadProfile(profiles.default, profiles));
   assert.equal(warnings.length, 1);
   assert.match(warnings[0], /no-existe/);
   assert.deepEqual(loadProfile(undefined, profiles, () => {}), p);
+  assert.ok(profiles.profiles['1080p30'].programBitrate >= 4000);
 });
 
 test('readProfiles con archivo inexistente devuelve un perfil de emergencia usable', () => {
