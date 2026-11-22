@@ -29,7 +29,7 @@ export function initSplitPanel({ send }) {
   $('sp-load').onclick = () => { if ($('sp-fights').value) send({ type: 'SPLIT_LOAD_FIGHT', id: $('sp-fights').value }); };
   $('sp-delete').onclick = () => { if ($('sp-fights').value) send({ type: 'SPLIT_DELETE_FIGHT', id: $('sp-fights').value }); };
 
-  const camOptions = () => state.sources.filter((s) => s.kind !== 'vtr' && s.kind !== 'split');
+  const camOptions = () => state.sources.filter((s) => s.active && s.kind !== 'vtr' && s.kind !== 'split');
 
   function renderChips() {
     const cams = camOptions();

@@ -18,6 +18,9 @@ let lastState = null;
 let teams = [];
 let preGfx = null, pgmGfx = null, preSlot = null, preBadge = null, preNote = null;
 let seenSeq = null;
+let builtKey = null;
+const slotEls = new Map();
+const activeSrc = (st) => st.sources.filter((x) => x.active);
 
 const conn = connect((state) => { lastState = state; render(); }, {
   onStatus: (on) => document.getElementById('conn').classList.toggle('on', on),
@@ -42,7 +45,7 @@ try { sizes = clampSizes(JSON.parse(localStorage.getItem('multicam.sizes'))); } 
 const bigInput = document.getElementById('sz-big');
 function applySizes() {
   if (lastState) {
-    const ids = lastState.sources.map((s) => s.id);
+    const ids = activeSrc(lastState).map((s) => s.id);
     mv.style.setProperty('--cols', ids.length * 2);
     mv.style.gridTemplateAreas = gridTemplate(ids, bigColsFor(sizes.bigShare, ids.length));
   }
@@ -81,13 +84,23 @@ function build(state) {
     return g;
   };
   preGfx = cell('pre'); pgmGfx = cell('pgm');
-  for (const s of state.sources) slot(`s-${s.id}`, s.label);
-  for (const s of state.sources) {
+  for (const s of activeSrc(state)) slotEls.set(s.id, slot(`s-${s.id}`, s.label));
+  for (const s of activeSrc(state)) {
     const meta = sources.find((x) => x.id === s.id) ?? s;
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.append(createSourceElement(meta, { url: meta.url }));
     const label = document.createElement('span'); label.className = 'label'; label.textContent = s.label;
+    if (s.kind === 'vdo' || s.kind === 'twitch') {
+      label.title = 'Doble clic para ponerle tu propio nombre';
+      label.onclick = (e) => { e.stopPropagation(); send({ type: 'SET_PREVIEW', id: s.id }); };
+      label.ondblclick = (e) => {
+        e.stopPropagation();
+        const cur = lastState.sources.find((x) => x.id === s.id)?.label ?? s.label;
+        const name = window.prompt('Nombre de esta cámara (vacío = nombre por defecto):', cur);
+        if (name !== null) send({ type: 'CAM_NAME', id: s.id, name });
+      };
+    }
     const badge = document.createElement('span'); badge.className = 'badge';
     const hit = document.createElement('div'); hit.className = 'hit';
     hit.onclick = () => send({ type: 'SET_PREVIEW', id: s.id });
@@ -153,11 +166,18 @@ mv.addEventListener('load', muteAll, true); // iframes recién cargados
 
 function render() {
   if (!sources || !lastState) return;
-  if (!tiles.size) build(lastState);
+  const key = activeSrc(lastState).map((x) => x.id).join();
+  if (key !== builtKey) { // cambió qué cámaras se ven: se reconstruye la grilla
+    mv.replaceChildren(); tiles.clear(); slotEls.clear(); mirror = null; mirrorId = null;
+    build(lastState);
+    builtKey = key;
+  }
   const areas = assignAreas(lastState);
-  for (const s of lastState.sources) {
+  for (const s of activeSrc(lastState)) {
     const t = tiles.get(s.id);
     t.style.gridArea = areas[s.id];
+    t.querySelector('.label').textContent = s.label;
+    if (slotEls.has(s.id)) slotEls.get(s.id).textContent = s.label;
     t.classList.toggle('pgm', areas[s.id] === 'pgm');
     t.classList.toggle('pre', areas[s.id] === 'pre');
     t.classList.toggle('nosignal', s.status === 'nosignal');
@@ -195,6 +215,7 @@ function render() {
   } else if (!lt && seenSeq === null) seenSeq = 0;
   syncVtrPanel();
   syncEmergencyPanel();
+  syncCamSettings();
   muteAll(); // el audio sale solo por /program (OBS); aquí todo en silencio
   const pct = (c) => (c.muted ? 'mute' : `${Math.round(c.level * 100)}%`);
   document.getElementById('vol').textContent = `🔊 cámara ${pct(lastState.audio.cam)} · VTR ${pct(lastState.audio.vtr)}`;
@@ -284,4 +305,18 @@ function syncEmergencyPanel() {
   const key = JSON.stringify(media);
   if (emSel.dataset.key !== key) { emSel.dataset.key = key; emSel.replaceChildren(new Option('(logo / texto)', ''), ...media.map((f) => new Option(f, f))); }
   emSel.value = lastState.emergencyFile ?? '';
+}
+
+// --- Cuántas cámaras se ven (equipos) y cámara aérea
+const camCountSel = document.getElementById('cam-count');
+const aerialChk = document.getElementById('aerial-on');
+camCountSel.onchange = () => { send({ type: 'SET_CAM_COUNT', n: Number(camCountSel.value) }); camCountSel.blur(); };
+aerialChk.onchange = () => { send({ type: 'SET_AERIAL', on: aerialChk.checked }); aerialChk.blur(); };
+function syncCamSettings() {
+  const teamsN = lastState.srcBase.filter((b) => !b.aerial).length;
+  if (camCountSel.options.length !== teamsN) camCountSel.replaceChildren(...Array.from({ length: teamsN }, (_, i) => new Option(String(i + 1), String(i + 1))));
+  camCountSel.value = String(lastState.camCount);
+  const hasAerial = lastState.srcBase.some((b) => b.aerial);
+  aerialChk.parentElement.hidden = !hasAerial;
+  aerialChk.checked = lastState.aerialOn;
 }

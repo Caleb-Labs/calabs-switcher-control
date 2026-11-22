@@ -113,3 +113,4 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .tile.master { box-shadow: inset 0 0 0 2px var(--ok); }
 .tile.sel { outline: 2px dashed var(--warn); outline-offset: -4px; }
 .mix-row.sel .mix-name { text-decoration: underline; }
+.fade-t input[type=checkbox] { width: auto; }

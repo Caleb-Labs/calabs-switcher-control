@@ -343,7 +343,7 @@ test('la plantilla de emergencia usa el archivo elegido: video en bucle, imagen 
 test('persistable agrupa lo que se guarda en disco y conserva referencias si nada cambió', () => {
   const s = S();
   const a = persistable(s);
-  assert.deepEqual(Object.keys(a).sort(), ['emergencyFile', 'gcPos', 'split']);
+  assert.deepEqual(Object.keys(a).sort(), ['aerialOn', 'camCount', 'camNames', 'emergencyFile', 'gcPos', 'split']);
   assert.equal(persistable(apply(s, { type: 'TAKE', mode: 'cut' })).split, a.split);
 });
 

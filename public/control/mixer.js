@@ -27,7 +27,7 @@ export function initMixer({ send }) {
     box.replaceChildren();
     rows.clear();
     rows.set('@cam', row('Cámaras (general)', { onLevel: (l) => send({ type: 'SET_VOLUME', target: 'cam', level: l }), onMute: () => send({ type: 'TOGGLE_MUTE', target: 'cam' }) }));
-    for (const s of state.sources.filter((x) => x.kind !== 'vtr' && x.kind !== 'split')) {
+    for (const s of state.sources.filter((x) => x.active && x.kind !== 'vtr' && x.kind !== 'split')) {
       rows.set(s.id, row(s.label, { onToggle: () => send({ type: 'MIX_TOGGLE', id: s.id }), onLevel: (l) => send({ type: 'MIX_LEVEL', id: s.id, level: l }) }));
     }
     rows.set('@vtr', row('VTR', { onLevel: (l) => send({ type: 'SET_VOLUME', target: 'vtr', level: l }), onMute: () => send({ type: 'TOGGLE_MUTE', target: 'vtr' }) }));
@@ -38,7 +38,7 @@ export function initMixer({ send }) {
 
   return {
     render(state) {
-      const key = JSON.stringify(state.sources.map((s) => s.id + s.label));
+      const key = JSON.stringify(state.sources.map((s) => s.id + s.label + s.active));
       if (key !== builtKey) { builtKey = key; build(state); }
       setRange(rows.get('@cam'), state.audio.cam.level);
       rows.get('@cam').el.classList.toggle('muted', state.audio.cam.muted);

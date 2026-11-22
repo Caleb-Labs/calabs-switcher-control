@@ -72,7 +72,41 @@ export function normalizeSplit(raw, camIds) {
 }
 
 const slug = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pelea';
-const camIdsOf = (state) => state.sources.filter((x) => x.kind !== 'vtr' && x.kind !== 'split').map((x) => x.id);
+const camIdsOf = (state) => state.sources.filter((x) => x.active && x.kind !== 'vtr' && x.kind !== 'split').map((x) => x.id);
+const NAME_MAX = 30;
+const cleanCamNames = (raw, camIds) => Object.fromEntries(Object.entries(isPlainObj(raw) ? raw : {}).filter(([id, v]) => camIds.includes(id) && typeof v === 'string' && v.trim()).map(([id, v]) => [id, v.trim().slice(0, NAME_MAX)]));
+
+// Lista de fuentes visibles: cámaras (con nombre personalizado y activas según cantidad/aérea) + VTR + pantalla dividida.
+function buildSources(base, camNames, camCount, aerialOn, prev) {
+  const cams = base.map((b, i) => ({
+    id: b.id, label: camNames[b.id] || b.defLabel, team: b.team, kind: b.kind, status: prev.find((p) => p.id === b.id)?.status ?? 'live',
+    players: b.players, logo: b.logo, active: b.aerial ? aerialOn : i < camCount,
+  }));
+  return [...cams, { id: 'vtr', label: 'VTR', kind: 'vtr', status: 'live', active: true }, { id: 'split', label: 'Pantalla dividida', kind: 'split', status: 'live', active: true }];
+}
+const rebuild = (state) => ({ ...state, sources: buildSources(state.srcBase, state.camNames, state.camCount, state.aerialOn, state.sources) });
+
+// Al ocultar cámaras, lo que las usaba (program, preview, audio, mezclador, pantalla dividida) se reacomoda a cámaras activas.
+function fixRefs(state) {
+  const act = camIdsOf(state);
+  if (!act.length) return state;
+  const ok = (id) => act.includes(id);
+  const okAny = (id) => ok(id) || id === 'vtr' || id === 'split';
+  const program = okAny(state.program) ? state.program : act[0];
+  const preview = okAny(state.preview) ? state.preview : (act.find((c) => c !== program) ?? act[0]);
+  const mix = Object.fromEntries(Object.entries(state.mix).map(([id, m]) => [id, ok(id) || !m.on ? m : { ...m, on: false }]));
+  const layouts = {};
+  for (const n of COUNTS) {
+    const used = new Set(state.split.layouts[n].filter((s) => ok(s.cam)).map((s) => s.cam));
+    layouts[n] = state.split.layouts[n].map((s) => {
+      if (ok(s.cam)) return s;
+      const free = act.find((c) => !used.has(c)) ?? act[0];
+      used.add(free);
+      return { ...s, cam: free };
+    });
+  }
+  return { ...state, program, preview, mix, mixSel: ok(state.mixSel) ? state.mixSel : act[0], audioMaster: state.audioMaster && !ok(state.audioMaster) ? null : state.audioMaster, split: { ...state.split, layouts } };
+}
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const teamOf = (sources, id) => sources.find((x) => x.id === id)?.team ?? '';
 
@@ -98,27 +132,31 @@ const withSlots = (state, fn) => {
 };
 
 // Lo que se guarda en disco (data/split.json) para sobrevivir a reinicios.
-export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile });
+export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, aerialOn: state.aerialOn });
 
 export function createState(config) {
   const saved = config.saved ?? { split: config.splitSaved, gcPos: config.gcPosSaved }; // compatibilidad con el formato anterior
-  const sources = config.teams.map((t, i) => ({
+  const base = config.teams.map((t, i) => ({
     id: `cam${i + 1}`,
-    label: `Cámara ${i + 1}`,
+    defLabel: `Cámara ${i + 1}`,
     team: t.name, // el nombre del equipo se usa en los GC
     kind: t.source?.kind ?? 'vdo',
-    status: 'live',
     players: t.players,
     logo: t.logo ?? null,
   }));
-  if (config.aerial) {
-    sources.push({ id: `cam${sources.length + 1}`, label: `Cámara ${sources.length + 1}`, kind: config.aerial.source.kind, status: 'live', players: undefined, logo: null });
-  }
-  const camIds = sources.map((x) => x.id);
-  sources.push({ id: 'vtr', label: 'VTR', kind: 'vtr', status: 'live' });
-  sources.push({ id: 'split', label: 'Pantalla dividida', kind: 'split', status: 'live' });
+  if (config.aerial) base.push({ id: `cam${base.length + 1}`, defLabel: `Cámara ${base.length + 1}`, team: undefined, kind: config.aerial.source.kind, players: undefined, logo: null, aerial: true });
+  const camIds = base.map((x) => x.id);
+  const teamCount = base.filter((x) => !x.aerial).length;
+  const camNames = cleanCamNames(saved.camNames, camIds);
+  const camCount = Number.isInteger(saved.camCount) && saved.camCount >= 1 && saved.camCount <= teamCount ? saved.camCount : teamCount;
+  const aerialOn = typeof saved.aerialOn === 'boolean' ? saved.aerialOn : true;
+  const sources = buildSources(base, camNames, camCount, aerialOn, []);
   return {
     sources,
+    srcBase: base,
+    camNames,
+    camCount,
+    aerialOn,
     split: withTeamTexts(normalizeSplit(saved.split, camIds), sources),
     emergencyFile: typeof saved.emergencyFile === 'string' ? saved.emergencyFile : null,
     splitGc: 'off',
@@ -144,7 +182,7 @@ export function createState(config) {
 
 const GC_TEMPLATES = new Set(['gc-name', 'scoreboard', 'standings']);
 const isPlainObject = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
-const hasSource = (s, id) => s.sources.some((x) => x.id === id);
+const hasSource = (s, id) => s.sources.some((x) => x.id === id && x.active);
 
 export function reduce(state, action) {
   switch (action?.type) {
@@ -225,7 +263,7 @@ export function reduce(state, action) {
       return state.vtr.current ? { ...state, vtr: { ...state.vtr, playing: !state.vtr.playing } } : state;
 
     case 'PREVIEW_STEP': {
-      const ids = state.sources.map((x) => x.id);
+      const ids = state.sources.filter((x) => x.active).map((x) => x.id);
       const dir = action.dir > 0 ? 1 : -1;
       let i = ids.indexOf(state.preview);
       for (let k = 0; k < ids.length; k++) {
@@ -305,6 +343,21 @@ export function reduce(state, action) {
       return { ...state, gcPos: { ...state.gcPos, [action.gcId]: { x: clampPos(action.x), y: clampPos(action.y) } } };
     case 'GC_RESET_POS':
       return Object.hasOwn(state.gcPos, action.gcId) ? { ...state, gcPos: { ...state.gcPos, [action.gcId]: null } } : state;
+    case 'CAM_NAME': {
+      if (!state.srcBase.some((b) => b.id === action.id) || typeof action.name !== 'string') return state;
+      const name = action.name.trim().slice(0, NAME_MAX);
+      const camNames = { ...state.camNames };
+      if (name) camNames[action.id] = name; else delete camNames[action.id];
+      return rebuild({ ...state, camNames });
+    }
+    case 'SET_CAM_COUNT': {
+      const max = state.srcBase.filter((b) => !b.aerial).length;
+      if (!Number.isInteger(action.n) || action.n < 1 || action.n > max) return state;
+      return fixRefs(rebuild({ ...state, camCount: action.n }));
+    }
+    case 'SET_AERIAL':
+      if (!state.srcBase.some((b) => b.aerial) || typeof action.on !== 'boolean') return state;
+      return fixRefs(rebuild({ ...state, aerialOn: action.on }));
     case 'FADE_TIME':
       return isNum(action.ms) ? { ...state, fadeMs: Math.min(5000, Math.max(100, Math.round(action.ms))) } : state;
     case 'FADE_STEP':
