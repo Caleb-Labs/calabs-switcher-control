@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Prueba de rendimiento (desechable)</title>
+<style>
+  body { margin: 0; background: #14161a; color: #cfd3da; font: 14px system-ui; }
+  #grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; }
+  iframe { width: 100%; aspect-ratio: 16/9; border: 0; background: #000; }
+  #hud { position: fixed; top: 6px; right: 10px; background: #000a; padding: 4px 8px; border-radius: 4px; }
+</style>
+<div id="hud">fps: –</div>
+<div id="grid"></div>
+<script>
+  // Uso: /spike/?rooms=sala1,sala2,...,sala8  (hasta 8 salas de VDO.Ninja)
+  const rooms = (new URLSearchParams(location.search).get('rooms') || '').split(',').filter(Boolean).slice(0, 8);
+  const grid = document.getElementById('grid');
+  for (const room of rooms) {
+    const f = document.createElement('iframe');
+    f.allow = 'autoplay';
+    f.src = 'https://vdo.ninja/?view=' + encodeURIComponent(room) + '&videobitrate=3000&cleanoutput&noaudio';
+    grid.append(f);
+  }
+  let frames = 0, last = performance.now();
+  (function tick(t) {
+    frames++;
+    if (t - last >= 1000) { document.getElementById('hud').textContent = 'fps: ' + frames; frames = 0; last = t; }
+    requestAnimationFrame(tick);
+  })(last);
+</script>
