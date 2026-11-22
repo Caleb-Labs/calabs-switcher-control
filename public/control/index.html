@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Control — Multicam</title>
 <link rel="stylesheet" href="/shared/theme.css">
+<link rel="stylesheet" href="/graphics/graphics.css">
 <link rel="stylesheet" href="/control/control.css">
 <header id="bar">
   <span id="conn" class="dot" title="conexión"></span>
@@ -12,5 +13,20 @@
   <button id="btn-fade" class="take">FADE <kbd>Espacio</kbd></button>
   <span id="warn" hidden></span>
 </header>
+<section id="gcpanel">
+  <label>Equipo <select id="gc-team"></select></label>
+  <label>Jugador <select id="gc-player"></select></label>
+  <span class="grp">GC nombre:
+    <button data-gc="name" data-act="arm">a preview</button>
+    <button data-gc="name" data-act="live">al aire</button>
+    <button data-gc="name" data-act="off">bajar</button>
+  </span>
+  <span class="grp">Marcador:
+    <button data-gc="score" data-act="arm">a preview</button>
+    <button data-gc="score" data-act="live">al aire</button>
+    <button data-gc="score" data-act="off">bajar</button>
+  </span>
+  <button id="btn-emergency" class="danger">EMERGENCIA</button>
+</section>
 <main id="mv"></main>
 <script type="module" src="/control/control.js"></script>

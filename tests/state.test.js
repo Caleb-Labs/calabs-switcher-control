@@ -91,3 +91,8 @@ test('el reducer no muta el estado de entrada y ignora acciones desconocidas', (
   assert.equal(JSON.stringify(s), snapshot);
   assert.equal(reduce(s, { type: 'NOPE' }), s);
 });
+
+test('createState guarda emergencyLogo de la config (null si no hay)', () => {
+  assert.equal(createState(config).emergencyLogo, null);
+  assert.equal(createState({ ...config, emergencyLogo: '/vtr/e.png' }).emergencyLogo, '/vtr/e.png');
+});

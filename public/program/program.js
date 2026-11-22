@@ -1,8 +1,10 @@
 import { connect } from '/shared/client.js';
 import { createSourceElement, mountOnly, neededIds } from '/shared/sources.js';
+import { syncGraphics, applyScale } from '/graphics/layer.js';
 
 const FADE_MS = 500;
 const stage = document.getElementById('stage');
+const gfx = document.getElementById('gfx');
 let sources = null;      // [{id, kind, url}] desde /api/sources
 let lastState = null;
 let lastSeq = 0;
@@ -16,6 +18,8 @@ const make = (id) => {
 };
 
 function render(state) {
+  syncGraphics(gfx, state, 'live');
+  applyScale(gfx);
   if (!sources) return;
   const fresh = state.lastTake && state.lastTake.seq !== lastSeq;
   if (initialized && fresh && state.lastTake.mode === 'fade') {

@@ -16,6 +16,7 @@ export function createState(config) {
     audioMaster: null,
     gc: {},
     emergency: false,
+    emergencyLogo: config.emergencyLogo ?? null,
     vtr: { files: [], current: null, playing: false },
     scoreboard: { teams: [], updatedAt: null, stale: false },
   };

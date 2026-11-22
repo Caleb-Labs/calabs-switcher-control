@@ -16,3 +16,10 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .tile.pgm { border-color: var(--live); }
 .tile.pre { border-color: var(--ok); }
 .tile.nosignal::after { content: 'SIN SEÑAL'; position: absolute; inset: 0; display: grid; place-items: center; background: #111c; color: var(--warn); z-index: 2; }
+
+#gcpanel { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#gcpanel select { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px; }
+.grp { display: inline-flex; gap: 4px; align-items: center; color: var(--muted); }
+.danger { border-color: var(--live); }
+.danger.on { background: var(--live); color: #111; }
+.gfx-cell { position: relative; aspect-ratio: 16 / 9; pointer-events: none; z-index: 5; }

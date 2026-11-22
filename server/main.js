@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { startServer } from './index.js';
 import { loadConfig } from './config.js';
-import { sourcesRoute } from './api.js';
+import { sourcesRoute, teamsRoute } from './api.js';
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const real = here('../config/teams.json');
@@ -11,5 +11,5 @@ if (cfgPath.endsWith('teams.example.json')) console.warn('Usando config/teams.ex
 
 const config = loadConfig(cfgPath);
 const port = Number(process.env.PORT ?? 3000);
-const srv = await startServer({ port, config, publicDir: here('../public'), extraRoutes: [sourcesRoute(config)] });
+const srv = await startServer({ port, config, publicDir: here('../public'), extraRoutes: [sourcesRoute(config), teamsRoute(config)] });
 console.log(`Control: http://localhost:${srv.port}/control/   Program (OBS): http://localhost:${srv.port}/program/`);

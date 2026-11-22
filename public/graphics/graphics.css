@@ -1,0 +1,21 @@
+.gfx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+.g-root { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; color: #e4e6ea; font-family: system-ui, sans-serif; }
+.g-root.in { animation: g-in 400ms ease-out; }
+@keyframes g-in { from { opacity: 0; } to { opacity: 1; } }
+.ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.gc-name { left: 80px; top: auto; bottom: 90px; width: 620px; height: 120px; background: #1c1f25ee; border-left: 8px solid var(--accent, #6f8fb0); padding: 14px 24px; }
+.gc-name .team { font-size: 48px; font-weight: 700; }
+.gc-name .player { font-size: 34px; color: #aeb4bf; }
+.gc-name .logo { position: absolute; right: 16px; top: 16px; height: 88px; }
+
+.scoreboard, .standings { background: #1c1f25ee; padding: 18px 24px; }
+.scoreboard { left: 60px; top: 60px; width: 520px; height: auto; font-size: 30px; }
+.standings { left: 460px; top: 120px; width: 1000px; height: auto; font-size: 44px; }
+.row { display: grid; grid-template-columns: 70px 1fr 120px; gap: 12px; padding: 6px 0; border-bottom: 1px solid #2b2f37; }
+.row .pts { text-align: right; font-variant-numeric: tabular-nums; }
+
+.nosignal { width: 1920px; height: 1080px; background: #14161a; display: grid; place-items: center; font-size: 96px; color: #b89a5e; letter-spacing: 8px; }
+.emergency { width: 1920px; height: 1080px; background: #14161a; display: grid; place-items: center; }
+.emergency .logo { max-width: 60%; max-height: 60%; }
+.emergency .fallback { font-size: 80px; color: #aeb4bf; }

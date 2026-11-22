@@ -55,3 +55,8 @@ test('viewLink de un equipo Twitch apunta al player de Twitch silenciado', () =>
   assert.equal(u.searchParams.get('parent'), 'localhost');
   assert.equal(u.searchParams.get('muted'), 'true');
 });
+
+test('parseConfig conserva emergencyLogo', () => {
+  assert.equal(parseConfig({ teams: eight(), emergencyLogo: '/vtr/e.png' }).emergencyLogo, '/vtr/e.png');
+  assert.equal(parseConfig({ teams: eight() }).emergencyLogo, null);
+});
