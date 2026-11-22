@@ -113,7 +113,7 @@ test('/api/sources usa las salas y la contraseña actuales del estado', async ()
 test('/api/links lista por cámara activa: sala, link para el navegador, link para OBS y link de vista', async () => {
   srv.dispatch({ type: 'SET_CAM_COUNT', n: 3 });
   const links = await get('/api/links');
-  assert.deepEqual(links.map((l) => l.id), ['cam1', 'cam2', 'cam3', 'cam9']);
+  assert.deepEqual(links.map((l) => l.id), ['cam1', 'cam2', 'cam3']);
   const c2 = links.find((l) => l.id === 'cam2');
   assert.equal(c2.room, 'sala-nueva');
   const b = new URL(c2.browser);

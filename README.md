@@ -78,7 +78,7 @@ Es una fuente más (`s`): se manda a Preview y se toma con CUT/FADE. En el panel
 - **VTR:** suena solo si está **al aire** y en **▶**; el panel te dice el motivo si no se oye.
 
 ## Cámaras visibles y nombres
-Arriba: **Equipos [N]** oculta del todo las cámaras sobrantes (tiles, botones, mezclador, teclas), y **aérea** la muestra/oculta. Doble clic en el nombre de una cámara para personalizarlo.
+Arriba: **Equipos [N]** oculta del todo las cámaras sobrantes (tiles, botones, mezclador, teclas); la cámara aérea cuenta como una más (la última, `9`). Doble clic en el nombre de una cámara para personalizarlo.
 
 ## Macropad Redragon SS-552 (10 teclas + 4 diales)
 Dos formas (usa la que permita tu Redragon Station):

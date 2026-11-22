@@ -328,16 +328,11 @@ function syncEmergencyPanel() {
   emSel.value = lastState.emergencyFile ?? '';
 }
 
-// --- Cuántas cámaras se ven (equipos) y cámara aérea
+// --- Cuántas cámaras se ven (la aérea cuenta como una más)
 const camCountSel = document.getElementById('cam-count');
-const aerialChk = document.getElementById('aerial-on');
 camCountSel.onchange = () => { send({ type: 'SET_CAM_COUNT', n: Number(camCountSel.value) }); camCountSel.blur(); };
-aerialChk.onchange = () => { send({ type: 'SET_AERIAL', on: aerialChk.checked }); aerialChk.blur(); };
 function syncCamSettings() {
-  const teamsN = lastState.srcBase.filter((b) => !b.aerial).length;
-  if (camCountSel.options.length !== teamsN) camCountSel.replaceChildren(...Array.from({ length: teamsN }, (_, i) => new Option(String(i + 1), String(i + 1))));
+  const total = lastState.srcBase.length;
+  if (camCountSel.options.length !== total) camCountSel.replaceChildren(...Array.from({ length: total }, (_, i) => new Option(String(i + 1), String(i + 1))));
   camCountSel.value = String(lastState.camCount);
-  const hasAerial = lastState.srcBase.some((b) => b.aerial);
-  aerialChk.parentElement.hidden = !hasAerial;
-  aerialChk.checked = lastState.aerialOn;
 }

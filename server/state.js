@@ -96,14 +96,14 @@ function cleanConn(raw, defaultRooms) {
 const cleanCamNames = (raw, camIds) => Object.fromEntries(Object.entries(isPlainObj(raw) ? raw : {}).filter(([id, v]) => camIds.includes(id) && typeof v === 'string' && v.trim()).map(([id, v]) => [id, v.trim().slice(0, NAME_MAX)]));
 
 // Lista de fuentes visibles: cámaras (con nombre personalizado y activas según cantidad/aérea) + VTR + pantalla dividida.
-function buildSources(base, camNames, camCount, aerialOn, prev) {
+function buildSources(base, camNames, camCount, prev) {
   const cams = base.map((b, i) => ({
     id: b.id, label: camNames[b.id] || b.defLabel, team: b.team, kind: b.kind, status: prev.find((p) => p.id === b.id)?.status ?? 'live',
-    players: b.players, logo: b.logo, active: b.aerial ? aerialOn : i < camCount,
+    players: b.players, logo: b.logo, active: i < camCount,
   }));
   return [...cams, { id: 'vtr', label: 'VTR', kind: 'vtr', status: 'live', active: true }, { id: 'split', label: 'Pantalla dividida', kind: 'split', status: 'live', active: true }];
 }
-const rebuild = (state) => ({ ...state, sources: buildSources(state.srcBase, state.camNames, state.camCount, state.aerialOn, state.sources) });
+const rebuild = (state) => ({ ...state, sources: buildSources(state.srcBase, state.camNames, state.camCount, state.sources) });
 
 // Al ocultar cámaras, lo que las usaba (program, preview, audio, mezclador, pantalla dividida) se reacomoda a cámaras activas.
 function fixRefs(state) {
@@ -151,7 +151,7 @@ const withSlots = (state, fn) => {
 };
 
 // Lo que se guarda en disco (data/split.json) para sobrevivir a reinicios.
-export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, aerialOn: state.aerialOn, conn: state.conn, gcStyle: state.gcStyle });
+export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, conn: state.conn, gcStyle: state.gcStyle });
 
 export function createState(config) {
   const saved = config.saved ?? { split: config.splitSaved, gcPos: config.gcPosSaved }; // compatibilidad con el formato anterior
@@ -165,11 +165,14 @@ export function createState(config) {
   }));
   if (config.aerial) base.push({ id: `cam${base.length + 1}`, defLabel: `Cámara ${base.length + 1}`, team: undefined, kind: config.aerial.source.kind, players: undefined, logo: null, aerial: true });
   const camIds = base.map((x) => x.id);
-  const teamCount = base.filter((x) => !x.aerial).length;
+  const total = base.length; // la aérea cuenta como una cámara más
   const camNames = cleanCamNames(saved.camNames, camIds);
-  const camCount = Number.isInteger(saved.camCount) && saved.camCount >= 1 && saved.camCount <= teamCount ? saved.camCount : teamCount;
-  const aerialOn = typeof saved.aerialOn === 'boolean' ? saved.aerialOn : true;
-  const sources = buildSources(base, camNames, camCount, aerialOn, []);
+  // Archivos viejos guardaban equipos visibles + un interruptor aparte para la aérea: "todos los equipos + aérea encendida" = todas.
+  const teamCount = base.filter((x) => !x.aerial).length;
+  const legacyAll = saved.aerialOn === true && saved.camCount === teamCount && total > teamCount;
+  const savedCount = legacyAll ? total : saved.camCount;
+  const camCount = Number.isInteger(savedCount) && savedCount >= 1 && savedCount <= total ? savedCount : total;
+  const sources = buildSources(base, camNames, camCount, []);
   const defaultRooms = Object.fromEntries([
     ...config.teams.map((t, i) => (t.source?.kind === 'vdo' ? [`cam${i + 1}`, t.source.room] : null)),
     config.aerial?.source?.kind === 'vdo' ? [`cam${config.teams.length + 1}`, config.aerial.source.room] : null,
@@ -182,7 +185,6 @@ export function createState(config) {
     connRev: 0,
     camNames,
     camCount,
-    aerialOn,
     split: withTeamTexts(normalizeSplit(saved.split, camIds), sources),
     emergencyFile: typeof saved.emergencyFile === 'string' ? saved.emergencyFile : null,
     splitGc: 'off',
@@ -385,13 +387,10 @@ export function reduce(state, action) {
       return rebuild({ ...state, camNames });
     }
     case 'SET_CAM_COUNT': {
-      const max = state.srcBase.filter((b) => !b.aerial).length;
+      const max = state.srcBase.length;
       if (!Number.isInteger(action.n) || action.n < 1 || action.n > max) return state;
       return fixRefs(rebuild({ ...state, camCount: action.n }));
     }
-    case 'SET_AERIAL':
-      if (!state.srcBase.some((b) => b.aerial) || typeof action.on !== 'boolean') return state;
-      return fixRefs(rebuild({ ...state, aerialOn: action.on }));
     case 'GC_STYLE': {
       if (typeof action.target !== 'string' || !STYLE_TARGETS.includes(action.target)) return state;
       const patch = action.patch;
