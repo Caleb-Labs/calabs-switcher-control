@@ -12,9 +12,10 @@ let initialized = false;
 let fading = false;
 let fadeTimer = null;
 
+const statusOf = (id) => lastState?.sources.find((s) => s.id === id)?.status ?? 'live';
 const make = (id) => {
   const meta = sources.find((s) => s.id === id) ?? { id, kind: 'vdo' };
-  return createSourceElement(meta, { url: meta.url });
+  return createSourceElement({ ...meta, status: statusOf(id) }, { url: meta.url });
 };
 
 function render(state) {
@@ -25,17 +26,17 @@ function render(state) {
   if (initialized && fresh && state.lastTake.mode === 'fade') {
     clearTimeout(fadeTimer);
     fading = true;
-    mountOnly(stage, neededIds(state, true), make);
+    mountOnly(stage, neededIds(state, true), make, statusOf);
     const incoming = stage.querySelector(`[data-source-id="${state.program}"]`);
     incoming.style.opacity = '0';
     incoming.style.zIndex = '2';
     requestAnimationFrame(() => requestAnimationFrame(() => { incoming.style.opacity = '1'; }));
     fadeTimer = setTimeout(() => {
       fading = false;
-      mountOnly(stage, neededIds(lastState, false), make);
+      mountOnly(stage, neededIds(lastState, false), make, statusOf);
     }, FADE_MS + 50);
   } else if (!fading) {
-    mountOnly(stage, neededIds(state, false), make);
+    mountOnly(stage, neededIds(state, false), make, statusOf);
   }
   lastSeq = state.lastTake?.seq ?? 0;
   initialized = true;

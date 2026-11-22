@@ -47,3 +47,26 @@ test('createSourceElement: iframe para vdo/twitch, video para vtr', () => {
   const v = createSourceElement({ id: 'vtr', kind: 'vtr' }, {});
   assert.equal(v.tagName, 'VIDEO');
 });
+
+test('una fuente en nosignal se monta como SIN SEÑAL, nunca como contenedor vacío', () => {
+  const c = setup();
+  const make = (status) => (id) => createSourceElement({ id, kind: 'vdo', status }, { url: 'https://vdo.ninja/?view=x' });
+  mountOnly(c, ['cam4'], make('nosignal'), () => 'nosignal');
+  assert.equal(c.children.length, 1);
+  assert.match(c.firstElementChild.textContent, /SIN SEÑAL/);
+  assert.equal(c.firstElementChild.dataset.sourceId, 'cam4');
+});
+
+test('mountOnly reemplaza el elemento cuando cambia la variante (nosignal <-> live) y vuelve al iframe', () => {
+  const c = setup();
+  let status = 'nosignal';
+  const make = (id) => createSourceElement({ id, kind: 'vdo', status }, { url: 'https://vdo.ninja/?view=x' });
+  mountOnly(c, ['cam4'], make, () => status);
+  const first = c.firstElementChild;
+  mountOnly(c, ['cam4'], make, () => status);
+  assert.equal(c.firstElementChild, first);
+  status = 'live';
+  mountOnly(c, ['cam4'], make, () => status);
+  assert.equal(c.children.length, 1);
+  assert.equal(c.firstElementChild.tagName, 'IFRAME');
+});

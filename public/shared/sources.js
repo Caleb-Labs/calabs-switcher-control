@@ -1,7 +1,15 @@
+import { renderGraphic } from '../graphics/templates.js';
+
 // Montaje de fuentes. Regla clave: /program nunca mantiene montadas más fuentes de las necesarias
 // (cada iframe de VDO.Ninja abre su propia conexión al jugador).
 
 export function createSourceElement(source, { url } = {}) {
+  if (source.status === 'nosignal' && source.kind !== 'vtr') {
+    const ns = renderGraphic('nosignal', {});
+    ns.dataset.sourceId = source.id;
+    ns.classList.add('src', 'nosignal-el');
+    return ns;
+  }
   const el = document.createElement(source.kind === 'vtr' ? 'video' : 'iframe');
   el.dataset.sourceId = source.id;
   el.className = 'src';
@@ -21,12 +29,16 @@ export function neededIds(state, fading) {
   return ids;
 }
 
-export function mountOnly(container, ids, create) {
+// variantOf(id) distingue versiones del mismo id (p. ej. 'live' / 'nosignal'): si cambia, se reemplaza el elemento.
+export function mountOnly(container, ids, create, variantOf = () => '') {
   for (const child of [...container.children]) {
-    if (!ids.includes(child.dataset.sourceId)) child.remove();
+    if (!ids.includes(child.dataset.sourceId) || child.dataset.variant !== variantOf(child.dataset.sourceId)) child.remove();
   }
   const present = new Set([...container.children].map((c) => c.dataset.sourceId));
   for (const id of ids) {
-    if (!present.has(id)) container.append(create(id));
+    if (present.has(id)) continue;
+    const el = create(id);
+    el.dataset.variant = variantOf(id);
+    container.append(el);
   }
 }

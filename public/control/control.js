@@ -3,6 +3,7 @@ import { createSourceElement } from '/shared/sources.js';
 import { keyToAction } from './keymap.js';
 import { assignAreas } from './layout.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
+import { statusFromMessage } from '/shared/signal.js';
 
 const mv = document.getElementById('mv');
 const tiles = new Map();
@@ -53,7 +54,14 @@ function build(state) {
     const label = document.createElement('span'); label.className = 'label'; label.textContent = s.label;
     const hit = document.createElement('div'); hit.className = 'hit';
     hit.onclick = () => send({ type: 'SET_PREVIEW', id: s.id });
-    tile.append(label, hit);
+    const sig = document.createElement('button');
+    sig.className = 'sig'; sig.textContent = '⚠'; sig.title = 'Marcar sin señal / con señal';
+    sig.onclick = (e) => {
+      e.stopPropagation();
+      const cur = lastState.sources.find((x) => x.id === s.id)?.status;
+      send({ type: 'SOURCE_STATUS', id: s.id, status: cur === 'nosignal' ? 'live' : 'nosignal' });
+    };
+    tile.append(label, hit, sig);
     mv.append(tile); tiles.set(s.id, tile);
   }
 }
@@ -105,3 +113,10 @@ document.querySelectorAll('[data-gc]').forEach((b) => {
 document.getElementById('btn-emergency').onclick = () => send({ type: 'EMERGENCY', on: !lastState?.emergency });
 
 fetch('/api/sources').then((r) => r.json()).then((list) => { sources = list; render(); });
+
+// Detección automática (mejor esfuerzo) por los eventos del iframe de VDO.Ninja.
+window.addEventListener('message', (e) => {
+  if (!sources || !lastState) return;
+  const r = statusFromMessage(e, sources);
+  if (r && lastState.sources.find((x) => x.id === r.id)?.status !== r.status) send({ type: 'SOURCE_STATUS', ...r });
+});

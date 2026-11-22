@@ -23,3 +23,6 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .danger { border-color: var(--live); }
 .danger.on { background: var(--live); color: #111; }
 .gfx-cell { position: relative; aspect-ratio: 16 / 9; pointer-events: none; z-index: 5; }
+
+.tile .sig { position: absolute; right: 4px; top: 4px; z-index: 6; padding: 0 6px; font-size: 12px; opacity: .55; }
+.tile .sig:hover { opacity: 1; }
