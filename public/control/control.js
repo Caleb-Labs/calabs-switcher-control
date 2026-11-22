@@ -72,6 +72,9 @@ function render() {
   syncGraphics(preGfx, lastState, 'preview'); applyScale(preGfx);
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);
   document.getElementById('btn-emergency').classList.toggle('on', lastState.emergency);
+  const warn = document.getElementById('warn');
+  warn.hidden = !lastState.scoreboard.stale;
+  warn.textContent = 'marcador sin actualizar';
 }
 
 // --- Panel de GC

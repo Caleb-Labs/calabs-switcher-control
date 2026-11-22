@@ -80,9 +80,13 @@ export function reduce(state, action) {
       return { ...state, vtr: { ...state.vtr, current: next } };
     }
 
-    case 'SCOREBOARD_UPDATE':
-      return { ...state, scoreboard: { teams: action.teams ?? [], updatedAt: Date.now(), stale: false } };
+    case 'SCOREBOARD_UPDATE': {
+      const teams = action.teams ?? [];
+      if (!state.scoreboard.stale && JSON.stringify(teams) === JSON.stringify(state.scoreboard.teams)) return state;
+      return { ...state, scoreboard: { teams, updatedAt: Date.now(), stale: false } };
+    }
     case 'SCOREBOARD_STALE':
+      if (state.scoreboard.stale) return state;
       return { ...state, scoreboard: { ...state.scoreboard, stale: true } };
 
     default:

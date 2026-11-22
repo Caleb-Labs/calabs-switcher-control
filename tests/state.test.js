@@ -96,3 +96,13 @@ test('createState guarda emergencyLogo de la config (null si no hay)', () => {
   assert.equal(createState(config).emergencyLogo, null);
   assert.equal(createState({ ...config, emergencyLogo: '/vtr/e.png' }).emergencyLogo, '/vtr/e.png');
 });
+
+test('SCOREBOARD_UPDATE con los mismos datos y sin stale no genera un estado nuevo', () => {
+  const teams = [{ name: 'A', points: 3, position: 1 }];
+  const s1 = reduce(createState(config), { type: 'SCOREBOARD_UPDATE', teams });
+  const s2 = reduce(s1, { type: 'SCOREBOARD_UPDATE', teams: [{ ...teams[0] }] });
+  assert.equal(s2, s1);
+  const stale = reduce(s1, { type: 'SCOREBOARD_STALE' });
+  assert.equal(reduce(stale, { type: 'SCOREBOARD_STALE' }), stale);
+  assert.equal(reduce(stale, { type: 'SCOREBOARD_UPDATE', teams }).scoreboard.stale, false);
+});
