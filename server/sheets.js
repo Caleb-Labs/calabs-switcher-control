@@ -25,13 +25,16 @@ export function parseRows(values) {
   return teams;
 }
 
-export function startSheetPoller({ sheet, fetchFn = fetch, onUpdate, onStale, intervalMs = 3000, autoStart = true }) {
+export function startSheetPoller({ sheet, fetchFn = fetch, onUpdate, onStale, intervalMs = 3000, timeoutMs = 4000, autoStart = true }) {
   let stopped = false;
   let timer = null;
 
   async function tick() {
+    // Sin timeout, una conexión colgada deja datos viejos como "frescos" hasta ~5 min.
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeoutMs);
     try {
-      const res = await fetchFn(sheetUrl(sheet));
+      const res = await fetchFn(sheetUrl(sheet), { signal: ctl.signal });
       if (!res.ok) return onStale();
       const body = await res.json();
       const teams = parseRows(body?.values);
@@ -39,6 +42,8 @@ export function startSheetPoller({ sheet, fetchFn = fetch, onUpdate, onStale, in
       onUpdate(teams);
     } catch {
       onStale();
+    } finally {
+      clearTimeout(timer);
     }
   }
 

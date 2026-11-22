@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { keyToAction } from '../public/control/keymap.js';
+import { keyToAction, shouldHandleKey } from '../public/control/keymap.js';
 import { assignAreas } from '../public/control/layout.js';
 
 test('keyToAction: 1-8 eligen cámara en preview, 9 el VTR', () => {
@@ -40,4 +40,14 @@ test('assignAreas: si preview == program, program gana y no se duplica', () => {
   const a = assignAreas(state('cam4', 'cam4'));
   assert.equal(a.cam4, 'pgm');
   assert.equal(Object.values(a).filter((v) => v === 'pre').length, 0);
+});
+
+test('shouldHandleKey: ignora repeticiones, combinaciones con Ctrl/Alt/Meta y campos de texto', () => {
+  assert.equal(shouldHandleKey({ key: 'Enter', repeat: false }), true);
+  assert.equal(shouldHandleKey({ key: 'Enter', repeat: true }), false);
+  assert.equal(shouldHandleKey({ key: '1', ctrlKey: true }), false);
+  assert.equal(shouldHandleKey({ key: '1', altKey: true }), false);
+  assert.equal(shouldHandleKey({ key: '1', metaKey: true }), false);
+  assert.equal(shouldHandleKey({ key: '1', target: { closest: () => ({}) } }), false);
+  assert.equal(shouldHandleKey({ key: '1', target: { closest: () => null } }), true);
 });

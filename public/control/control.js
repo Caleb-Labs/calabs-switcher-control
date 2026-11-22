@@ -1,6 +1,6 @@
 import { connect } from '/shared/client.js';
 import { createSourceElement, applyVolumes } from '/shared/sources.js';
-import { keyToAction } from './keymap.js';
+import { keyToAction, shouldHandleKey } from './keymap.js';
 import { assignAreas } from './layout.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
@@ -21,7 +21,7 @@ const send = (action) => conn.send(action);
 document.getElementById('btn-cut').onclick = () => send({ type: 'TAKE', mode: 'cut' });
 document.getElementById('btn-fade').onclick = () => send({ type: 'TAKE', mode: 'fade' });
 document.addEventListener('keydown', (e) => {
-  if (e.target.closest?.('input, textarea, select')) return;
+  if (!shouldHandleKey(e)) return;
   const action = keyToAction(e.key);
   if (action) { e.preventDefault(); send(action); }
 });

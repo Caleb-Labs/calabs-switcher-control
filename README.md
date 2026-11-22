@@ -44,4 +44,6 @@ El programa lee la hoja cada ~3 s; si falla, deja el último dato y muestra "mar
 `config/profiles.json`. Si tu PC va justa, usa `ligero`. La medición pendiente está en `docs/superpowers/notes/perf-spike.md`.
 
 ## Desarrollo
+El servidor escucha solo en 127.0.0.1 (esta PC). Si OBS corre en otra PC: `set HOST=0.0.0.0` antes de `npm start`.
+
 `npm test` (≈7 s). Diseño: `docs/superpowers/specs/`. Plan: `docs/superpowers/plans/`.

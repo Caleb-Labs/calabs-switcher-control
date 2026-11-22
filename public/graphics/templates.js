@@ -9,7 +9,7 @@ const el = (tag, cls, text) => {
 };
 
 const sortedTeams = (data) =>
-  [...(data?.teams ?? [])].sort((a, b) => (Number(a.position) || 999) - (Number(b.position) || 999));
+  [...(Array.isArray(data?.teams) ? data.teams : [])].sort((a, b) => (Number(a.position) || 999) - (Number(b.position) || 999));
 
 function table(cls, data) {
   const root = el('div', `g-root ${cls}`);

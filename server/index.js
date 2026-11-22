@@ -26,16 +26,29 @@ async function serveStatic(root, urlPath, res) {
   }
 }
 
-export async function startServer({ port = 3000, config, publicDir, extraRoutes = [] }) {
+// Acciones que puede mandar un cliente. SCOREBOARD_* y VTR_FILES son internas del servidor.
+const CLIENT_ACTIONS = new Set([
+  'SET_PREVIEW', 'TAKE', 'SET_AUDIO_MASTER', 'SOURCE_STATUS', 'GC_ARM', 'GC_LIVE', 'GC_OFF',
+  'EMERGENCY', 'VTR_SELECT', 'VTR_PLAY', 'VTR_PAUSE', 'VTR_NEXT',
+]);
+
+export async function startServer({ port = 3000, host = '127.0.0.1', config, publicDir, extraRoutes = [] }) {
   let state = createState(config);
   const root = path.resolve(publicDir);
 
   const server = http.createServer(async (req, res) => {
-    const url = new URL(req.url, 'http://localhost');
-    for (const route of extraRoutes) {
-      if (await route(req, res, url, { getState: () => state })) return;
+    try {
+      let url;
+      try { url = new URL(req.url, 'http://localhost'); } catch { res.writeHead(400).end('bad request'); return; }
+      for (const route of extraRoutes) {
+        if (await route(req, res, url, { getState: () => state })) return;
+      }
+      await serveStatic(root, url.pathname, res);
+    } catch (e) {
+      console.error('request error:', e);
+      if (!res.headersSent) res.writeHead(500);
+      res.end();
     }
-    await serveStatic(root, url.pathname, res);
   });
   const wss = new WebSocketServer({ server, path: '/ws' });
 
@@ -53,14 +66,15 @@ export async function startServer({ port = 3000, config, publicDir, extraRoutes 
     ws.on('message', (raw) => {
       let msg;
       try { msg = JSON.parse(raw); } catch { return; }
-      if (msg?.type === 'action' && msg.action) dispatch(msg.action);
+      if (msg?.type === 'action' && CLIENT_ACTIONS.has(msg.action?.type)) dispatch(msg.action);
     });
     ws.on('error', () => {});
   });
 
-  await new Promise((resolve) => server.listen(port, resolve));
+  await new Promise((resolve) => server.listen(port, host, resolve));
   return {
     port: server.address().port,
+    host,
     getState: () => state,
     dispatch,
     close: () => new Promise((resolve) => {

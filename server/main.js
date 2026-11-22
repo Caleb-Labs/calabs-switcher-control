@@ -15,7 +15,7 @@ if (cfgPath.endsWith('teams.example.json')) console.warn('Usando config/teams.ex
 const config = loadConfig(cfgPath);
 const port = Number(process.env.PORT ?? 3000);
 const profile = loadProfile(process.env.PROFILE ?? config.profile, readProfiles(here('../config/profiles.json')));
-const srv = await startServer({ port, config, publicDir: here('../public'), extraRoutes: [sourcesRoute(config, profile), teamsRoute(config), vtrRoute(here('../vtr'))] });
+const srv = await startServer({ port, host: process.env.HOST, config, publicDir: here('../public'), extraRoutes: [sourcesRoute(config, profile), teamsRoute(config), vtrRoute(here('../vtr'))] });
 console.log(`Control: http://localhost:${srv.port}/control/   Program (OBS): http://localhost:${srv.port}/program/`);
 
 if (config.sheet) {

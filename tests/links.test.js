@@ -60,3 +60,8 @@ test('parseConfig conserva emergencyLogo', () => {
   assert.equal(parseConfig({ teams: eight(), emergencyLogo: '/vtr/e.png' }).emergencyLogo, '/vtr/e.png');
   assert.equal(parseConfig({ teams: eight() }).emergencyLogo, null);
 });
+
+test('viewLink con noAudio agrega noaudio; sin él no', () => {
+  assert.ok(new URL(viewLink(vdo('x'), { noAudio: true })).searchParams.has('noaudio'));
+  assert.ok(!new URL(viewLink(vdo('x'))).searchParams.has('noaudio'));
+});

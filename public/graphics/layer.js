@@ -30,7 +30,8 @@ export function syncGraphics(container, state, which) {
   const present = new Set([...container.children].map((c) => c.dataset.gcId));
   for (const g of list) {
     if (present.has(g.id)) continue;
-    const node = renderGraphic(g.template, g.data);
+    let node;
+    try { node = renderGraphic(g.template, g.data); } catch { continue; } // un gráfico dañado no tumba a los demás
     node.dataset.gcId = g.id;
     node.dataset.key = keys.get(g.id);
     node.classList.add('in');

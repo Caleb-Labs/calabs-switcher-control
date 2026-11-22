@@ -89,3 +89,12 @@ test('syncGraphics en live pone la emergencia por encima cuando está activa', (
   syncGraphics(c, state, 'preview');
   assert.equal(c.children.length, 0);
 });
+
+test('datos corruptos no rompen el render: teams que no es arreglo, plantilla desconocida dentro del estado', () => {
+  const c = setup();
+  assert.doesNotThrow(() => renderGraphic('standings', { teams: 5 }));
+  assert.doesNotThrow(() => renderGraphic('scoreboard', { teams: 'x' }));
+  const state = { gc: { bad: { template: 'nope', data: {}, state: 'live' }, ok: { template: 'gc-name', data: { team: 'A', player: 'p' }, state: 'live' } }, scoreboard: { teams: 5 }, emergency: false };
+  assert.doesNotThrow(() => syncGraphics(c, state, 'live'));
+  assert.deepEqual([...c.children].map((e) => e.dataset.gcId), ['ok']);
+});

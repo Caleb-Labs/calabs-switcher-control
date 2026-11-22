@@ -90,3 +90,16 @@ test('stop() detiene el sondeo', async () => {
   assert.equal(calls, after);
   assert.ok(after >= 1);
 });
+
+test('un fetch colgado se corta por timeout y marca stale (no se queda "fresco" 5 minutos)', async () => {
+  const events = [];
+  const p = startSheetPoller({
+    sheet, autoStart: false, timeoutMs: 50,
+    fetchFn: (url, { signal }) => new Promise((_, reject) => signal.addEventListener('abort', () => reject(new Error('aborted')))),
+    onUpdate: () => events.push('update'), onStale: () => events.push('stale'),
+  });
+  const t0 = Date.now();
+  await p.tick();
+  assert.deepEqual(events, ['stale']);
+  assert.ok(Date.now() - t0 < 1000);
+});

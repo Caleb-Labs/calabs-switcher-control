@@ -114,3 +114,23 @@ test('audio master: solo cámaras; id null lo limpia; el vtr no puede ser master
   s = reduce(s, { type: 'SET_AUDIO_MASTER', id: null });
   assert.equal(s.audioMaster, null);
 });
+
+test('GC_ARM rechaza plantillas desconocidas, ids no string y normaliza data', () => {
+  const s0 = createState(config);
+  assert.equal(reduce(s0, { type: 'GC_ARM', gcId: 'g', template: 'nope', data: {} }), s0);
+  assert.equal(reduce(s0, { type: 'GC_ARM', gcId: 'g', template: undefined, data: {} }), s0);
+  assert.equal(reduce(s0, { type: 'GC_ARM', gcId: 42, template: 'gc-name', data: {} }), s0);
+  assert.deepEqual(reduce(s0, { type: 'GC_ARM', gcId: 'g', template: 'gc-name', data: 'x' }).gc.g.data, {});
+});
+
+test('GC_LIVE/GC_OFF ignoran ids heredados de Object.prototype (toString)', () => {
+  const s0 = createState(config);
+  assert.equal(reduce(s0, { type: 'GC_LIVE', gcId: 'toString' }), s0);
+  assert.equal(reduce(s0, { type: 'GC_OFF', gcId: '__proto__' }), s0);
+});
+
+test('SCOREBOARD_UPDATE ignora teams que no sea un arreglo', () => {
+  const s0 = createState(config);
+  assert.equal(reduce(s0, { type: 'SCOREBOARD_UPDATE', teams: 5 }), s0);
+  assert.equal(reduce(s0, { type: 'SCOREBOARD_UPDATE', teams: 'x' }), s0);
+});

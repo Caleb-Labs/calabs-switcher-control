@@ -24,12 +24,26 @@ export function createSourceElement(source, { url } = {}) {
 }
 
 // Fuentes que deben existir en el DOM: la al aire y, durante un fade, la saliente.
-// El audio master también se monta (oculto) aunque no esté al aire: es una conexión extra a ese jugador.
+// Se montan: la al aire, la saliente (en fade), el preview y el audio master (estas dos ocultas): una conexión extra por jugador.
 export function neededIds(state, fading) {
   const ids = [state.program];
   if (fading && state.lastTake && state.lastTake.from !== state.program) ids.push(state.lastTake.from);
+  // El preview se precarga (oculto) para que el CUT/FADE no muestre negro mientras conecta WebRTC.
+  if (state.preview && !ids.includes(state.preview)) ids.push(state.preview);
   if (state.audioMaster && !ids.includes(state.audioMaster)) ids.push(state.audioMaster);
   return ids;
+}
+
+// Lo que realmente se ve: la al aire y, durante un fade, la saliente. El resto va oculto (solo-audio/precarga).
+export function visibleIds(state, fading) {
+  const ids = [state.program];
+  if (fading && state.lastTake && state.lastTake.from !== state.program) ids.push(state.lastTake.from);
+  return ids;
+}
+
+// Quita opacity/zIndex en línea que dejó un fade (si no, un fade de vuelta queda tapado y el audio-only se ve).
+export function clearFadeStyles(container) {
+  for (const el of container.children) { el.style.opacity = ''; el.style.zIndex = ''; }
 }
 
 // Volumen (0 o 1) que debe tener cada fuente en /program.

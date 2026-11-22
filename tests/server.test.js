@@ -1,6 +1,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import net from 'node:net';
 import WebSocket from 'ws';
 import { startServer } from '../server/index.js';
 
@@ -88,4 +89,40 @@ test('sirve archivos estáticos y no permite salir de public/', async () => {
   assert.match(ok.headers.get('content-type'), /javascript/);
   const bad = await fetch(`http://127.0.0.1:${port}/..%2fpackage.json`);
   assert.equal(bad.status, 404);
+});
+
+test('un request HTTP malformado responde 400 y el servidor sigue vivo', async () => {
+  const { port } = await boot();
+  const reply = await new Promise((resolve, reject) => {
+    const sock = net.connect(port, '127.0.0.1', () => sock.write('GET http://[ HTTP/1.1\r\nHost: x\r\n\r\n'));
+    let buf = '';
+    sock.on('data', (d) => { buf += d; if (buf.includes('\r\n')) { sock.destroy(); resolve(buf); } });
+    sock.on('error', reject);
+    sock.on('close', () => resolve(buf));
+  });
+  assert.match(reply, /^HTTP\/1\.1 400/);
+  const ok = await fetch(`http://127.0.0.1:${port}/shared/client.js`);
+  assert.equal(ok.status, 200);
+});
+
+test('por defecto escucha solo en 127.0.0.1', async () => {
+  const srv = await boot();
+  assert.equal(srv.host, '127.0.0.1');
+});
+
+test('un cliente no puede mandar acciones internas (SCOREBOARD_*, VTR_FILES) ni GC inválidos', async () => {
+  const { port } = await boot();
+  const a = client(port);
+  await a.next();
+  a.send({ type: 'action', action: { type: 'SCOREBOARD_UPDATE', teams: [{ name: 'X', points: 99, position: 1 }] } });
+  a.send({ type: 'action', action: { type: 'VTR_FILES', files: ['malo.mp4'] } });
+  a.send({ type: 'action', action: { type: 'GC_ARM', gcId: 'g', template: 'nope', data: {} } });
+  a.send({ type: 'action', action: { type: 'GC_LIVE', gcId: 'toString' } });
+  a.send({ type: 'action', action: { type: 'SET_PREVIEW', id: 'cam6' } });
+  const msg = await a.next();
+  assert.equal(msg.state.preview, 'cam6');
+  assert.deepEqual(msg.state.scoreboard.teams, []);
+  assert.deepEqual(msg.state.vtr.files, []);
+  assert.deepEqual(msg.state.gc, {});
+  a.close();
 });

@@ -22,6 +22,8 @@ export function createState(config) {
   };
 }
 
+const GC_TEMPLATES = new Set(['gc-name', 'scoreboard', 'standings']);
+const isPlainObject = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
 const hasSource = (s, id) => s.sources.some((x) => x.id === id);
 
 export function reduce(state, action) {
@@ -52,11 +54,12 @@ export function reduce(state, action) {
       };
 
     case 'GC_ARM':
-      return { ...state, gc: { ...state.gc, [action.gcId]: { template: action.template, data: action.data ?? {}, state: 'preview' } } };
+      if (typeof action.gcId !== 'string' || !action.gcId || action.gcId in Object.prototype || !GC_TEMPLATES.has(action.template)) return state;
+      return { ...state, gc: { ...state.gc, [action.gcId]: { template: action.template, data: isPlainObject(action.data) ? action.data : {}, state: 'preview' } } };
     case 'GC_LIVE':
     case 'GC_OFF': {
+      if (!Object.hasOwn(state.gc, action.gcId)) return state;
       const g = state.gc[action.gcId];
-      if (!g) return state;
       return { ...state, gc: { ...state.gc, [action.gcId]: { ...g, state: action.type === 'GC_LIVE' ? 'live' : 'off' } } };
     }
 
@@ -82,7 +85,8 @@ export function reduce(state, action) {
     }
 
     case 'SCOREBOARD_UPDATE': {
-      const teams = action.teams ?? [];
+      if (!Array.isArray(action.teams)) return state;
+      const teams = action.teams;
       if (!state.scoreboard.stale && JSON.stringify(teams) === JSON.stringify(state.scoreboard.teams)) return state;
       return { ...state, scoreboard: { teams, updatedAt: Date.now(), stale: false } };
     }

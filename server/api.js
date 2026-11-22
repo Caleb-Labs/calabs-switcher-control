@@ -5,8 +5,9 @@ import { viewLink } from './links.js';
 export function sourcesRoute(config, profile = { tileBitrate: 2000, programBitrate: 3000 }) {
   return async (req, res, url) => {
     if (url.pathname !== '/api/sources') return false;
-    const bitrate = url.searchParams.get('for') === 'control' ? profile.tileBitrate : profile.programBitrate;
-    const list = config.teams.map((t, i) => ({ id: `cam${i + 1}`, kind: t.source.kind, url: viewLink(t, { bitrate }) }));
+    const control = url.searchParams.get('for') === 'control';
+    const opts = { bitrate: control ? profile.tileBitrate : profile.programBitrate, noAudio: control };
+    const list = config.teams.map((t, i) => ({ id: `cam${i + 1}`, kind: t.source.kind, url: viewLink(t, opts) }));
     list.push({ id: 'vtr', kind: 'vtr', url: null });
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify(list));

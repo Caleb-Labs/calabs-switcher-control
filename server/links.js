@@ -8,7 +8,7 @@ export function pushLink(team) {
   return u.toString();
 }
 
-export function viewLink(team, { bitrate = 3000 } = {}) {
+export function viewLink(team, { bitrate = 3000, noAudio = false } = {}) {
   if (team.source.kind === 'twitch') {
     const u = new URL('https://player.twitch.tv/');
     u.searchParams.set('channel', team.source.channel);
@@ -20,5 +20,6 @@ export function viewLink(team, { bitrate = 3000 } = {}) {
   u.searchParams.set('view', team.source.room);
   u.searchParams.set('videobitrate', String(bitrate));
   u.searchParams.set('cleanoutput', '');
+  if (noAudio) u.searchParams.set('noaudio', '');
   return u.toString();
 }
