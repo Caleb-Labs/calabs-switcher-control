@@ -5,6 +5,8 @@ import { assignAreas, gridTemplate, clampSizes, bigColsFor, badgeText } from './
 import { renderSplitView } from './splitview.js';
 import { initSplitPanel } from './splitpanel.js';
 import { uploadFile } from './upload.js';
+import { initMixer } from './mixer.js';
+import { initGcMove } from './gcmove.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
@@ -52,6 +54,8 @@ document.getElementById('sz-reset').onclick = () => { sizes = clampSizes(null); 
 window.addEventListener('resize', () => { if (preGfx) { applyScale(preGfx); applyScale(pgmGfx); } });
 
 const splitPanel = initSplitPanel({ send });
+const mixer = initMixer({ send });
+const gcMove = initGcMove({ send });
 
 function build(state) {
   applySizes();
@@ -125,6 +129,8 @@ function render() {
   const splitEl = tiles.get('split')?.querySelector('.split-view');
   if (splitEl) renderSplitView(splitEl, lastState);
   splitPanel.render(lastState);
+  mixer.render(lastState);
+  gcMove.render(lastState);
   syncGraphics(preGfx, lastState, 'preview'); applyScale(preGfx);
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);
   document.getElementById('btn-emergency').classList.toggle('on', lastState.emergency);
@@ -138,14 +144,23 @@ function render() {
   warn.textContent = 'marcador sin actualizar';
 }
 
-// --- Panel de GC
+// --- Panel de GC: el texto es libre; elegir equipo/jugador solo rellena los campos
 const teamSel = document.getElementById('gc-team');
 const playerSel = document.getElementById('gc-player');
+const titleIn = document.getElementById('gc-title');
+const subIn = document.getElementById('gc-sub');
+function fillText() {
+  const t = teams[teamSel.selectedIndex];
+  titleIn.value = t?.name ?? '';
+  subIn.value = playerSel.value ?? '';
+}
 function fillPlayers() {
   const t = teams[teamSel.selectedIndex];
   playerSel.replaceChildren(...(t?.players ?? []).map((p) => new Option(p, p)));
+  fillText();
 }
-teamSel.onchange = fillPlayers;
+teamSel.onchange = () => { fillPlayers(); teamSel.blur(); };
+playerSel.onchange = () => { subIn.value = playerSel.value; playerSel.blur(); };
 fetch('/api/teams').then((r) => r.json()).then((list) => {
   teams = list;
   teamSel.replaceChildren(...list.map((t) => new Option(t.name, t.id)));
@@ -157,8 +172,7 @@ document.querySelectorAll('[data-gc]').forEach((b) => {
     if (b.dataset.act === 'arm') {
       if (gcId === 'name') {
         const t = teams[teamSel.selectedIndex];
-        if (!t) return;
-        send({ type: 'GC_ARM', gcId, template: 'gc-name', data: { team: t.name, player: playerSel.value, logo: t.logo } });
+        send({ type: 'GC_ARM', gcId, template: 'gc-name', data: { team: titleIn.value, player: subIn.value, logo: t && titleIn.value === t.name ? t.logo : null } });
       } else send({ type: 'GC_ARM', gcId, template: 'scoreboard', data: {} });
     } else send({ type: b.dataset.act === 'live' ? 'GC_LIVE' : 'GC_OFF', gcId });
   };

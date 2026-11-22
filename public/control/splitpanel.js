@@ -13,12 +13,16 @@ export function initSplitPanel({ send }) {
   let state = null;
   let drag = null;
   let lastSend = 0;
+  let lastCount = null;
 
   const blurOnChange = (el) => { el.addEventListener('change', () => el.blur()); }; // para que las teclas 1-9 sigan funcionando
   blurOnChange($('sp-fights'));
+  blurOnChange($('sp-bgcount'));
+  $('sp-bgcount').addEventListener('change', () => state && renderCards());
 
   $('sp-reset').onclick = () => send({ type: 'SPLIT_RESET_LAYOUT' });
   $('sp-preview').onclick = () => send({ type: 'SET_PREVIEW', id: 'split' });
+  for (const to of ['preview', 'live', 'off']) $(`sp-gc-${to}`).onclick = () => send({ type: 'SPLIT_GC', to });
   const save = () => { const name = $('sp-name').value.trim(); if (name) { send({ type: 'SPLIT_SAVE_FIGHT', name }); $('sp-name').value = ''; } };
   $('sp-save').onclick = save;
   $('sp-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.stopPropagation(); save(); } });
@@ -54,17 +58,33 @@ export function initSplitPanel({ send }) {
     if (box.dataset.key !== key) {
       box.dataset.key = key;
       box.replaceChildren(...slots.map((_, i) => {
-        const row = document.createElement('label');
-        row.append(`${i + 1} · ${names[i]}`);
+        const row = document.createElement('div');
+        row.className = 'sp-slotrow';
+        const lab = document.createElement('label');
+        lab.append(`${i + 1} · ${names[i]}`);
         const sel = document.createElement('select');
-        sel.dataset.index = i;
         sel.replaceChildren(...cams.map((c) => new Option(c.label, c.id)));
         sel.onchange = () => { send({ type: 'SPLIT_SET_CAM', index: i, cam: sel.value }); sel.blur(); };
-        row.append(sel);
+        lab.append(sel);
+        const title = document.createElement('input'); title.type = 'text'; title.maxLength = 60; title.placeholder = 'GC título';
+        const sub = document.createElement('input'); sub.type = 'text'; sub.maxLength = 60; sub.placeholder = 'GC subtítulo';
+        let timer = null;
+        const push = () => { clearTimeout(timer); timer = setTimeout(() => send({ type: 'SPLIT_SET_TEXT', index: i, title: title.value, subtitle: sub.value }), 250); };
+        title.oninput = push; sub.oninput = push;
+        row.append(lab, title, sub);
         return row;
       }));
     }
-    box.querySelectorAll('select').forEach((sel, i) => { if (document.activeElement !== sel && slots[i]) sel.value = slots[i].cam; });
+    const n = state.split.count;
+    [...box.children].forEach((row, i) => {
+      const [lab, title, sub] = row.children;
+      const sel = lab.querySelector('select');
+      if (document.activeElement !== sel && slots[i]) sel.value = slots[i].cam;
+      const t = state.split.texts[n][i];
+      if (document.activeElement !== title) title.value = t.title;
+      if (document.activeElement !== sub) sub.value = t.subtitle;
+    });
+    for (const to of ['preview', 'live', 'off']) $(`sp-gc-${to}`).classList.toggle('on', state.splitGc === to);
   }
 
   function applyBox(el, r) { Object.assign(el.style, slotStyle(r)); }
@@ -81,7 +101,35 @@ export function initSplitPanel({ send }) {
       applyBox(el, slot);
       const name = document.createElement('span'); name.textContent = `${i + 1} · ${labels[slot.cam] ?? slot.cam}`;
       const handle = document.createElement('div'); handle.className = 'sp-handle'; handle.title = 'Arrastra para cambiar el tamaño';
-      el.append(name, handle);
+      const gc = document.createElement('div'); gc.className = 'sp-gc';
+      const off = state.split.gcOffs[state.split.count][i];
+      gc.style.left = `${off.x * 100}%`; gc.style.top = `${off.y * 100}%`;
+      gc.textContent = state.split.texts[state.split.count][i].title || 'GC';
+      gc.title = 'Arrastra para mover el GC dentro de este recuadro';
+      gc.onpointerdown = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        gc.setPointerCapture(e.pointerId);
+        const box = el.getBoundingClientRect();
+        const g = gc.getBoundingClientRect();
+        drag = { index: i, el: gc, kind: 'gc', ox: e.clientX - g.left, oy: e.clientY - g.top, box, cur: null };
+      };
+      gc.onpointermove = (e) => {
+        if (!drag || drag.el !== gc) return;
+        const x = Math.min(0.95, Math.max(0, (e.clientX - drag.ox - drag.box.left) / drag.box.width));
+        const y = Math.min(0.95, Math.max(0, (e.clientY - drag.oy - drag.box.top) / drag.box.height));
+        gc.style.left = `${x * 100}%`; gc.style.top = `${y * 100}%`;
+        drag.cur = { x, y };
+        const now = Date.now();
+        if (now - lastSend > 70) { lastSend = now; send({ type: 'SPLIT_SET_GCPOS', index: i, ...drag.cur }); }
+      };
+      const gcEnd = () => {
+        if (!drag || drag.el !== gc) return;
+        if (drag.cur) send({ type: 'SPLIT_SET_GCPOS', index: i, ...drag.cur });
+        drag = null;
+        renderCanvas();
+      };
+      gc.onpointerup = gcEnd; gc.onpointercancel = gcEnd;
+      el.append(name, gc, handle);
       el.onpointerdown = (e) => {
         e.preventDefault();
         el.setPointerCapture(e.pointerId);
@@ -114,11 +162,13 @@ export function initSplitPanel({ send }) {
   function renderCards() {
     const sp = state.split;
     const media = state.vtr.files.filter((f) => MEDIA.test(f));
-    const key = JSON.stringify([sp.count, sp.layouts, sp.bgs, media]);
+    if (lastCount !== sp.count) { lastCount = sp.count; $('sp-bgcount').value = String(sp.count); } // sigue a la cantidad en edición
+    const shown = Number($('sp-bgcount').value);
+    const key = JSON.stringify([shown, sp.count, sp.layouts[shown], sp.bgs[shown], media]);
     const box = $('sp-cards');
     if (box.dataset.key === key) return;
     box.dataset.key = key;
-    box.replaceChildren(...Object.keys(sp.layouts).map((k) => {
+    box.replaceChildren(...[String(shown)].map((k) => {
       const n = Number(k);
       const slots = sp.layouts[n];
       const names = slotNames(n);

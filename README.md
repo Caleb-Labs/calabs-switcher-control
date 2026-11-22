@@ -31,7 +31,7 @@ Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920,
 
 - El panel es fluido: se adapta al tamaño de la ventana del navegador. El slider de arriba ajusta qué tan grandes son Preview/Program (se recuerda en el navegador; `↺` vuelve al valor por defecto).
 - Click en un tile = a Preview. `⚠` marca una cámara "sin señal" a mano; `🔊` = audio master.
-- **GC**: elige equipo/jugador → "a preview" (se ve solo en el tile PREVIEW) → "al aire" → "bajar".
+- **GC**: el texto es **libre** (Título y Subtítulo); elegir equipo/jugador solo los rellena. "a preview" (se ve solo en el tile PREVIEW) → "al aire" → "bajar". En **"Mover GC"** arrastras el GC de nombre y el marcador al lugar que quieras (se guarda; si están al aire se mueven en vivo).
 - **EMERGENCIA** pone el logo de emergencia (`"emergencyLogo": "/vtr/emergencia.png"` en la config).
 - **VTR**: usa el botón **"Subir archivos"** del panel (videos `.mp4 .webm .mov` o imágenes `.png .jpg .svg`; también puedes copiarlos a la carpeta `vtr/`). "Tabla de posiciones" sale por el VTR. Sin archivo elegido muestra un cartel "VTR · sin archivo seleccionado".
 - Las cámaras se llaman **Cámara 1 … Cámara 9** (la 9 es la aérea). El nombre del equipo se usa solo en los GC.
@@ -46,8 +46,15 @@ Es una fuente más (`s`, comando `split`): se manda a Preview y se toma con CUT/
 2. **Arrastra** los recuadros del lienzo para moverlos y usa la esquina para cambiar el tamaño ("mantener 16:9" evita franjas negras). `/program` se actualiza en vivo si está al aire.
 3. **Fondos por cantidad:** abajo del panel hay una ficha por cada cantidad (1 a 9 cámaras) con su vista previa. En cada ficha: **"Molde PNG"** descarga una guía 1920×1080 con los recuadros y sus medidas en píxeles (también se ven en "Medidas") para mandar a diseñar el fondo; **"Cargar fondo"** sube la imagen y la asigna a esa cantidad; y el desplegable cambia el fondo por otro ya subido. Los recuadros de cámara quedan por encima del fondo. Si cambias las posiciones, descarga el molde otra vez. También se detecta solo un archivo `split-2.png`, `split-3.png`… en `vtr/`.
 4. **Peleas:** escribe un nombre ("Pelea 1") y "Guardar" para recordar cámaras + posiciones. Después "Cargar" y listo; así no necesitas un macro por cada combinación.
+**GC por recuadro:** cada recuadro tiene su propio GC (título y subtítulo; al elegir una cámara se rellena con el nombre de su equipo, y lo que escribas a mano se respeta). Arrastra la etiqueta roja dentro del recuadro para moverlo. Con los botones "GC de la dividida" lo pones a preview, al aire o lo bajas; solo se ve si la dividida está en Preview/Program. Las peleas guardadas recuerdan también estos textos.
 Cada cantidad recuerda su propio arreglo. Todo se guarda en `data/split.json` y sobrevive a reinicios.
 En el panel la dividida se ve como un esquema (fondo + recuadros con nombres); el video real solo se compone en `/program`.
+
+## Audio
+- **Mezclador de audio** (desplegable en el panel): una casilla y un fader por cada cámara, nivel general de cámaras y fader del VTR. Pueden sonar varias cámaras a la vez, cada una con su nivel. El 🔊 de cada tile sigue siendo el "audio principal" (para el macropad).
+- Cada cámara con audio encendido se conecta (oculta) en `/program`: es una conexión más de ese jugador.
+- El audio **sale solo por `/program`**, o sea por la fuente del navegador en OBS. El panel va en silencio a propósito. Para **oírlo tú**, en OBS: *Propiedades avanzadas de audio* → *Monitoreo de audio* → «Solo monitor» o «Monitor y salida» en esa fuente; y en la fuente del navegador marca «Controlar audio mediante OBS».
+- **VTR:** suena solo si está **al aire (Program)** y en **▶**; el panel te dice el motivo si no se oye ("En pausa", "NO está al aire", "Silenciado"…).
 
 ## Macropad Redragon SS-552 (10 teclas + 4 diales)
 Hay dos formas; usa la que permita tu Redragon Station (no pude comprobar cuál admite):
@@ -66,7 +73,7 @@ Propuesta de asignación:
 Teclas: `cut`, `fade`, `gc-name-preview`, `gc-name-live`, `gc-name-off`, `gc-score-live`, `gc-score-off`, `vtr-toggle`, `gc-player-next`, `emergency-toggle`.
 Otros comandos: `cam1`…`cam9`, `vtr`, `split`, `audio-clear`, `vtr-vol-up`, `vtr-vol-down`, `vtr-mute`, `vtr-play`, `vtr-pause`, `gc-score-preview`, `emergency-on`, `emergency-off`.
 `gc-name-preview` arma el GC con el equipo que esté en Preview; `gc-player-next` alterna entre sus 2 jugadores.
-Cada paso de volumen es 5 %. El volumen y el mute se ven arriba en el panel.
+Cada paso de volumen es 5 %. Comandos extra: `split-gc-preview`, `split-gc-live`, `split-gc-off`. El volumen y el mute se ven arriba en el panel.
 
 Prueba sin macropad: `curl -X POST http://127.0.0.1:3000/api/do/cut`. Solo acepta POST y rechaza peticiones de otras páginas web.
 

@@ -4,10 +4,10 @@
 @keyframes g-in { from { opacity: 0; } to { opacity: 1; } }
 .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.gc-name { left: 80px; top: auto; bottom: 90px; width: 620px; height: 120px; background: #1c1f25ee; border-left: 8px solid var(--accent, #6f8fb0); padding: 14px 24px; }
-.gc-name .team { font-size: 48px; font-weight: 700; }
-.gc-name .player { font-size: 34px; color: #aeb4bf; }
-.gc-name .logo { position: absolute; right: 16px; top: 16px; height: 88px; }
+.gc-name { --gk: 1; left: 80px; top: auto; bottom: 90px; width: calc(620px * var(--gk)); height: auto; min-height: calc(120px * var(--gk)); box-sizing: border-box; background: #1c1f25ee; border-left: calc(8px * var(--gk)) solid var(--accent, #6f8fb0); padding: calc(14px * var(--gk)) calc(24px * var(--gk)); }
+.gc-name .team { font-size: calc(48px * var(--gk)); font-weight: 700; }
+.gc-name .player { font-size: calc(34px * var(--gk)); color: #aeb4bf; }
+.gc-name .logo { position: absolute; right: calc(16px * var(--gk)); top: calc(16px * var(--gk)); height: calc(88px * var(--gk)); }
 
 .scoreboard, .standings { background: #1c1f25ee; padding: 18px 24px; }
 .scoreboard { left: 60px; top: 60px; width: 520px; height: auto; font-size: 30px; }

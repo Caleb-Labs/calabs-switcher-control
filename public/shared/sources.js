@@ -48,12 +48,15 @@ export function idsFor(state, id) {
 
 const uniq = (arr) => [...new Set(arr)];
 
+// Cámaras que suenan: el audio master y las encendidas en el mezclador.
+export const audibleCams = (state) => uniq([state.audioMaster, ...Object.entries(state.mix ?? {}).filter(([, m]) => m.on).map(([id]) => id)].filter(Boolean));
+
 // Se montan: la al aire, la saliente (en fade), el preview y el audio master (estas dos ocultas): una conexión extra por jugador.
 export function neededIds(state, fading) {
   const ids = [...idsFor(state, state.program)];
   if (fading && state.lastTake) ids.push(...idsFor(state, state.lastTake.from));
   if (state.preview) ids.push(...idsFor(state, state.preview)); // precarga (oculta) para que el CUT/FADE no muestre negro
-  if (state.audioMaster) ids.push(state.audioMaster);
+  ids.push(...audibleCams(state));
   return uniq(ids);
 }
 
@@ -74,7 +77,8 @@ export function volumeFor(state, id) {
   const ch = state.audio?.[id === 'vtr' ? 'vtr' : 'cam'] ?? { level: 1, muted: false };
   const v = ch.muted ? 0 : ch.level;
   if (id === 'vtr') return state.program === 'vtr' && state.vtr?.playing ? v : 0;
-  return state.audioMaster === id ? v : 0;
+  if (!audibleCams(state).includes(id)) return 0;
+  return Math.round(v * (state.mix?.[id]?.level ?? 1) * 100) / 100;
 }
 
 // Aplica volúmenes sin recargar nada. VDO.Ninja: postMessage({volume}); Twitch: sin control (queda silenciado).

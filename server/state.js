@@ -39,6 +39,14 @@ function cleanSlots(raw, count, camIds) {
   });
 }
 
+const cleanGcPos = (p) => (isNum(p?.x) && isNum(p?.y) ? { x: clampPos(p.x), y: clampPos(p.y) } : null);
+const DEFAULT_OFF = { x: 0.03, y: 0.78 }; // dónde nace el GC dentro de su recuadro (fracciones del recuadro)
+const str = (v) => (typeof v === 'string' ? v.slice(0, 60) : '');
+const clampPos = (v) => Math.min(0.95, Math.max(0, v));
+const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
+const cleanTexts = (raw, n) => Array.from({ length: n }, (_, i) => ({ title: str(raw?.[i]?.title), subtitle: str(raw?.[i]?.subtitle) }));
+const cleanOffs = (raw, n) => Array.from({ length: n }, (_, i) => (isNum(raw?.[i]?.x) && isNum(raw?.[i]?.y) ? { x: clampPos(raw[i].x), y: clampPos(raw[i].y) } : { ...DEFAULT_OFF }));
+
 // Repara/valida lo que se leyó del archivo guardado (puede venir corrupto).
 export function normalizeSplit(raw, camIds) {
   const r = isPlainObj(raw) ? raw : {};
@@ -46,20 +54,43 @@ export function normalizeSplit(raw, camIds) {
   for (const n of COUNTS) layouts[n] = cleanSlots(isPlainObj(r.layouts) ? r.layouts[n] : null, n, camIds);
   const bgs = {};
   if (isPlainObj(r.bgs)) for (const n of COUNTS) if (typeof r.bgs[n] === 'string' && r.bgs[n]) bgs[n] = r.bgs[n];
+  const texts = {};
+  const gcOffs = {};
+  for (const n of COUNTS) {
+    texts[n] = cleanTexts(isPlainObj(r.texts) ? r.texts[n] : null, n);
+    gcOffs[n] = cleanOffs(isPlainObj(r.gcOffs) ? r.gcOffs[n] : null, n);
+  }
   const fights = [];
   if (Array.isArray(r.fights)) {
     for (const f of r.fights) {
       if (!isPlainObj(f) || typeof f.id !== 'string' || !f.id || typeof f.name !== 'string' || !COUNTS.includes(f.count)) continue;
-      fights.push({ id: f.id, name: f.name, count: f.count, slots: cleanSlots(f.slots, f.count, camIds) });
+      fights.push({ id: f.id, name: f.name, count: f.count, slots: cleanSlots(f.slots, f.count, camIds), texts: cleanTexts(f.texts, f.count), offs: cleanOffs(f.offs, f.count) });
       if (fights.length >= MAX_FIGHTS) break;
     }
   }
-  return { count: COUNTS.includes(r.count) ? r.count : 2, layouts, bgs, fights };
+  return { count: COUNTS.includes(r.count) ? r.count : 2, layouts, bgs, texts, gcOffs, fights };
 }
 
 const slug = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pelea';
 const camIdsOf = (state) => state.sources.filter((x) => x.kind !== 'vtr' && x.kind !== 'split').map((x) => x.id);
 const clone = (x) => JSON.parse(JSON.stringify(x));
+const teamOf = (sources, id) => sources.find((x) => x.id === id)?.team ?? '';
+
+// Textos iniciales de los GC de la dividida: el nombre del equipo de la cámara de cada recuadro.
+function withTeamTexts(split, sources) {
+  const texts = {};
+  for (const n of COUNTS) {
+    texts[n] = split.texts[n].map((t, i) => (t.title || t.subtitle ? t : { ...t, title: teamOf(sources, split.layouts[n][i].cam) }));
+  }
+  return { ...split, texts };
+}
+
+// Si el texto del recuadro era el automático (nombre del equipo de la cámara anterior, o vacío), sigue a la cámara nueva; uno escrito a mano se respeta.
+function retext(sources, texts, i, oldCam, newCam) {
+  const t = texts[i];
+  if (t.subtitle || (t.title !== '' && t.title !== teamOf(sources, oldCam))) return texts;
+  return texts.map((x, k) => (k === i ? { ...x, title: teamOf(sources, newCam) } : x));
+}
 const withSlots = (state, fn) => {
   const n = state.split.count;
   const slots = fn(state.split.layouts[n]);
@@ -84,7 +115,10 @@ export function createState(config) {
   sources.push({ id: 'split', label: 'Pantalla dividida', kind: 'split', status: 'live' });
   return {
     sources,
-    split: normalizeSplit(config.splitSaved, camIds),
+    split: withTeamTexts(normalizeSplit(config.splitSaved, camIds), sources),
+    splitGc: 'off',
+    gcPos: { name: cleanGcPos(config.gcPosSaved?.name), score: cleanGcPos(config.gcPosSaved?.score) },
+    mix: Object.fromEntries(camIds.map((id) => [id, { level: 1, on: false }])),
     program: 'cam1',
     preview: 'cam2',
     lastTake: null,
@@ -235,13 +269,46 @@ export function reduce(state, action) {
       const valid = camIdsOf(state);
       if (!Array.isArray(cams) || cams.length < 1 || cams.length > 9 || new Set(cams).size !== cams.length || !cams.every((c) => valid.includes(c))) return state;
       const n = cams.length;
-      const slots = state.split.layouts[n].map((s, i) => ({ ...s, cam: cams[i] }));
-      return { ...state, split: { ...state.split, count: n, layouts: { ...state.split.layouts, [n]: slots } } };
+      const old = state.split.layouts[n];
+      const slots = old.map((s, i) => ({ ...s, cam: cams[i] }));
+      let texts = state.split.texts[n];
+      for (let i = 0; i < n; i++) texts = retext(state.sources, texts, i, old[i].cam, cams[i]);
+      return { ...state, split: { ...state.split, count: n, layouts: { ...state.split.layouts, [n]: slots }, texts: { ...state.split.texts, [n]: texts } } };
     }
+    case 'SPLIT_SET_TEXT': {
+      const n = state.split.count;
+      if (!Number.isInteger(action.index) || action.index < 0 || action.index >= n) return state;
+      const texts = state.split.texts[n].map((t, i) => (i === action.index ? { title: str(action.title), subtitle: str(action.subtitle) } : t));
+      return { ...state, split: { ...state.split, texts: { ...state.split.texts, [n]: texts } } };
+    }
+    case 'SPLIT_SET_GCPOS': {
+      const n = state.split.count;
+      if (!Number.isInteger(action.index) || action.index < 0 || action.index >= n || !isNum(action.x) || !isNum(action.y)) return state;
+      const offs = state.split.gcOffs[n].map((o, i) => (i === action.index ? { x: clampPos(action.x), y: clampPos(action.y) } : o));
+      return { ...state, split: { ...state.split, gcOffs: { ...state.split.gcOffs, [n]: offs } } };
+    }
+    case 'SPLIT_GC':
+      return ['off', 'preview', 'live'].includes(action.to) ? { ...state, splitGc: action.to } : state;
+    case 'GC_SET_POS':
+      if (!Object.hasOwn(state.gcPos, action.gcId) || !isNum(action.x) || !isNum(action.y)) return state;
+      return { ...state, gcPos: { ...state.gcPos, [action.gcId]: { x: clampPos(action.x), y: clampPos(action.y) } } };
+    case 'GC_RESET_POS':
+      return Object.hasOwn(state.gcPos, action.gcId) ? { ...state, gcPos: { ...state.gcPos, [action.gcId]: null } } : state;
+    case 'MIX_TOGGLE':
+      if (!Object.hasOwn(state.mix, action.id)) return state;
+      return { ...state, mix: { ...state.mix, [action.id]: { ...state.mix[action.id], on: !state.mix[action.id].on } } };
+    case 'MIX_LEVEL':
+      if (!Object.hasOwn(state.mix, action.id) || !isNum(action.level)) return state;
+      return { ...state, mix: { ...state.mix, [action.id]: { ...state.mix[action.id], level: Math.min(1, Math.max(0, Math.round(action.level * 100) / 100)) } } };
+    case 'SET_VOLUME':
+      if ((action.target !== 'cam' && action.target !== 'vtr') || !isNum(action.level)) return state;
+      return { ...state, audio: { ...state.audio, [action.target]: { ...state.audio[action.target], level: Math.min(1, Math.max(0, Math.round(action.level * 100) / 100)) } } };
     case 'SPLIT_SET_CAM': {
       const n = state.split.count;
       if (!Number.isInteger(action.index) || action.index < 0 || action.index >= n || !camIdsOf(state).includes(action.cam)) return state;
-      return withSlots(state, (slots) => slots.map((s, i) => (i === action.index ? { ...s, cam: action.cam } : s)));
+      const oldCam = state.split.layouts[n][action.index].cam;
+      const moved = withSlots(state, (slots) => slots.map((s, i) => (i === action.index ? { ...s, cam: action.cam } : s)));
+      return { ...moved, split: { ...moved.split, texts: { ...moved.split.texts, [n]: retext(state.sources, state.split.texts[n], action.index, oldCam, action.cam) } } };
     }
     case 'SPLIT_SET_RECT': {
       const n = state.split.count;
@@ -264,7 +331,7 @@ export function reduce(state, action) {
       const name = typeof action.name === 'string' ? action.name.trim().slice(0, 40) : '';
       if (!name) return state;
       const n = state.split.count;
-      const fight = { id: slug(name), name, count: n, slots: clone(state.split.layouts[n]) };
+      const fight = { id: slug(name), name, count: n, slots: clone(state.split.layouts[n]), texts: clone(state.split.texts[n]), offs: clone(state.split.gcOffs[n]) };
       const exists = state.split.fights.some((f) => f.id === fight.id);
       if (!exists && state.split.fights.length >= MAX_FIGHTS) return state;
       const fights = exists ? state.split.fights.map((f) => (f.id === fight.id ? fight : f)) : [...state.split.fights, fight];
@@ -273,7 +340,7 @@ export function reduce(state, action) {
     case 'SPLIT_LOAD_FIGHT': {
       const f = state.split.fights.find((x) => x.id === action.id);
       if (!f) return state;
-      return { ...state, split: { ...state.split, count: f.count, layouts: { ...state.split.layouts, [f.count]: clone(f.slots) } } };
+      return { ...state, split: { ...state.split, count: f.count, layouts: { ...state.split.layouts, [f.count]: clone(f.slots) }, texts: { ...state.split.texts, [f.count]: cleanTexts(f.texts, f.count) }, gcOffs: { ...state.split.gcOffs, [f.count]: cleanOffs(f.offs, f.count) } } };
     }
     case 'SPLIT_DELETE_FIGHT': {
       const fights = state.split.fights.filter((f) => f.id !== action.id);

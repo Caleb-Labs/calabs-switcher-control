@@ -59,3 +59,9 @@ export function toggleCam(cams, id) {
 export function slotPixels(slots, W = 1920, H = 1080) {
   return slots.map((s) => ({ x: Math.round(s.x * W), y: Math.round(s.y * H), w: Math.round(s.w * W), h: Math.round(s.h * H) }));
 }
+
+// Dónde va el GC de un recuadro: esquina dentro del recuadro (off = fracciones del recuadro) y escala (k) para que quepa.
+export function slotGcPlacement(slot, off) {
+  const k = Math.round(Math.min(1, Math.max(0.25, (slot.w * 1920 * 0.9) / 620)) * 100) / 100;
+  return { left: Math.round((slot.x + off.x * slot.w) * 1920), top: Math.round((slot.y + off.y * slot.h) * 1080), k };
+}

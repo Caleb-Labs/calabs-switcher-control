@@ -82,3 +82,25 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .card-actions .btn, .card-actions button { padding: 4px 10px; font-size: 12px; }
 .card details { font-size: 12px; color: var(--muted); }
 .card ul { margin: 4px 0 0; padding-left: 16px; }
+
+#gcpanel input[type=text], #sp-slots input[type=text] { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px; font: inherit; width: 150px; }
+#gc-move { flex-basis: 100%; }
+#gc-move summary, #mixer summary, .sp-bgs summary { cursor: pointer; color: var(--muted); }
+.gc-move-body { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-top: 8px; }
+#gc-canvas { position: relative; width: min(480px, 100%); aspect-ratio: 16 / 9; background: #111; border: 1px solid var(--line); border-radius: 6px; touch-action: none; user-select: none; overflow: hidden; }
+.gc-box { position: absolute; border: 2px solid var(--accent); background: #6f8fb040; display: grid; place-items: center; font-size: 12px; cursor: move; }
+.gc-box.custom { border-color: var(--ok); }
+.gc-move-help { max-width: 360px; color: var(--muted); font-size: 12px; display: grid; gap: 8px; }
+#mixer { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#mix-rows { display: grid; gap: 4px; margin-top: 8px; max-width: 720px; }
+.mix-row { display: grid; grid-template-columns: 22px 130px 1fr 44px auto; gap: 8px; align-items: center; }
+.mix-row.muted .mix-name { text-decoration: line-through; opacity: .6; }
+.mix-row.master .mix-name { color: var(--ok); font-weight: 700; }
+.mix-pct { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.vtr-status { font-size: 12px; color: var(--muted); }
+.vtr-status.live { color: var(--ok); }
+#mixer .hint { color: var(--muted); font-size: 12px; max-width: 720px; }
+.sp-bgs { border-top: 1px solid var(--line); padding-top: 8px; }
+.sp-bgs-body { display: grid; gap: 8px; margin-top: 8px; }
+.sp-slotrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: end; }
+.sp-gc { position: absolute; z-index: 2; background: #b5656b; color: #111; font-size: 10px; padding: 1px 5px; border-radius: 3px; cursor: grab; white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }

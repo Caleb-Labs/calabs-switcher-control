@@ -21,6 +21,8 @@
 <section id="gcpanel">
   <label>Equipo <select id="gc-team"></select></label>
   <label>Jugador <select id="gc-player"></select></label>
+  <label>Título <input id="gc-title" type="text" maxlength="60" placeholder="texto libre"></label>
+  <label>Subtítulo <input id="gc-sub" type="text" maxlength="60" placeholder="texto libre"></label>
   <span class="grp">GC nombre:
     <button data-gc="name" data-act="arm">a preview</button>
     <button data-gc="name" data-act="live">al aire</button>
@@ -32,6 +34,16 @@
     <button data-gc="score" data-act="off">bajar</button>
   </span>
   <button id="btn-emergency" class="danger">EMERGENCIA</button>
+  <details id="gc-move">
+    <summary>Mover GC</summary>
+    <div class="gc-move-body">
+      <div id="gc-canvas"></div>
+      <div class="gc-move-help">
+        Arrastra cada GC al lugar que quieras (si está al aire, se mueve en vivo). Los GC de la pantalla dividida se mueven dentro de su recuadro, en el editor de abajo.
+        <div><button id="gc-reset-name">Restablecer GC nombre</button> <button id="gc-reset-score">Restablecer marcador</button></div>
+      </div>
+    </div>
+  </details>
 </section>
 <section id="vtrpanel">
   <strong>VTR</strong>
@@ -39,8 +51,14 @@
   <button id="vtr-play">▶</button><button id="vtr-pause">⏸</button><button id="vtr-next">⏭</button>
   <label class="btn" title="Imágenes (png, jpg, svg) o videos (mp4, webm, mov)">Subir archivos<input id="vtr-upload" type="file" multiple accept=".png,.jpg,.jpeg,.svg,.mp4,.webm,.mov" hidden></label>
   <span id="vtr-upload-status"></span>
+  <span id="vtr-audio" class="vtr-status"></span>
   <span id="vtr-empty" hidden>aún no hay archivos: usa "Subir archivos"</span>
 </section>
+<details id="mixer">
+  <summary>Mezclador de audio</summary>
+  <div id="mix-rows"></div>
+  <p class="hint">El audio sale por <code>/program</code> (la fuente del navegador en OBS). Activa la casilla de las cámaras que quieres escuchar y regula cada una. Para oírlo tú: en OBS, Propiedades avanzadas de audio → Monitoreo de audio → «Solo monitor» o «Monitor y salida» en esa fuente.</p>
+</details>
 <main id="mv"></main>
 <section id="splitpanel">
   <div class="sp-pick">
@@ -53,6 +71,11 @@
     <label class="chk"><input type="checkbox" id="sp-lock" checked> mantener 16:9</label>
     <button id="sp-reset">Restablecer posiciones</button>
     <button id="sp-preview">Dividida a Preview</button>
+    <span class="grp">GC de la dividida:
+      <button id="sp-gc-preview">a preview</button>
+      <button id="sp-gc-live">al aire</button>
+      <button id="sp-gc-off">bajar</button>
+    </span>
   </div>
   <div class="sp-row">
     <strong>Peleas</strong>
@@ -66,10 +89,15 @@
     <div id="sp-slots"></div>
     <div id="sp-canvas"></div>
   </div>
-  <div class="sp-bgs">
-    <strong>Fondos por cantidad de cámaras</strong>
-    <span id="sp-bgs-hint">Cada cantidad tiene su fondo. "Molde PNG" descarga una guía 1920×1080 con los recuadros y sus medidas en píxeles para mandar a diseñar el fondo; luego lo cargas con "Cargar fondo". Los recuadros se ven por encima del fondo.</span>
-    <div id="sp-cards" class="cards"></div>
-  </div>
+  <details class="sp-bgs" id="sp-bgs-box">
+    <summary>Fondos por cantidad de cámaras</summary>
+    <div class="sp-bgs-body">
+      <label>Cantidad de cámaras
+        <select id="sp-bgcount"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select>
+      </label>
+      <span id="sp-bgs-hint">Cada cantidad tiene su fondo. «Molde PNG» descarga una guía 1920×1080 con los recuadros y sus medidas en píxeles para mandar a diseñar el fondo; luego lo cargas con «Cargar fondo». Los recuadros de cámara quedan por encima del fondo.</span>
+      <div id="sp-cards" class="cards"></div>
+    </div>
+  </details>
 </section>
 <script type="module" src="/control/control.js"></script>

@@ -26,3 +26,15 @@ export function syncVtr(el, vtr) {
   else if (plan.kind === 'none') el.setAttribute('poster', NONE_POSTER);
   else el.removeAttribute('poster');
 }
+
+// Por qué suena (o no) el VTR: el audio sale por /program (OBS) solo si está al aire, en reproducción y sin silencio.
+export function vtrAudioStatus(state) {
+  const { current, playing } = state.vtr;
+  if (!current) return { text: 'Sin archivo elegido', live: false };
+  if (current === '@tabla' || IMAGE.has(ext(current))) return { text: 'Imagen: sin audio', live: false };
+  if (!playing) return { text: 'En pausa: pulsa ▶ para que suene', live: false };
+  const ch = state.audio?.vtr;
+  if (ch && (ch.muted || ch.level === 0)) return { text: 'Silenciado (mute o nivel 0)', live: false };
+  if (state.program !== 'vtr') return { text: 'Reproduciendo, pero NO está al aire: no se oye (pásalo a Program)', live: false };
+  return { text: 'Sonando en Program', live: true };
+}
