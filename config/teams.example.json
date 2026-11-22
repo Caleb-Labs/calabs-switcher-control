@@ -74,8 +74,8 @@
         "Jugador 7B"
       ],
       "source": {
-        "kind": "twitch",
-        "channel": "canal_del_equipo_7"
+        "kind": "vdo",
+        "room": "sot-torneo-eq7"
       }
     },
     {

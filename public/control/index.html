@@ -11,6 +11,7 @@
   <strong>Multicam</strong>
   <button id="btn-cut" class="take">CUT <kbd>Enter</kbd></button>
   <button id="btn-fade" class="take">FADE <kbd>Espacio</kbd></button>
+  <label class="fade-t" title="Duración del fade (el dial del macropad: fade-longer / fade-shorter)">Duración <input id="fade-ms" type="range" min="100" max="5000" step="100"> <span id="fade-val"></span></label>
   <span class="sizes">
     <label>Tamaño de Preview/Program <input id="sz-big" type="range" min="0.2" max="0.5" step="0.01"></label>
     <button id="sz-reset" title="Tamaños por defecto">↺</button>
@@ -57,6 +58,7 @@
 <details id="mixer">
   <summary>Mezclador de audio</summary>
   <div id="mix-rows"></div>
+  <p><button id="mix-tone">Probar audio (bip en /program)</button> <span class="hint">Si en OBS se mueve el medidor de la fuente del navegador al oír el bip, el audio de /program llega bien a OBS.</span></p>
   <p class="hint">El audio sale por <code>/program</code> (la fuente del navegador en OBS). Activa la casilla de las cámaras que quieres escuchar y regula cada una. Para oírlo tú: en OBS, Propiedades avanzadas de audio → Monitoreo de audio → «Solo monitor» o «Monitor y salida» en esa fuente.</p>
 </details>
 <main id="mv"></main>

@@ -19,7 +19,7 @@ test('/api/sources lista 8 cámaras con su url (vdo o twitch) y el vtr sin url',
   assert.equal(list.length, 11); // 8 equipos + aérea + vtr + split
   assert.equal(list[0].id, 'cam1');
   assert.match(list[0].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-eq1/);
-  assert.match(list[6].url, /^https:\/\/player\.twitch\.tv\//);
+  assert.match(list[6].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-eq7/); // todas las cámaras del ejemplo son VDO.Ninja
   assert.equal(list[8].id, 'cam9');
   assert.match(list[8].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-aerea/);
   assert.deepEqual(list[9], { id: 'vtr', kind: 'vtr', url: null });

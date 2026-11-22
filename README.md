@@ -30,6 +30,8 @@ Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920,
 | `Enter` / `Espacio` | CUT / FADE (Preview ↔ Program) |
 
 - El panel es fluido: se adapta al tamaño de la ventana del navegador. El slider de arriba ajusta qué tan grandes son Preview/Program (se recuerda en el navegador; `↺` vuelve al valor por defecto).
+- **Fade:** el slider "Duración" (arriba, 0.1 a 5 s) y los comandos `fade-longer` / `fade-shorter` para un dial. El fade se ve en `/program` y también en el panel.
+- Si una cámara ya está en Program y la mandas a Preview, la ventana Preview la muestra igual (abre una segunda conexión a ese jugador solo mientras coincidan).
 - Click en un tile = a Preview. `⚠` marca una cámara "sin señal" a mano; `🔊` = audio master.
 - **GC**: el texto es **libre** (Título y Subtítulo); elegir equipo/jugador solo los rellena. "a preview" (se ve solo en el tile PREVIEW) → "al aire" → "bajar". En **"Mover GC"** arrastras el GC de nombre y el marcador al lugar que quieras (se guarda; si están al aire se mueven en vivo).
 - **EMERGENCIA** pone el logo de emergencia (`"emergencyLogo": "/vtr/emergencia.png"` en la config).
@@ -51,9 +53,12 @@ Cada cantidad recuerda su propio arreglo. Todo se guarda en `data/split.json` y 
 En el panel la dividida se ve como un esquema (fondo + recuadros con nombres); el video real solo se compone en `/program`.
 
 ## Audio
+- **Faders en cada cámara:** cada tile de cámara tiene su fader de volumen y su 🔊 (enciende/apaga). Los diales pueden manejar todos con `mix-next/prev`, `mix-up/down` y `mix-toggle`.
 - **Mezclador de audio** (desplegable en el panel): una casilla y un fader por cada cámara, nivel general de cámaras y fader del VTR. Pueden sonar varias cámaras a la vez, cada una con su nivel. El 🔊 de cada tile sigue siendo el "audio principal" (para el macropad).
 - Cada cámara con audio encendido se conecta (oculta) en `/program`: es una conexión más de ese jugador.
 - El audio **sale solo por `/program`**, o sea por la fuente del navegador en OBS. El panel va en silencio a propósito. Para **oírlo tú**, en OBS: *Propiedades avanzadas de audio* → *Monitoreo de audio* → «Solo monitor» o «Monitor y salida» en esa fuente; y en la fuente del navegador marca «Controlar audio mediante OBS».
+- **Probar audio:** el botón "Probar audio (bip)" del mezclador hace que `/program` emita un bip de 0.7 s. Si en OBS se mueve el medidor de esa fuente, el audio llega bien a OBS (y entonces el problema está en la cámara o el VTR, no en OBS).
+- **Audio de los jugadores:** en VDO.Ninja, compartir *una ventana* normalmente **no incluye audio**. Cada jugador debe elegir compartir audio (pestaña/pantalla con "compartir audio del sistema") o usar su micrófono/mezcla; si no, no hay nada que oír aunque todo esté bien configurado aquí.
 - **VTR:** suena solo si está **al aire (Program)** y en **▶**; el panel te dice el motivo si no se oye ("En pausa", "NO está al aire", "Silenciado"…).
 
 ## Macropad Redragon SS-552 (10 teclas + 4 diales)
@@ -66,9 +71,9 @@ Propuesta de asignación:
 | Control | Girar → | Girar ← | Presionar |
 |---|---|---|---|
 | Dial 1 (cámara a preview) | `preview-next` | `preview-prev` | `cut` |
-| Dial 2 (audio master) | `audio-next` | `audio-prev` | `audio-clear` |
-| Dial 3 (volumen cámara) | `vol-up` | `vol-down` | `mute` |
-| Dial 4 (VTR) | `vtr-next` | `vtr-prev` | `vtr-toggle` |
+| Dial 2 (elegir cámara de audio; se marca con borde punteado) | `mix-next` | `mix-prev` | `mix-toggle` (enciende/apaga su audio) |
+| Dial 3 (volumen de la cámara elegida) | `mix-up` | `mix-down` | `mute` (silencia todas las cámaras) |
+| Dial 4 (duración del fade) | `fade-longer` | `fade-shorter` | `fade` |
 
 Teclas: `cut`, `fade`, `gc-name-preview`, `gc-name-live`, `gc-name-off`, `gc-score-live`, `gc-score-off`, `vtr-toggle`, `gc-player-next`, `emergency-toggle`.
 Otros comandos: `cam1`…`cam9`, `vtr`, `split`, `audio-clear`, `vtr-vol-up`, `vtr-vol-down`, `vtr-mute`, `vtr-play`, `vtr-pause`, `gc-score-preview`, `emergency-on`, `emergency-off`.
@@ -94,5 +99,7 @@ El programa lee la hoja cada ~3 s; si falla, deja el último dato y muestra "mar
 
 ## Desarrollo
 El servidor escucha solo en 127.0.0.1 (esta PC). Si OBS corre en otra PC: `set HOST=0.0.0.0` antes de `npm start`.
+
+Variable `SPLIT_FILE` para guardar los datos de la pantalla dividida y los GC en otro archivo (útil para pruebas; por defecto `data/split.json`).
 
 `npm test` (≈7 s). Diseño: `docs/superpowers/specs/`. Plan: `docs/superpowers/plans/`.

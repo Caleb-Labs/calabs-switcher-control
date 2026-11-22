@@ -19,7 +19,7 @@ test('TAKE cut intercambia preview y program y sube seq', () => {
   const s = reduce(createState(config), { type: 'TAKE', mode: 'cut' });
   assert.equal(s.program, 'cam2');
   assert.equal(s.preview, 'cam1');
-  assert.deepEqual(s.lastTake, { mode: 'cut', from: 'cam1', to: 'cam2', seq: 1 });
+  assert.deepEqual(s.lastTake, { mode: 'cut', from: 'cam1', to: 'cam2', seq: 1, ms: 0 });
 });
 
 test('TAKE con preview == program no cambia nada ni sube seq', () => {

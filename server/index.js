@@ -37,6 +37,7 @@ const CLIENT_ACTIONS = new Set([
   'SPLIT_SET_COUNT', 'SPLIT_SET_CAMS', 'SPLIT_SET_CAM', 'SPLIT_SET_RECT', 'SPLIT_RESET_LAYOUT', 'SPLIT_SET_BG',
   'SPLIT_SAVE_FIGHT', 'SPLIT_LOAD_FIGHT', 'SPLIT_DELETE_FIGHT',
   'SPLIT_SET_TEXT', 'SPLIT_SET_GCPOS', 'SPLIT_GC', 'GC_SET_POS', 'GC_RESET_POS', 'MIX_TOGGLE', 'MIX_LEVEL', 'SET_VOLUME',
+  'FADE_TIME', 'FADE_STEP', 'MIX_SELECT', 'MIX_ADJUST', 'MIX_SEL_TOGGLE', 'TEST_TONE',
 ]);
 
 export async function startServer({ port = 3000, host = '127.0.0.1', config, publicDir, extraRoutes = [], splitFile = null, splitSaveDelayMs = 500 }) {

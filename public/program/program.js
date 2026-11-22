@@ -4,12 +4,12 @@ import { splitBgFile, splitPlacement } from '/shared/split.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { syncVtr } from '/shared/vtr.js';
 
-const FADE_MS = 500;
 const stage = document.getElementById('stage');
 const gfx = document.getElementById('gfx');
 let sources = null;      // [{id, kind, url}] desde /api/sources
 let lastState = null;
 let lastSeq = 0;
+let lastTone = null;
 let initialized = false;
 let fading = false;
 let fadeTimer = null;
@@ -34,15 +34,18 @@ function renderStage(state) {
     // Entran con fade solo los elementos nuevos; los que ya estaban visibles (cámara que pasa de la dividida a sola) no parpadean.
     const outgoing = new Set(idsFor(state, state.lastTake.from));
     const incoming = idsFor(state, state.program).filter((id) => !outgoing.has(id)).map(find).filter(Boolean);
-    for (const el of incoming) { el.style.opacity = '0'; el.style.zIndex = el.classList.contains('split-cam') ? '4' : '3'; }
-    requestAnimationFrame(() => requestAnimationFrame(() => { for (const el of incoming) el.style.opacity = '1'; }));
+    const ms = state.lastTake.ms || 500;
+    for (const el of incoming) {
+      el.style.zIndex = el.classList.contains('split-cam') ? '4' : '3';
+      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms, easing: 'linear' }); // Web Animations: no depende de transiciones CSS ni de rAF
+    }
     fadeTimer = setTimeout(() => {
       fading = false;
       clearFadeStyles(stage);
       mountOnly(stage, neededIds(lastState, false), make, variantOf);
       markAudioOnly(stage, visibleIds(lastState, false));
       applyPlacement(stage, splitPlacement(lastState, false));
-    }, FADE_MS + 50);
+    }, ms + 50);
   } else {
     mountOnly(stage, neededIds(state, fading), make, variantOf);
     markAudioOnly(stage, visibleIds(state, fading));
@@ -55,7 +58,25 @@ function renderStage(state) {
   initialized = true;
 }
 
+// Bip de prueba: comprueba que el audio de esta página llega a OBS (independiente de cámaras y VTR).
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume?.();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 440;
+    gain.gain.value = 0.25;
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.7);
+    setTimeout(() => ctx.close(), 1200);
+  } catch (e) { console.error('bip:', e); }
+}
+
 function render(state) {
+  if (lastTone !== null && state.toneSeq !== lastTone) beep();
+  lastTone = state.toneSeq;
   if (sources) renderStage(state); // primero la imagen: un gráfico dañado nunca debe congelar el switch
   try {
     syncGraphics(gfx, state, 'live');

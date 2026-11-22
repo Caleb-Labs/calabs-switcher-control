@@ -17,12 +17,17 @@ let sources = null;
 let lastState = null;
 let teams = [];
 let preGfx = null, pgmGfx = null, preSlot = null, preBadge = null, preNote = null;
+let seenSeq = null;
 
 const conn = connect((state) => { lastState = state; render(); }, {
   onStatus: (on) => document.getElementById('conn').classList.toggle('on', on),
 });
 const send = (action) => conn.send(action);
 
+const fadeInput = document.getElementById('fade-ms');
+let fadeSent = 0;
+fadeInput.oninput = () => { const now = Date.now(); if (now - fadeSent > 60) { fadeSent = now; send({ type: 'FADE_TIME', ms: Number(fadeInput.value) }); } };
+fadeInput.onchange = () => { send({ type: 'FADE_TIME', ms: Number(fadeInput.value) }); fadeInput.blur(); };
 document.getElementById('btn-cut').onclick = () => send({ type: 'TAKE', mode: 'cut' });
 document.getElementById('btn-fade').onclick = () => send({ type: 'TAKE', mode: 'fade' });
 document.addEventListener('keydown', (e) => {
@@ -72,7 +77,7 @@ function build(state) {
   const cell = (area) => {
     const c = document.createElement('div'); c.className = 'gfx-cell'; c.style.gridArea = area;
     const g = document.createElement('div'); g.className = 'gfx'; c.append(g); mv.append(c);
-    new ResizeObserver(() => applyScale(g)).observe(g);
+    new ResizeObserver(() => applyScale(g)).observe(c);
     return g;
   };
   preGfx = cell('pre'); pgmGfx = cell('pgm');
@@ -94,19 +99,56 @@ function build(state) {
       send({ type: 'SOURCE_STATUS', id: s.id, status: cur === 'nosignal' ? 'live' : 'nosignal' });
     };
     const aud = document.createElement('button');
-    aud.className = 'aud'; aud.textContent = '🔊'; aud.title = 'Audio master';
+    aud.className = 'aud'; aud.textContent = '🔊'; aud.title = 'Encender / apagar el audio de esta cámara';
     aud.onclick = (e) => {
       e.stopPropagation();
-      send({ type: 'SET_AUDIO_MASTER', id: lastState.audioMaster === s.id ? null : s.id });
+      const on = lastState.mix[s.id]?.on;
+      const master = lastState.audioMaster === s.id;
+      if (on || master) { if (master) send({ type: 'SET_AUDIO_MASTER', id: null }); if (on) send({ type: 'MIX_TOGGLE', id: s.id }); }
+      else send({ type: 'MIX_TOGGLE', id: s.id });
     };
     const isCam = s.kind === 'vdo' || s.kind === 'twitch';
-    if (isCam) tile.append(aud, sig);
+    if (isCam) {
+      tile.classList.add('cam');
+      const vol = document.createElement('input');
+      vol.type = 'range'; vol.min = 0; vol.max = 100; vol.step = 1; vol.className = 'tvol'; vol.title = 'Volumen de esta cámara';
+      let t = 0;
+      vol.oninput = () => { const now = Date.now(); if (now - t > 60) { t = now; send({ type: 'MIX_LEVEL', id: s.id, level: Number(vol.value) / 100 }); } };
+      vol.onchange = () => { send({ type: 'MIX_LEVEL', id: s.id, level: Number(vol.value) / 100 }); vol.blur(); };
+      vol.onpointerdown = (e) => e.stopPropagation();
+      tile.append(aud, sig, vol);
+    }
     tile.append(label, badge, hit);
     mv.append(tile); tiles.set(s.id, tile);
   }
 }
 
-const muteAll = () => { for (const t of tiles.values()) applyVolumes(t, () => 0); };
+// Ventana Preview cuando la misma fuente está también en Program: una cámara solo tiene un iframe, así que se abre un segundo
+// (solo mientras coincidan; es una conexión extra a ese jugador, sin audio) para poder ver el Preview igualmente.
+let mirror = null;
+let mirrorId = null;
+function syncMirror() {
+  const same = lastState.preview === lastState.program;
+  if (!same) { mirror?.remove(); mirror = null; mirrorId = null; return; }
+  const id = lastState.preview;
+  if (mirrorId !== id) {
+    mirror?.remove();
+    const meta = sources.find((x) => x.id === id) ?? { id, kind: 'vdo' };
+    const label = lastState.sources.find((x) => x.id === id)?.label ?? id;
+    mirror = document.createElement('div');
+    mirror.className = 'tile pre mirror';
+    mirror.style.gridArea = 'pre';
+    const badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = badgeText('pre', label);
+    mirror.append(createSourceElement(meta, { url: meta.url }), badge);
+    mv.append(mirror);
+    mirrorId = id;
+  }
+  const split = mirror.querySelector('.split-view'); if (split) renderSplitView(split, lastState);
+  const v = mirror.querySelector('video'); if (v) { syncVtr(v, lastState.vtr); v.muted = true; }
+  applyVolumes(mirror, () => 0);
+}
+
+const muteAll = () => { for (const t of tiles.values()) applyVolumes(t, () => 0); if (mirror) applyVolumes(mirror, () => 0); };
 mv.addEventListener('load', muteAll, true); // iframes recién cargados
 
 function render() {
@@ -123,9 +165,8 @@ function render() {
   }
   const progLabel = lastState.sources.find((x) => x.id === lastState.program)?.label;
   const same = lastState.preview === lastState.program;
-  preBadge.hidden = !same;
-  preBadge.textContent = badgeText('pre', progLabel ?? '');
-  preNote.textContent = same ? 'Es la misma cámara que está en PROGRAM' : 'PREVIEW';
+  preBadge.hidden = true;
+  preNote.textContent = 'PREVIEW';
   const splitEl = tiles.get('split')?.querySelector('.split-view');
   if (splitEl) renderSplitView(splitEl, lastState);
   splitPanel.render(lastState);
@@ -134,7 +175,24 @@ function render() {
   syncGraphics(preGfx, lastState, 'preview'); applyScale(preGfx);
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);
   document.getElementById('btn-emergency').classList.toggle('on', lastState.emergency);
-  for (const s of lastState.sources) tiles.get(s.id)?.classList.toggle('master', lastState.audioMaster === s.id);
+  for (const s of lastState.sources) {
+    const t = tiles.get(s.id);
+    if (!t) continue;
+    const m = lastState.mix[s.id];
+    t.classList.toggle('master', lastState.audioMaster === s.id || !!m?.on);
+    t.classList.toggle('sel', lastState.mixSel === s.id);
+    const vol = t.querySelector('.tvol');
+    if (vol && document.activeElement !== vol) vol.value = Math.round((m?.level ?? 1) * 100);
+  }
+  syncMirror();
+  const fade = document.getElementById('fade-ms');
+  if (document.activeElement !== fade) fade.value = lastState.fadeMs;
+  document.getElementById('fade-val').textContent = `${(lastState.fadeMs / 1000).toFixed(1)} s`;
+  const lt = lastState.lastTake;
+  if (lt && lt.seq !== seenSeq) {
+    if (seenSeq !== null && lt.mode === 'fade') tiles.get(lt.to)?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: lt.ms || 500, easing: 'linear' }); // se ve el fade también en el panel
+    seenSeq = lt.seq;
+  } else if (!lt && seenSeq === null) seenSeq = 0;
   syncVtrPanel();
   muteAll(); // el audio sale solo por /program (OBS); aquí todo en silencio
   const pct = (c) => (c.muted ? 'mute' : `${Math.round(c.level * 100)}%`);

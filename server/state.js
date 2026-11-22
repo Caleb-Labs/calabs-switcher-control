@@ -117,6 +117,9 @@ export function createState(config) {
     sources,
     split: withTeamTexts(normalizeSplit(config.splitSaved, camIds), sources),
     splitGc: 'off',
+    fadeMs: 500,
+    mixSel: camIds[0],
+    toneSeq: 0,
     gcPos: { name: cleanGcPos(config.gcPosSaved?.name), score: cleanGcPos(config.gcPosSaved?.score) },
     mix: Object.fromEntries(camIds.map((id) => [id, { level: 1, on: false }])),
     program: 'cam1',
@@ -150,7 +153,7 @@ export function reduce(state, action) {
         ...state,
         program: state.preview,
         preview: state.program,
-        lastTake: { mode, from: state.program, to: state.preview, seq: (state.lastTake?.seq ?? 0) + 1 },
+        lastTake: { mode, from: state.program, to: state.preview, seq: (state.lastTake?.seq ?? 0) + 1, ms: mode === 'fade' ? state.fadeMs : 0 },
       };
     }
 
@@ -294,6 +297,28 @@ export function reduce(state, action) {
       return { ...state, gcPos: { ...state.gcPos, [action.gcId]: { x: clampPos(action.x), y: clampPos(action.y) } } };
     case 'GC_RESET_POS':
       return Object.hasOwn(state.gcPos, action.gcId) ? { ...state, gcPos: { ...state.gcPos, [action.gcId]: null } } : state;
+    case 'FADE_TIME':
+      return isNum(action.ms) ? { ...state, fadeMs: Math.min(5000, Math.max(100, Math.round(action.ms))) } : state;
+    case 'FADE_STEP':
+      return { ...state, fadeMs: Math.min(5000, Math.max(100, state.fadeMs + (action.dir > 0 ? 100 : -100))) };
+    case 'MIX_SELECT': {
+      const cams = camIdsOf(state);
+      const i = cams.indexOf(state.mixSel);
+      return { ...state, mixSel: cams[(i + (action.dir > 0 ? 1 : -1) + cams.length) % cams.length] };
+    }
+    case 'MIX_ADJUST': {
+      if (!isNum(action.delta) || !Object.hasOwn(state.mix, state.mixSel)) return state;
+      const m = state.mix[state.mixSel];
+      return { ...state, mix: { ...state.mix, [state.mixSel]: { ...m, level: Math.min(1, Math.max(0, Math.round((m.level + action.delta) * 100) / 100)) } } };
+    }
+    case 'MIX_SEL_TOGGLE': {
+      const id = state.mixSel;
+      if (!Object.hasOwn(state.mix, id)) return state;
+      const audible = state.audioMaster === id || state.mix[id].on;
+      return { ...state, audioMaster: state.audioMaster === id ? null : state.audioMaster, mix: { ...state.mix, [id]: { ...state.mix[id], on: !audible } } };
+    }
+    case 'TEST_TONE':
+      return { ...state, toneSeq: state.toneSeq + 1 };
     case 'MIX_TOGGLE':
       if (!Object.hasOwn(state.mix, action.id)) return state;
       return { ...state, mix: { ...state.mix, [action.id]: { ...state.mix[action.id], on: !state.mix[action.id].on } } };

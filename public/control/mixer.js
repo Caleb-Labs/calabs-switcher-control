@@ -3,6 +3,7 @@ import { vtrAudioStatus } from '/shared/vtr.js';
 // Mezclador de audio: un fader por cámara (con encendido), nivel general de cámaras y VTR. El audio sale por /program (OBS).
 export function initMixer({ send }) {
   const box = document.getElementById('mix-rows');
+  document.getElementById('mix-tone').onclick = () => send({ type: 'TEST_TONE' });
   const rows = new Map(); // id -> { check, range, pct }
   let builtKey = null;
   const sendSoon = (() => { let t = 0; return (fn) => { const now = Date.now(); if (now - t > 60) { t = now; fn(); } }; })();
@@ -46,6 +47,7 @@ export function initMixer({ send }) {
         if (!r) continue;
         r.check.checked = m.on || state.audioMaster === id;
         r.el.classList.toggle('master', state.audioMaster === id);
+        r.el.classList.toggle('sel', state.mixSel === id);
         setRange(r, m.level);
       }
       setRange(rows.get('@vtr'), state.audio.vtr.level);

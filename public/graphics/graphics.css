@@ -1,4 +1,4 @@
-.gfx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+.gfx { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 5; }
 .g-root { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; color: #e4e6ea; font-family: system-ui, sans-serif; }
 .g-root.in { animation: g-in 400ms ease-out; }
 @keyframes g-in { from { opacity: 0; } to { opacity: 1; } }

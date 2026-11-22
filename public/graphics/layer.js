@@ -56,8 +56,14 @@ export function syncGraphics(container, state, which) {
   if (em && container.lastElementChild !== em) container.append(em);
 }
 
-// Escala los gráficos (diseñados a 1920x1080) al ancho real del contenedor.
+// Escala el lienzo de gráficos (diseñado a 1920x1080) al ancho de su contenedor. Se escala el lienzo completo,
+// no cada gráfico: así también se escalan las posiciones (left/top), que si no quedaban fuera de las ventanas chicas del panel.
 export function applyScale(container) {
-  const s = container.clientWidth / 1920;
-  for (const child of container.children) child.style.transform = `scale(${s})`;
+  container.style.width = '1920px';
+  container.style.height = '1080px';
+  container.style.transformOrigin = '0 0';
+  const w = container.parentElement?.clientWidth;
+  if (!w) return;
+  const s = w / 1920;
+  container.style.transform = s === 1 ? '' : `scale(${s})`;
 }

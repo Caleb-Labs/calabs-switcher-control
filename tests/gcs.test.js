@@ -219,3 +219,83 @@ test('GC_RESET_POS devuelve un GC principal a su posición original', () => {
   const s0 = S();
   assert.equal(apply(s0, { type: 'GC_RESET_POS', gcId: 'nope' }), s0);
 });
+
+// ---------- los gráficos se escalan como un solo lienzo 1920x1080 ----------
+import { applyScale } from '../public/graphics/layer.js';
+
+test('applyScale escala el lienzo completo (posiciones incluidas) según el ancho del contenedor padre', () => {
+  const stage = { style: {}, parentElement: { clientWidth: 960 } };
+  applyScale(stage);
+  assert.equal(stage.style.transform, 'scale(0.5)');
+  assert.equal(stage.style.transformOrigin, '0 0');
+  assert.equal(stage.style.width, '1920px');
+  assert.equal(stage.style.height, '1080px');
+  const full = { style: {}, parentElement: { clientWidth: 1920 } };
+  applyScale(full);
+  assert.equal(full.style.transform, '');
+  const none = { style: {}, parentElement: { clientWidth: 0 } };
+  assert.doesNotThrow(() => applyScale(none));
+});
+
+// ---------- fade con duración ----------
+test('TAKE guarda la duración del fade en lastTake.ms (0 para un corte)', () => {
+  let s = apply(S(), { type: 'TAKE', mode: 'fade' });
+  assert.equal(s.lastTake.ms, 500);
+  s = apply(S(), { type: 'FADE_TIME', ms: 2000 }, { type: 'TAKE', mode: 'fade' });
+  assert.equal(s.lastTake.ms, 2000);
+  assert.equal(apply(S(), { type: 'FADE_TIME', ms: 2000 }, { type: 'TAKE', mode: 'cut' }).lastTake.ms, 0);
+});
+
+test('FADE_TIME fija la duración (100 ms a 5 s) y FADE_STEP la sube o baja de 100 en 100', () => {
+  assert.equal(S().fadeMs, 500);
+  assert.equal(apply(S(), { type: 'FADE_TIME', ms: 99999 }).fadeMs, 5000);
+  assert.equal(apply(S(), { type: 'FADE_TIME', ms: 1 }).fadeMs, 100);
+  assert.equal(apply(S(), { type: 'FADE_STEP', dir: 1 }).fadeMs, 600);
+  assert.equal(apply(S(), { type: 'FADE_STEP', dir: -1 }).fadeMs, 400);
+  assert.equal(apply(S(), { type: 'FADE_TIME', ms: 100 }, { type: 'FADE_STEP', dir: -1 }).fadeMs, 100);
+  const s0 = S();
+  assert.equal(apply(s0, { type: 'FADE_TIME', ms: 'x' }), s0);
+  assert.equal(apply(s0, { type: 'FADE_TIME', ms: NaN }), s0);
+});
+
+// ---------- selección de cámara para los diales de audio ----------
+test('mixSel: la cámara seleccionada para los diales (empieza en cam1) y MIX_SELECT la recorre dando la vuelta', () => {
+  assert.equal(S().mixSel, 'cam1');
+  assert.equal(apply(S(), { type: 'MIX_SELECT', dir: 1 }).mixSel, 'cam2');
+  assert.equal(apply(S(), { type: 'MIX_SELECT', dir: -1 }).mixSel, 'cam9');
+  assert.equal(apply(S(), { type: 'MIX_SELECT', dir: -1 }, { type: 'MIX_SELECT', dir: 1 }).mixSel, 'cam1');
+});
+
+test('MIX_ADJUST sube o baja el volumen de la cámara seleccionada; MIX_SEL_TOGGLE la enciende o apaga', () => {
+  let s = apply(S(), { type: 'MIX_SELECT', dir: 1 }, { type: 'MIX_ADJUST', delta: -0.25 });
+  assert.equal(s.mix.cam2.level, 0.75);
+  assert.equal(s.mix.cam1.level, 1);
+  s = apply(s, { type: 'MIX_ADJUST', delta: -5 });
+  assert.equal(s.mix.cam2.level, 0);
+  s = apply(s, { type: 'MIX_SEL_TOGGLE' });
+  assert.equal(s.mix.cam2.on, true);
+  s = apply(s, { type: 'MIX_SEL_TOGGLE' });
+  assert.equal(s.mix.cam2.on, false);
+  s = apply(S(), { type: 'SET_AUDIO_MASTER', id: 'cam1' }, { type: 'MIX_SEL_TOGGLE' }); // cam1 era master: apagarla la quita
+  assert.equal(s.audioMaster, null);
+  assert.equal(s.mix.cam1.on, false);
+  const s0 = S();
+  assert.equal(apply(s0, { type: 'MIX_ADJUST', delta: NaN }), s0);
+});
+
+// ---------- bip de prueba de audio ----------
+test('TEST_TONE incrementa toneSeq para que /program emita un bip (comprueba que OBS recibe audio)', () => {
+  assert.equal(S().toneSeq, 0);
+  assert.equal(apply(S(), { type: 'TEST_TONE' }, { type: 'TEST_TONE' }).toneSeq, 2);
+});
+
+test('comandos del macropad: fade más largo/corto, selección de cámara de audio y su volumen', () => {
+  assert.deepEqual(commandToAction('fade-longer'), { type: 'FADE_STEP', dir: 1 });
+  assert.deepEqual(commandToAction('fade-shorter'), { type: 'FADE_STEP', dir: -1 });
+  assert.deepEqual(commandToAction('mix-next'), { type: 'MIX_SELECT', dir: 1 });
+  assert.deepEqual(commandToAction('mix-prev'), { type: 'MIX_SELECT', dir: -1 });
+  assert.deepEqual(commandToAction('mix-up'), { type: 'MIX_ADJUST', delta: 0.05 });
+  assert.deepEqual(commandToAction('mix-down'), { type: 'MIX_ADJUST', delta: -0.05 });
+  assert.deepEqual(commandToAction('mix-toggle'), { type: 'MIX_SEL_TOGGLE' });
+  assert.deepEqual(commandToAction('test-tone'), { type: 'TEST_TONE' });
+});
