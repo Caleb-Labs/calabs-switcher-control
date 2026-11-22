@@ -1,6 +1,6 @@
 # Multicam Switcher — Estado del proyecto (para retomar)
 
-Última actualización: 2026-11-22 · Rama: `feat/multicam` · 28 commits · **225 pruebas pasando** (`npm test`)
+Última actualización: 2026-11-22 · Rama: `feat/multicam` · 32 commits · **227 pruebas pasando** (`npm test`)
 
 ## 1. La idea
 Comunidad de **Sea of Thieves** que hace torneos y los transmite. Los equipos (8 equipos de 2 personas, **un solo jugador por equipo manda la señal**) transmiten su juego y esta aplicación los usa como fuentes de un **"ATEM web"**:
@@ -20,13 +20,14 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 
 ## 3. Lo que está hecho
 - **Switcher:** estado en servidor (reducer puro `server/state.js`), WebSocket, `/control` y `/program`. Teclas: `Espacio`=CUT, `Enter`=FADE, `1`–`9` cámaras, `0` VTR, `s` dividida. Fade con duración ajustable (slider + comandos de dial) y animación visible en panel y `/program`. Si la misma cámara está en Preview y Program, Preview abre un 2.º iframe (mirror).
-- **Cámaras:** 8 equipos + **cámara aérea** opcional (cam9), nombres personalizados (doble clic), selector "Equipos [N]" (1–9, la aérea cuenta como una más) que oculta las sobrantes, "sin señal" manual (⚠) y detección por evento de VDO.Ninja (sin verificar).
+- **Cámaras:** 8 equipos + **cámara aérea** (cam9, cuenta como una más), nombres personalizados (doble clic), selector "Equipos [N]" (1–9, la aérea cuenta como una más) que oculta las sobrantes, "sin señal" manual (⚠) y detección por evento de VDO.Ninja (sin verificar).
 - **Conexión (VDO.Ninja):** panel con contraseña única, calidad 1080p/720p, FPS 30/60, sala por cámara (editable, aleatorias), "Link navegador", "Link OBS" y mensaje para el jugador. Cambiar sala/contraseña reconecta las cámaras solas.
 - **Pantalla dividida:** fuente virtual `split`; elegir cámaras con botones (1–9), posiciones con nombre, arrastrar/redimensionar recuadros, fondos por cantidad (subir imagen, molde PNG con medidas en píxeles), GC por recuadro (texto, posición, estado preview/live), audio por recuadro (suena solo mientras está al aire), peleas guardadas (incluyen textos/posiciones/audio).
 - **GC:** texto libre, mover arrastrando, **estilos** por tipo (pantalla única / dividida / marcador): colores, opacidad, tamaño, plantilla PNG (620×120), efectos de entrada/salida, "se baja solo a los N segundos", vista previa en vivo.
 - **VTR / emergencia:** subir archivos desde el panel, fader de volumen, cartel cuando no hay archivo; emergencia con foto o video.
 - **Audio:** faders por cámara, mezclador, nivel general, VTR; botón "Probar audio (bip)"; estado del audio del VTR.
 - **Macropad:** `POST /api/do/<comando>` (`macropad\cmd.bat`) y teclas extra. Propuesta de asignación de diales en el README. **Falta configurarlo en Redragon Station.**
+- **Zona segura:** casilla en la barra; guías solo en el monitor de Preview.
 - **Seguridad básica:** servidor solo en 127.0.0.1, chequeo de Origin (WS y API), subidas con lista blanca/tamaño máximo, SVG sandbox, textos de Sheets siempre como texto (no HTML).
 - **Persistencia:** `data/split.json` (pantalla dividida, peleas, posiciones y estilos de GC, nombres, cantidad, emergencia, conexión). Variable `SPLIT_FILE` para otro archivo.
 
@@ -46,6 +47,11 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - Cada cámara con audio encendido, la del preview y las de la dividida son **conexiones extra** del jugador hacia `/program`.
 
 ## 6. Pendiente / próximos pasos (por prioridad)
+0. **Bloque en curso (pedido del usuario, 2026-11-22), en este orden:**
+   - ✅ Selector **Equipos [N]** (1–9): la aérea (cam9) cuenta como una cámara más; se quitó la casilla "aérea" y `SET_AERIAL`. Los archivos viejos con `aerialOn` se migran solos. La barra superior ahora baja de línea (antes Equipos quedaba cortado y el usuario no lo veía).
+   - ✅ **Zona segura en Preview** (casilla en la barra; acción 93 %, título 90 %, cruz central; solo Preview, nunca `/program`). Verificada en Edge real; **falta que el usuario la vea en su ventana** (dijo que no le salía; se añadió `cache-control: no-store` y requiere reiniciar el servidor).
+   - ⏳ **Stinger** (transición propia): subir un WebM con alfa, elegir a mano el segundo de corte (ej. video de 10 s, cambio a los 5 s), el audio del video suena, varios cargados y elegibles; CUT y FADE se mantienen. Se reproduce en `/program` sobre el Program.
+   - ⏳ **Medidores de audio** (VU vertical como el de ATEM) sobre cada ventana del multiview, VTR incluido; `/program` limpio. Riesgo: leer el nivel de los iframes de VDO.Ninja puede no ser posible → comprobar primero y proponer alternativa.
 1. **Prueba real con 2–3 jugadores:** conexión por navegador y por OBS, links del panel, contraseña, 1080p30.
 2. **Medición de rendimiento** con 8–9 emisores (Ryzen 5 3600 / RTX 3060): instrucciones en `docs/superpowers/notes/perf-spike.md`. Si no aguanta: bajar a `720p`/`480p-tiles` o pasar a app de escritorio.
 3. **Audio en OBS:** botón "Probar audio (bip)", VTR en Program + ▶, y que VDO.Ninja obedezca el comando `{volume}` por iframe (sin verificar). Activar "Controlar audio mediante OBS" y Monitoreo de audio.
