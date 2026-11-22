@@ -53,7 +53,7 @@ muestre un **multiview** y un **program**, permita cambiar de cámara con cortes
 
 **Layout del multiview (confirmado por el usuario):** fila superior con PREVIEW y PROGRAM grandes; debajo las 8 cámaras y el VTR en tiles chicos. Preview y Program son espejos de una fuente elegida, no fuentes nuevas.
 
-**Cuidado con conexiones duplicadas:** cada página que abre un link de VDO.Ninja crea su propia conexión WebRTC al jugador. `/program` solo debe conectar la fuente al aire y la que entra en el fade (no las 8), para no duplicar la subida de cada jugador. Los tiles Preview/Program de `/control` deben reutilizar el stream de los tiles de cámara cuando sea posible. A validar en un prototipo antes del resto.
+**Cuidado con conexiones duplicadas:** cada página que abre un link de VDO.Ninja crea su propia conexión WebRTC al jugador. `/program` conecta solo la fuente al aire, la que sale en un fade, **la que está en preview** (precargada oculta para que el CUT/FADE no muestre negro) y el **audio master** (oculto), no las 8, para no duplicar la subida de cada jugador. (Actualizado tras la revisión final.) Los tiles Preview/Program de `/control` deben reutilizar el stream de los tiles de cámara cuando sea posible. A validar en un prototipo antes del resto.
 
 **Estado y comunicación:** un pequeño servidor local mantiene el estado (cámara en preview/program, gráficos visibles) y lo transmite por WebSocket a `/control` y `/program`. El macropad solo manda acciones al servidor.
 
