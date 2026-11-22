@@ -1,0 +1,13 @@
+{
+  "teams": [
+    { "name": "Equipo 1", "players": ["Jugador 1A", "Jugador 1B"], "source": { "kind": "vdo", "room": "sot-torneo-eq1" }, "logo": "logos/eq1.png" },
+    { "name": "Equipo 2", "players": ["Jugador 2A", "Jugador 2B"], "source": { "kind": "vdo", "room": "sot-torneo-eq2" } },
+    { "name": "Equipo 3", "players": ["Jugador 3A", "Jugador 3B"], "source": { "kind": "vdo", "room": "sot-torneo-eq3" } },
+    { "name": "Equipo 4", "players": ["Jugador 4A", "Jugador 4B"], "source": { "kind": "vdo", "room": "sot-torneo-eq4" } },
+    { "name": "Equipo 5", "players": ["Jugador 5A", "Jugador 5B"], "source": { "kind": "vdo", "room": "sot-torneo-eq5" } },
+    { "name": "Equipo 6", "players": ["Jugador 6A", "Jugador 6B"], "source": { "kind": "vdo", "room": "sot-torneo-eq6" } },
+    { "name": "Equipo 7", "players": ["Jugador 7A", "Jugador 7B"], "source": { "kind": "twitch", "channel": "canal_del_equipo_7" } },
+    { "name": "Equipo 8", "players": ["Jugador 8A", "Jugador 8B"], "source": { "kind": "vdo", "room": "sot-torneo-eq8" } }
+  ],
+  "sheet": null
+}
