@@ -22,7 +22,7 @@ async function serveStatic(root, urlPath, res) {
     let file = abs;
     if ((await fs.stat(file)).isDirectory()) file = path.join(file, 'index.html');
     const data = await fs.readFile(file);
-    res.writeHead(200, { 'content-type': MIME[path.extname(file)] ?? 'application/octet-stream' });
+    res.writeHead(200, { 'content-type': MIME[path.extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' }); // el panel siempre carga la versión actual
     res.end(data);
   } catch {
     res.writeHead(404).end('not found');

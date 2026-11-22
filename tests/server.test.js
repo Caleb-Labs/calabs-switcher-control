@@ -126,3 +126,10 @@ test('un cliente no puede mandar acciones internas (SCOREBOARD_*, VTR_FILES) ni 
   assert.deepEqual(msg.state.gc, {});
   a.close();
 });
+
+test('los archivos estáticos se sirven sin caché para que el panel cargue siempre la versión actual', async () => {
+  const srv = await boot();
+  const res = await fetch(`http://127.0.0.1:${srv.port}/control/control.js`);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+});
