@@ -9,6 +9,12 @@ function wanted(state, which) {
     const data = LIVE_DATA_TEMPLATES.has(g.template) ? { teams: state.scoreboard?.teams ?? [] } : g.data;
     out.push({ id, template: g.template, data });
   }
+  if (state.vtr?.current === '@tabla') { // tabla a pantalla completa: sale por el VTR
+    const onAir = state.program === 'vtr';
+    if ((which === 'live' && onAir) || (which === 'preview' && state.preview === 'vtr' && !onAir)) {
+      out.push({ id: 'vtr-standings', template: 'standings', data: { teams: state.scoreboard?.teams ?? [], full: true } });
+    }
+  }
   if (which === 'live' && state.emergency) out.push({ id: 'emergency', template: 'emergency', data: { logo: state.emergencyLogo } });
   return out;
 }

@@ -1,6 +1,7 @@
 import { connect } from '/shared/client.js';
 import { createSourceElement, mountOnly, neededIds, volumeFor, applyVolumes, markAudioOnly } from '/shared/sources.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
+import { syncVtr } from '/shared/vtr.js';
 
 const FADE_MS = 500;
 const stage = document.getElementById('stage');
@@ -40,6 +41,8 @@ function render(state) {
   }
   const visible = fading ? neededIds({ ...state, audioMaster: null }, true) : [state.program];
   markAudioOnly(stage, visible);
+  const vtrEl = stage.querySelector('[data-source-id="vtr"]');
+  if (vtrEl?.tagName === 'VIDEO') syncVtr(vtrEl, state.vtr);
   applyVolumes(stage, (id) => volumeFor(state, id));
   lastSeq = state.lastTake?.seq ?? 0;
   initialized = true;

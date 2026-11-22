@@ -29,3 +29,6 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 
 .tile .aud { position: absolute; right: 4px; top: 30px; z-index: 6; padding: 0 6px; font-size: 12px; opacity: .45; }
 .tile.master .aud { opacity: 1; border-color: var(--accent); }
+#vtrpanel { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#vtrpanel select { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px; min-width: 220px; }
+#vtr-empty { color: var(--muted); }

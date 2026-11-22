@@ -13,6 +13,7 @@ const sortedTeams = (data) =>
 
 function table(cls, data) {
   const root = el('div', `g-root ${cls}`);
+  if (data?.full) root.classList.add('full');
   for (const t of sortedTeams(data)) {
     const row = el('div', 'row');
     row.append(el('span', 'pos', String(t.position ?? '')), el('span', 'name ellipsis', String(t.name ?? '')), el('span', 'pts', String(t.points ?? 0)));

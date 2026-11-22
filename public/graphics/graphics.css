@@ -19,3 +19,4 @@
 .emergency { width: 1920px; height: 1080px; background: #14161a; display: grid; place-items: center; }
 .emergency .logo { max-width: 60%; max-height: 60%; }
 .emergency .fallback { font-size: 80px; color: #aeb4bf; }
+.standings.full { left: 0; top: 0; width: 1920px; height: 1080px; padding: 110px 380px; font-size: 56px; background: #14161a; }

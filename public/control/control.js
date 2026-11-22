@@ -4,6 +4,7 @@ import { keyToAction } from './keymap.js';
 import { assignAreas } from './layout.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
+import { syncVtr } from '/shared/vtr.js';
 
 const mv = document.getElementById('mv');
 const tiles = new Map();
@@ -91,6 +92,7 @@ function render() {
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);
   document.getElementById('btn-emergency').classList.toggle('on', lastState.emergency);
   for (const s of lastState.sources) tiles.get(s.id)?.classList.toggle('master', lastState.audioMaster === s.id);
+  syncVtrPanel();
   muteAll(); // el audio sale solo por /program (OBS); aquí todo en silencio
   const warn = document.getElementById('warn');
   warn.hidden = !lastState.scoreboard.stale;
@@ -132,3 +134,23 @@ window.addEventListener('message', (e) => {
   const r = statusFromMessage(e, sources);
   if (r && lastState.sources.find((x) => x.id === r.id)?.status !== r.status) send({ type: 'SOURCE_STATUS', ...r });
 });
+
+// --- Panel del VTR
+const vtrSel = document.getElementById('vtr-files');
+const label = (f) => (f === '@tabla' ? 'Tabla de posiciones' : f);
+function syncVtrPanel() {
+  const { files, current } = lastState.vtr;
+  const key = JSON.stringify(files);
+  if (vtrSel.dataset.key !== key) {
+    vtrSel.dataset.key = key;
+    vtrSel.replaceChildren(...files.map((f) => new Option(label(f), f)));
+  }
+  vtrSel.value = current ?? '';
+  document.getElementById('vtr-empty').hidden = files.some((f) => f !== '@tabla');
+  const v = tiles.get('vtr')?.querySelector('video');
+  if (v) { syncVtr(v, lastState.vtr); v.muted = true; v.onended = () => send({ type: 'VTR_PAUSE' }); }
+}
+vtrSel.onchange = () => send({ type: 'VTR_SELECT', file: vtrSel.value });
+document.getElementById('vtr-play').onclick = () => send({ type: 'VTR_PLAY' });
+document.getElementById('vtr-pause').onclick = () => send({ type: 'VTR_PAUSE' });
+document.getElementById('vtr-next').onclick = () => send({ type: 'VTR_NEXT' });
