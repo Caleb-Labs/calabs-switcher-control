@@ -6,6 +6,8 @@ export function createState(config) {
     label: t.name,
     kind: t.source?.kind ?? 'vdo',
     status: 'live',
+    players: t.players,
+    logo: t.logo ?? null,
   }));
   sources.push({ id: 'vtr', label: 'VTR', kind: 'vtr', status: 'live' });
   return {
@@ -17,6 +19,9 @@ export function createState(config) {
     gc: {},
     emergency: false,
     emergencyLogo: config.emergencyLogo ?? null,
+    vtrDefault: config.vtrDefault ?? null,
+    audio: { cam: { level: 1, muted: false }, vtr: { level: 1, muted: false } },
+    gcPlayer: 0,
     vtr: { files: [], current: null, playing: false },
     scoreboard: { teams: [], updatedAt: null, stale: false },
   };
@@ -68,8 +73,10 @@ export function reduce(state, action) {
 
     case 'VTR_FILES': {
       const files = Array.isArray(action.files) ? action.files : [];
-      const current = files.includes(state.vtr.current) ? state.vtr.current : null;
-      return { ...state, vtr: { ...state.vtr, files, current, playing: current ? state.vtr.playing : false } };
+      const kept = files.includes(state.vtr.current);
+      // Si no hay archivo elegido (o se borró), se muestra el de respaldo (vtrDefault) en vez de negro.
+      const current = kept ? state.vtr.current : files.includes(state.vtrDefault) ? state.vtrDefault : null;
+      return { ...state, vtr: { ...state.vtr, files, current, playing: kept ? state.vtr.playing : false } };
     }
     case 'VTR_SELECT':
       return state.vtr.files.includes(action.file) ? { ...state, vtr: { ...state.vtr, current: action.file } } : state;
@@ -82,6 +89,54 @@ export function reduce(state, action) {
       if (!files.length) return state;
       const next = files[(files.indexOf(current) + 1) % files.length];
       return { ...state, vtr: { ...state.vtr, current: next } };
+    }
+
+    case 'VTR_PREV': {
+      const { files, current } = state.vtr;
+      if (!files.length) return state;
+      const i = files.indexOf(current);
+      return { ...state, vtr: { ...state.vtr, current: files[i < 0 ? files.length - 1 : (i - 1 + files.length) % files.length] } };
+    }
+    case 'VTR_TOGGLE':
+      return state.vtr.current ? { ...state, vtr: { ...state.vtr, playing: !state.vtr.playing } } : state;
+
+    case 'PREVIEW_STEP': {
+      const ids = state.sources.map((x) => x.id);
+      const dir = action.dir > 0 ? 1 : -1;
+      let i = ids.indexOf(state.preview);
+      for (let k = 0; k < ids.length; k++) {
+        i = (i + dir + ids.length) % ids.length;
+        if (ids[i] !== state.program) return { ...state, preview: ids[i] };
+      }
+      return state;
+    }
+    case 'AUDIO_MASTER_STEP': {
+      const cams = state.sources.filter((x) => x.kind !== 'vtr').map((x) => x.id);
+      const dir = action.dir > 0 ? 1 : -1;
+      const i = cams.indexOf(state.audioMaster);
+      const next = i < 0 ? (dir > 0 ? 0 : cams.length - 1) : (i + dir + cams.length) % cams.length;
+      return { ...state, audioMaster: cams[next] };
+    }
+    case 'ADJUST_VOLUME': {
+      const t = action.target;
+      if ((t !== 'cam' && t !== 'vtr') || !Number.isFinite(action.delta)) return state;
+      const level = Math.min(1, Math.max(0, Math.round((state.audio[t].level + action.delta) * 100) / 100));
+      return { ...state, audio: { ...state.audio, [t]: { ...state.audio[t], level } } };
+    }
+    case 'TOGGLE_MUTE': {
+      const t = action.target;
+      if (t !== 'cam' && t !== 'vtr') return state;
+      return { ...state, audio: { ...state.audio, [t]: { ...state.audio[t], muted: !state.audio[t].muted } } };
+    }
+    case 'EMERGENCY_TOGGLE':
+      return { ...state, emergency: !state.emergency };
+    case 'GC_PLAYER_NEXT':
+      return { ...state, gcPlayer: state.gcPlayer ? 0 : 1 };
+    case 'GC_NAME_PREVIEW': {
+      const src = state.sources.find((x) => x.id === state.preview);
+      if (!src || src.kind === 'vtr' || !Array.isArray(src.players)) return state;
+      const data = { team: src.label, player: src.players[state.gcPlayer] ?? src.players[0], logo: src.logo ?? null };
+      return { ...state, gc: { ...state.gc, name: { template: 'gc-name', data, state: 'preview' } } };
     }
 
     case 'SCOREBOARD_UPDATE': {

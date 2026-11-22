@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { WebSocketServer } from 'ws';
 import { createState, reduce } from './state.js';
+import { originAllowed } from './origin.js';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -30,6 +31,8 @@ async function serveStatic(root, urlPath, res) {
 const CLIENT_ACTIONS = new Set([
   'SET_PREVIEW', 'TAKE', 'SET_AUDIO_MASTER', 'SOURCE_STATUS', 'GC_ARM', 'GC_LIVE', 'GC_OFF',
   'EMERGENCY', 'VTR_SELECT', 'VTR_PLAY', 'VTR_PAUSE', 'VTR_NEXT',
+  'VTR_PREV', 'VTR_TOGGLE', 'PREVIEW_STEP', 'AUDIO_MASTER_STEP', 'ADJUST_VOLUME', 'TOGGLE_MUTE',
+  'EMERGENCY_TOGGLE', 'GC_NAME_PREVIEW', 'GC_PLAYER_NEXT',
 ]);
 
 export async function startServer({ port = 3000, host = '127.0.0.1', config, publicDir, extraRoutes = [] }) {
@@ -41,7 +44,7 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
       let url;
       try { url = new URL(req.url, 'http://localhost'); } catch { res.writeHead(400).end('bad request'); return; }
       for (const route of extraRoutes) {
-        if (await route(req, res, url, { getState: () => state })) return;
+        if (await route(req, res, url, { getState: () => state, dispatch })) return;
       }
       await serveStatic(root, url.pathname, res);
     } catch (e) {
@@ -50,7 +53,7 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
       res.end();
     }
   });
-  const wss = new WebSocketServer({ server, path: '/ws' });
+  const wss = new WebSocketServer({ server, path: '/ws', verifyClient: ({ req }) => originAllowed(req) });
 
   const broadcast = () => {
     const msg = JSON.stringify({ type: 'state', state });

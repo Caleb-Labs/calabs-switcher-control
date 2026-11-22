@@ -112,6 +112,8 @@ function render() {
   for (const s of lastState.sources) tiles.get(s.id)?.classList.toggle('master', lastState.audioMaster === s.id);
   syncVtrPanel();
   muteAll(); // el audio sale solo por /program (OBS); aquí todo en silencio
+  const pct = (c) => (c.muted ? 'mute' : `${Math.round(c.level * 100)}%`);
+  document.getElementById('vol').textContent = `🔊 cámara ${pct(lastState.audio.cam)} · VTR ${pct(lastState.audio.vtr)}`;
   const warn = document.getElementById('warn');
   warn.hidden = !lastState.scoreboard.stale;
   warn.textContent = 'marcador sin actualizar';

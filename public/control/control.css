@@ -40,3 +40,4 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .tile.pgm .badge { background: var(--live); color: #111; }
 .tile.pre .badge { background: var(--ok); color: #111; }
 .tile.pgm .label, .tile.pre .label { display: none; }
+#vol { margin-left: 16px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }

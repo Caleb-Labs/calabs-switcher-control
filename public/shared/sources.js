@@ -48,8 +48,10 @@ export function clearFadeStyles(container) {
 
 // Volumen (0 o 1) que debe tener cada fuente en /program.
 export function volumeFor(state, id) {
-  if (id === 'vtr') return state.program === 'vtr' && state.vtr?.playing ? 1 : 0;
-  return state.audioMaster === id ? 1 : 0;
+  const ch = state.audio?.[id === 'vtr' ? 'vtr' : 'cam'] ?? { level: 1, muted: false };
+  const v = ch.muted ? 0 : ch.level;
+  if (id === 'vtr') return state.program === 'vtr' && state.vtr?.playing ? v : 0;
+  return state.audioMaster === id ? v : 0;
 }
 
 // Aplica volúmenes sin recargar nada. VDO.Ninja: postMessage({volume}); Twitch: sin control (queda silenciado).

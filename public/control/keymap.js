@@ -5,6 +5,14 @@ export function keyToAction(key) {
   if (key === '9') return { type: 'SET_PREVIEW', id: 'vtr' };
   if (key === 'Enter') return { type: 'TAKE', mode: 'cut' };
   if (key === ' ') return { type: 'TAKE', mode: 'fade' };
+  if (key === ']') return { type: 'PREVIEW_STEP', dir: 1 };
+  if (key === '[') return { type: 'PREVIEW_STEP', dir: -1 };
+  if (key === '=') return { type: 'ADJUST_VOLUME', target: 'cam', delta: 0.05 };
+  if (key === '-') return { type: 'ADJUST_VOLUME', target: 'cam', delta: -0.05 };
+  if (key === 'm') return { type: 'TOGGLE_MUTE', target: 'cam' };
+  if (key === '.') return { type: 'VTR_NEXT' };
+  if (key === ',') return { type: 'VTR_PREV' };
+  if (key === 'p') return { type: 'VTR_TOGGLE' };
   return null;
 }
 

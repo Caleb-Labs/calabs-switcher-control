@@ -33,6 +33,31 @@ Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920,
 - **EMERGENCIA** pone el logo de emergencia (`"emergencyLogo": "/vtr/emergencia.png"` en la config).
 - **VTR**: pon videos (`.mp4 .webm .mov`) e imágenes (`.png .jpg .svg`) en la carpeta `vtr/`. "Tabla de posiciones" sale por el VTR.
 
+## Macropad Redragon SS-552 (10 teclas + 4 diales)
+Hay dos formas; usa la que permita tu Redragon Station (no pude comprobar cuál admite):
+1. **Ejecutar un programa** (la mejor: funciona aunque el foco esté en OBS): en cada tecla/dial pon `macropad\cmd.bat <comando>`.
+2. **Mandar una tecla**: usa las teclas de la tabla de arriba (+ `[` `]` preview, `-` `=` volumen, `m` mute, `,` `.` VTR anterior/siguiente, `p` VTR play/pausa). Solo funciona con la pestaña `/control` en primer plano.
+
+Propuesta de asignación:
+
+| Control | Girar → | Girar ← | Presionar |
+|---|---|---|---|
+| Dial 1 (cámara a preview) | `preview-next` | `preview-prev` | `cut` |
+| Dial 2 (audio master) | `audio-next` | `audio-prev` | `audio-clear` |
+| Dial 3 (volumen cámara) | `vol-up` | `vol-down` | `mute` |
+| Dial 4 (VTR) | `vtr-next` | `vtr-prev` | `vtr-toggle` |
+
+Teclas: `cut`, `fade`, `gc-name-preview`, `gc-name-live`, `gc-name-off`, `gc-score-live`, `gc-score-off`, `vtr-toggle`, `gc-player-next`, `emergency-toggle`.
+Otros comandos: `cam1`…`cam8`, `vtr`, `audio-clear`, `vtr-vol-up`, `vtr-vol-down`, `vtr-mute`, `vtr-play`, `vtr-pause`, `gc-score-preview`, `emergency-on`, `emergency-off`.
+`gc-name-preview` arma el GC con el equipo que esté en Preview; `gc-player-next` alterna entre sus 2 jugadores.
+Cada paso de volumen es 5 %. El volumen y el mute se ven arriba en el panel.
+
+Prueba sin macropad: `curl -X POST http://127.0.0.1:3000/api/do/cut`. Solo acepta POST y rechaza peticiones de otras páginas web.
+
+## Imagen o video por defecto del VTR
+Pon un archivo en `vtr/` (por ejemplo `standby.png`) y en la config `"vtrDefault": "standby.png"`. Se selecciona solo y se muestra
+cuando no hay nada elegido o se borra el archivo actual, así un corte al VTR nunca queda en negro.
+
 ## Marcador (Google Sheets)
 1. Crea una hoja importando `config/sheet-template.csv` (columnas: Equipo, Puntos, Posición; la posición puedes calcularla con fórmula).
 2. Compártela como "Cualquiera con el enlace puede ver" y da permiso de edición a quien lleve el marcador.
