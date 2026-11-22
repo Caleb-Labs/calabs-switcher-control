@@ -38,3 +38,19 @@ export function resizeRect(r, dw, dh, lock16x9) {
   }
   return { ...r, w: clamp(r.w + dw, MIN, 1 - r.x), h: clamp(r.h + dh, MIN, 1 - r.y) };
 }
+
+// --- Elegir cámaras con botones ---
+// Nombre de cada posición, para los desplegables ("Izquierda", "Derecha"...).
+export function slotNames(count) {
+  const fixed = { 1: ['Centro'], 2: ['Izquierda', 'Derecha'], 3: ['Arriba izquierda', 'Arriba derecha', 'Abajo centro'], 4: ['Arriba izquierda', 'Arriba derecha', 'Abajo izquierda', 'Abajo derecha'] };
+  if (fixed[count]) return fixed[count];
+  const top = { 5: 3, 6: 3, 7: 4, 8: 4 }[count];
+  if (top) return Array.from({ length: count }, (_, i) => (i < top ? `Arriba ${i + 1}` : `Abajo ${i - top + 1}`));
+  return Array.from({ length: count }, (_, i) => `Fila ${Math.floor(i / 3) + 1} · ${(i % 3) + 1}`);
+}
+
+// Clic en un botón de cámara: la agrega al final, o la quita si ya estaba (siempre queda al menos una; máximo 9).
+export function toggleCam(cams, id) {
+  if (cams.includes(id)) return cams.length > 1 ? cams.filter((c) => c !== id) : cams;
+  return cams.length >= 9 ? cams : [...cams, id];
+}

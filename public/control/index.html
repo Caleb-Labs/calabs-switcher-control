@@ -41,11 +41,13 @@
 </section>
 <main id="mv"></main>
 <section id="splitpanel">
+  <div class="sp-pick">
+    <strong>Cámaras en pantalla</strong>
+    <div id="sp-chips" class="chips"></div>
+    <span id="sp-hint">Haz clic en las cámaras que quieres (hasta 9). Se acomodan solas; cambia el orden con los desplegables o arrastra los recuadros.</span>
+  </div>
   <div class="sp-row">
-    <strong>Pantalla dividida</strong>
-    <label>Cámaras
-      <select id="sp-count"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
-    </label>
+    <strong>Fondo y tamaño</strong>
     <label>Fondo <select id="sp-bg"></select></label>
     <label class="chk"><input type="checkbox" id="sp-lock" checked> mantener 16:9</label>
     <button id="sp-reset">Restablecer posiciones</button>

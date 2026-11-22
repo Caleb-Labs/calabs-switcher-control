@@ -3,13 +3,17 @@
 // ---------- Pantalla dividida ----------
 // Rectángulos en fracciones del lienzo 1920x1080 (w y h iguales = recuadro 16:9).
 const LAYOUTS = {
+  1: [[0.2, 0.2, 0.6, 0.6]],
   2: [[0.01, 0.26, 0.48, 0.48], [0.51, 0.26, 0.48, 0.48]],
   3: [[0.08, 0.05, 0.4, 0.4], [0.52, 0.05, 0.4, 0.4], [0.3, 0.52, 0.4, 0.4]],
   4: [[0.08, 0.05, 0.4, 0.4], [0.52, 0.05, 0.4, 0.4], [0.08, 0.52, 0.4, 0.4], [0.52, 0.52, 0.4, 0.4]],
   5: [[0.03, 0.08, 0.3, 0.3], [0.35, 0.08, 0.3, 0.3], [0.67, 0.08, 0.3, 0.3], [0.19, 0.5, 0.3, 0.3], [0.51, 0.5, 0.3, 0.3]],
   6: [[0.03, 0.08, 0.3, 0.3], [0.35, 0.08, 0.3, 0.3], [0.67, 0.08, 0.3, 0.3], [0.03, 0.5, 0.3, 0.3], [0.35, 0.5, 0.3, 0.3], [0.67, 0.5, 0.3, 0.3]],
+  7: [[0.03, 0.12, 0.22, 0.22], [0.27, 0.12, 0.22, 0.22], [0.51, 0.12, 0.22, 0.22], [0.75, 0.12, 0.22, 0.22], [0.15, 0.46, 0.22, 0.22], [0.39, 0.46, 0.22, 0.22], [0.63, 0.46, 0.22, 0.22]],
+  8: [[0.03, 0.12, 0.22, 0.22], [0.27, 0.12, 0.22, 0.22], [0.51, 0.12, 0.22, 0.22], [0.75, 0.12, 0.22, 0.22], [0.03, 0.46, 0.22, 0.22], [0.27, 0.46, 0.22, 0.22], [0.51, 0.46, 0.22, 0.22], [0.75, 0.46, 0.22, 0.22]],
+  9: [[0.06, 0.04, 0.28, 0.28], [0.36, 0.04, 0.28, 0.28], [0.66, 0.04, 0.28, 0.28], [0.06, 0.36, 0.28, 0.28], [0.36, 0.36, 0.28, 0.28], [0.66, 0.36, 0.28, 0.28], [0.06, 0.68, 0.28, 0.28], [0.36, 0.68, 0.28, 0.28], [0.66, 0.68, 0.28, 0.28]],
 };
-const COUNTS = [2, 3, 4, 5, 6];
+const COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const BG_FILE = (n) => new RegExp(`^split-${n}\\.(png|jpe?g|svg|mp4|webm|mov)$`, 'i');
 const MAX_FIGHTS = 50;
 const isPlainObj = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
@@ -225,6 +229,14 @@ export function reduce(state, action) {
 
     case 'SPLIT_SET_COUNT':
       return COUNTS.includes(action.count) ? { ...state, split: { ...state.split, count: action.count } } : state;
+    case 'SPLIT_SET_CAMS': { // elegir las cámaras con botones: la cantidad sale de cuántas se eligen, en orden de clic
+      const cams = action.cams;
+      const valid = camIdsOf(state);
+      if (!Array.isArray(cams) || cams.length < 1 || cams.length > 9 || new Set(cams).size !== cams.length || !cams.every((c) => valid.includes(c))) return state;
+      const n = cams.length;
+      const slots = state.split.layouts[n].map((s, i) => ({ ...s, cam: cams[i] }));
+      return { ...state, split: { ...state.split, count: n, layouts: { ...state.split.layouts, [n]: slots } } };
+    }
     case 'SPLIT_SET_CAM': {
       const n = state.split.count;
       if (!Number.isInteger(action.index) || action.index < 0 || action.index >= n || !camIdsOf(state).includes(action.cam)) return state;

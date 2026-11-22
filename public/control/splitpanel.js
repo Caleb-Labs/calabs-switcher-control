@@ -1,4 +1,4 @@
-import { slotStyle, activeSlots, splitBgFile, moveRect, resizeRect } from '/shared/split.js';
+import { slotStyle, activeSlots, splitBgFile, moveRect, resizeRect, slotNames, toggleCam } from '/shared/split.js';
 
 const $ = (id) => document.getElementById(id);
 const MEDIA = /\.(png|jpe?g|svg|mp4|webm|mov)$/i;
@@ -13,9 +13,8 @@ export function initSplitPanel({ send }) {
   let lastSend = 0;
 
   const blurOnChange = (el) => { el.addEventListener('change', () => el.blur()); }; // para que las teclas 1-9 sigan funcionando
-  for (const id of ['sp-count', 'sp-bg', 'sp-fights']) blurOnChange($(id));
+  for (const id of ['sp-bg', 'sp-fights']) blurOnChange($(id));
 
-  $('sp-count').onchange = (e) => send({ type: 'SPLIT_SET_COUNT', count: Number(e.target.value) });
   $('sp-bg').onchange = (e) => send({ type: 'SPLIT_SET_BG', count: state.split.count, file: e.target.value || null });
   $('sp-reset').onclick = () => send({ type: 'SPLIT_RESET_LAYOUT' });
   $('sp-preview').onclick = () => send({ type: 'SET_PREVIEW', id: 'split' });
@@ -27,16 +26,35 @@ export function initSplitPanel({ send }) {
 
   const camOptions = () => state.sources.filter((s) => s.kind !== 'vtr' && s.kind !== 'split');
 
+  function renderChips() {
+    const cams = camOptions();
+    const chosen = [...new Set(activeSlots(state).map((s) => s.cam))];
+    const key = JSON.stringify([cams.map((c) => c.id + c.label), chosen]);
+    const box = $('sp-chips');
+    if (box.dataset.key === key) return;
+    box.dataset.key = key;
+    box.replaceChildren(...cams.map((c) => {
+      const order = chosen.indexOf(c.id);
+      const b = document.createElement('button');
+      b.className = `chip${order >= 0 ? ' on' : ''}`;
+      b.textContent = `${c.id.slice(3)} · ${c.label}`;
+      if (order >= 0) { const n = document.createElement('b'); n.textContent = order + 1; b.append(n); }
+      b.onclick = () => { send({ type: 'SPLIT_SET_CAMS', cams: toggleCam(chosen, c.id) }); b.blur(); };
+      return b;
+    }));
+  }
+
   function renderSlots() {
     const box = $('sp-slots');
     const slots = activeSlots(state);
     const cams = camOptions();
+    const names = slotNames(slots.length);
     const key = JSON.stringify([slots.length, cams.map((c) => c.id + c.label)]);
     if (box.dataset.key !== key) {
       box.dataset.key = key;
       box.replaceChildren(...slots.map((_, i) => {
         const row = document.createElement('label');
-        row.append(`Recuadro ${i + 1} `);
+        row.append(`${i + 1} · ${names[i]}`);
         const sel = document.createElement('select');
         sel.dataset.index = i;
         sel.replaceChildren(...cams.map((c) => new Option(c.label, c.id)));
@@ -92,7 +110,6 @@ export function initSplitPanel({ send }) {
 
   function renderSelects() {
     const sp = state.split;
-    $('sp-count').value = String(sp.count);
     const media = state.vtr.files.filter((f) => MEDIA.test(f));
     const bgKey = JSON.stringify(media);
     if ($('sp-bg').dataset.key !== bgKey) {
@@ -110,6 +127,6 @@ export function initSplitPanel({ send }) {
   }
 
   return {
-    render(s) { state = s; renderSelects(); renderSlots(); renderCanvas(); },
+    render(s) { state = s; renderSelects(); renderChips(); renderSlots(); renderCanvas(); },
   };
 }

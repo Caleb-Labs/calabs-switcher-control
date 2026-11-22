@@ -10,7 +10,7 @@ GC con preview, marcador desde Google Sheets y VTR. OBS solo carga la salida `/p
 ## Primer uso
 1. Doble clic en `start.bat`. La primera vez crea `config\teams.json` y lo abre: pon los 8 equipos
    (nombre, 2 jugadores, `source`: `{"kind":"vdo","room":"nombre-unico"}` o `{"kind":"twitch","channel":"canal"}`).
-2. Vuelve a abrir `start.bat`: levanta el servidor y abre el panel `http://localhost:3000/control/`.
+2. Vuelve a abrir `start.bat`: levanta el servidor y abre el panel como ventana de aplicación (Edge sin pestañas); si no hay Edge, usa tu navegador en `http://localhost:3000/control/`.
 
 ## Que cada equipo envíe su juego
 `npm run links` imprime el link de envío de cada equipo (`https://vdo.ninja/?push=...&quality=1`).
@@ -41,9 +41,9 @@ Aparece como la cámara 9 (tecla `9`, comando `cam9`), entra en `npm run links` 
 
 ## Pantalla dividida (peleas)
 Es una fuente más (`s`, comando `split`): se manda a Preview y se toma con CUT/FADE como cualquier cámara. En el panel "Pantalla dividida":
-1. Elige **cuántas cámaras** (2 a 6) y **quién va en cada recuadro** (por ejemplo, equipo 2 y equipo 6).
+1. En **"Cámaras en pantalla"** haz clic en los botones de las cámaras que quieres, en el orden que quieras (hasta 9; por ejemplo 1 y 4). La cantidad sale de cuántas elijas y se acomodan solas (2 quedan lado a lado). Para cambiar quién va en cada posición usa los desplegables con nombre ("Izquierda", "Derecha"…).
 2. **Arrastra** los recuadros del lienzo para moverlos y usa la esquina para cambiar el tamaño ("mantener 16:9" evita franjas negras). `/program` se actualiza en vivo si está al aire.
-3. **Fondo por cantidad:** cada cantidad (2, 3, 4…) tiene su fondo. Se detecta solo si pones en `vtr/` un archivo llamado `split-2.png`, `split-3.png`, `split-4.png`… (también `.jpg .svg .mp4 .webm .mov`), o lo eliges en el menú "Fondo".
+3. **Fondo por cantidad:** cada cantidad (2, 3, 4…) tiene su fondo. Se detecta solo si pones en `vtr/` un archivo llamado `split-2.png`, `split-3.png`, `split-4.png`… (también `.jpg .svg .mp4 .webm .mov`; `split-1` a `split-9`), o lo eliges en el menú "Fondo".
 4. **Peleas:** escribe un nombre ("Pelea 1") y "Guardar" para recordar cámaras + posiciones. Después "Cargar" y listo; así no necesitas un macro por cada combinación.
 Cada cantidad recuerda su propio arreglo. Todo se guarda en `data/split.json` y sobrevive a reinicios.
 En el panel la dividida se ve como un esquema (fondo + recuadros con nombres); el video real solo se compone en `/program`.

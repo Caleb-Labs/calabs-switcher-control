@@ -11,4 +11,5 @@ if not exist config\teams.json (
 )
 start "Multicam server" cmd /k node server\main.js
 timeout /t 2 >nul
-start "" http://localhost:3000/control/
+rem Se abre como ventana de aplicacion (Edge --app). Si no hay Edge, abre el navegador normal.
+start "" msedge --app=http://localhost:3000/control/ 2>nul || start "" http://localhost:3000/control/

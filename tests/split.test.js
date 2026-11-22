@@ -6,7 +6,7 @@ import path from 'node:path';
 import { createState, reduce, normalizeSplit, defaultSlots } from '../server/state.js';
 import { startServer } from '../server/index.js';
 import { parseHTML } from 'linkedom';
-import { slotStyle, splitPlacement, moveRect, resizeRect } from '../public/shared/split.js';
+import { slotStyle, splitPlacement, moveRect, resizeRect, slotNames, toggleCam } from '../public/shared/split.js';
 import { neededIds, visibleIds, createSourceElement, applyPlacement } from '../public/shared/sources.js';
 import { fileURLToPath } from 'node:url';
 
@@ -35,22 +35,25 @@ test('AUDIO_MASTER_STEP recorre también la aérea y salta vtr y split', () => {
 });
 
 // ---------- modelo de la pantalla dividida ----------
-test('defaultSlots: 2..6 recuadros dentro del lienzo, con cámaras asignadas en orden', () => {
-  for (let n = 2; n <= 6; n++) {
-    const slots = defaultSlots(n, ['cam1', 'cam2', 'cam3', 'cam4', 'cam5', 'cam6']);
+test('defaultSlots: 1..9 recuadros dentro del lienzo, sin encimarse, con cámaras asignadas en orden', () => {
+  const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  for (let n = 1; n <= 9; n++) {
+    const slots = defaultSlots(n, ['cam1', 'cam2', 'cam3', 'cam4', 'cam5', 'cam6', 'cam7', 'cam8', 'cam9']);
+    slots.forEach((a, i) => slots.slice(i + 1).forEach((b) => assert.ok(!overlap(a, b), `n=${n}: recuadros encimados`)));
     assert.equal(slots.length, n);
     slots.forEach((s, i) => {
       assert.equal(s.cam, `cam${i + 1}`);
       assert.ok(s.x >= 0 && s.y >= 0 && s.x + s.w <= 1.0001 && s.y + s.h <= 1.0001, `n=${n} slot ${i} dentro del lienzo`);
     });
   }
-  assert.throws(() => defaultSlots(1, ['cam1']));
+  assert.throws(() => defaultSlots(0, ['cam1']));
+  assert.throws(() => defaultSlots(10, ['cam1']));
 });
 
 test('estado inicial: 2 cámaras, layouts para 2..6, sin fondos ni peleas', () => {
   const sp = S().split;
   assert.equal(sp.count, 2);
-  assert.deepEqual(Object.keys(sp.layouts), ['2', '3', '4', '5', '6']);
+  assert.deepEqual(Object.keys(sp.layouts), ['1', '2', '3', '4', '5', '6', '7', '8', '9']);
   assert.deepEqual(sp.layouts[2].map((x) => x.cam), ['cam1', 'cam2']);
   assert.deepEqual(sp.fights, []);
   assert.deepEqual(sp.bgs, {});
@@ -62,8 +65,8 @@ test('SPLIT_SET_COUNT cambia la cantidad y cada cantidad recuerda su propio arre
   assert.equal(s.split.layouts[4].length, 4);
   s = apply(s, { type: 'SPLIT_SET_COUNT', count: 2 });
   assert.equal(s.split.layouts[2][0].cam, 'cam5');
-  assert.equal(apply(s, { type: 'SPLIT_SET_COUNT', count: 1 }), s);
-  assert.equal(apply(s, { type: 'SPLIT_SET_COUNT', count: 7 }), s);
+  assert.equal(apply(s, { type: 'SPLIT_SET_COUNT', count: 0 }), s);
+  assert.equal(apply(s, { type: 'SPLIT_SET_COUNT', count: 10 }), s);
   assert.equal(apply(s, { type: 'SPLIT_SET_COUNT', count: 'x' }), s);
 });
 
@@ -102,7 +105,7 @@ test('fondos: SPLIT_SET_BG solo con archivos del VTR; se detectan solos por nomb
   s = apply(s, { type: 'SPLIT_SET_BG', count: 3, file: 'otro.png' });
   assert.equal(s.split.bgs[3], 'otro.png');
   assert.equal(apply(s, { type: 'SPLIT_SET_BG', count: 3, file: 'no-existe.png' }), s);
-  assert.equal(apply(s, { type: 'SPLIT_SET_BG', count: 9, file: 'otro.png' }), s);
+  assert.equal(apply(s, { type: 'SPLIT_SET_BG', count: 10, file: 'otro.png' }), s);
   s = apply(s, { type: 'SPLIT_SET_BG', count: 3, file: null });
   assert.equal(s.split.bgs[3], undefined);
   s = apply(s, { type: 'VTR_FILES', files: ['@tabla'] });
@@ -147,8 +150,8 @@ test('normalizeSplit repara datos guardados corruptos y conserva los válidos', 
   assert.equal(good.fights.length, 1);
   for (const raw of [null, undefined, 'x', 5, [], { count: 99 }, { count: 3, layouts: { 3: 'x' } }, { layouts: { 2: [{ cam: 'vtr', x: 'a' }] } }, { fights: 'x' }, { fights: [{ id: 1 }] }]) {
     const sp = normalizeSplit(raw, cams);
-    assert.ok(sp.count >= 2 && sp.count <= 6);
-    for (let n = 2; n <= 6; n++) {
+    assert.ok(sp.count >= 1 && sp.count <= 9);
+    for (let n = 1; n <= 9; n++) {
       assert.equal(sp.layouts[n].length, n);
       for (const s of sp.layouts[n]) assert.ok(cams.includes(s.cam) && [s.x, s.y, s.w, s.h].every(Number.isFinite));
     }
@@ -280,4 +283,48 @@ test('createSourceElement: fondo imagen o video, y la vista de la dividida', () 
   const view = createSourceElement({ id: 'split', kind: 'split' }, {});
   assert.equal(view.tagName, 'DIV');
   assert.ok(view.classList.contains('split-view'));
+});
+
+// ---------- elegir cámaras con botones ----------
+test('SPLIT_SET_CAMS: la cantidad sale de cuántas eliges y van en el orden en que las eliges', () => {
+  let s = apply(S(), { type: 'SPLIT_SET_CAMS', cams: ['cam1', 'cam4'] });
+  assert.equal(s.split.count, 2);
+  assert.deepEqual(s.split.layouts[2].map((x) => x.cam), ['cam1', 'cam4']);
+  s = apply(s, { type: 'SPLIT_SET_CAMS', cams: ['cam1', 'cam4', 'cam9'] });
+  assert.equal(s.split.count, 3);
+  assert.deepEqual(s.split.layouts[3].map((x) => x.cam), ['cam1', 'cam4', 'cam9']);
+  s = apply(s, { type: 'SPLIT_SET_CAMS', cams: ['cam3'] });
+  assert.equal(s.split.count, 1);
+  const nine = Array.from({ length: 9 }, (_, i) => `cam${i + 1}`);
+  assert.equal(apply(s, { type: 'SPLIT_SET_CAMS', cams: nine }).split.count, 9);
+});
+
+test('SPLIT_SET_CAMS conserva las posiciones que ya habías ajustado para esa cantidad', () => {
+  let s = apply(S(), { type: 'SPLIT_SET_RECT', index: 0, x: 0.05, y: 0.05, w: 0.3, h: 0.3 });
+  const before = s.split.layouts[2][0];
+  s = apply(s, { type: 'SPLIT_SET_CAMS', cams: ['cam7', 'cam8'] });
+  assert.equal(s.split.layouts[2][0].cam, 'cam7');
+  assert.deepEqual({ x: s.split.layouts[2][0].x, w: s.split.layouts[2][0].w }, { x: before.x, w: before.w });
+});
+
+test('SPLIT_SET_CAMS ignora listas inválidas: vacía, repetidas, no cámaras, demasiadas o no-arreglo', () => {
+  const s0 = S();
+  for (const cams of [[], ['cam1', 'cam1'], ['cam1', 'vtr'], ['cam1', 'split'], ['cam99'], 'cam1', null, undefined, 5, Array.from({ length: 10 }, (_, i) => `cam${i + 1}`)]) {
+    assert.equal(apply(s0, { type: 'SPLIT_SET_CAMS', cams }), s0);
+  }
+});
+
+test('slotNames da un nombre de posición por recuadro (Izquierda/Derecha para 2)', () => {
+  assert.deepEqual(slotNames(2), ['Izquierda', 'Derecha']);
+  assert.deepEqual(slotNames(1), ['Centro']);
+  for (let n = 1; n <= 9; n++) assert.equal(slotNames(n).length, n);
+  assert.equal(new Set(slotNames(9)).size, 9);
+});
+
+test('toggleCam agrega al final, quita si ya estaba, no pasa de 9 ni deja la lista vacía', () => {
+  assert.deepEqual(toggleCam(['cam1'], 'cam4'), ['cam1', 'cam4']);
+  assert.deepEqual(toggleCam(['cam1', 'cam4'], 'cam1'), ['cam4']);
+  assert.deepEqual(toggleCam(['cam4'], 'cam4'), ['cam4']);
+  const nine = Array.from({ length: 9 }, (_, i) => `cam${i + 1}`);
+  assert.deepEqual(toggleCam(nine, 'cam10'), nine);
 });
