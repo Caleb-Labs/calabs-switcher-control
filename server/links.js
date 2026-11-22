@@ -14,7 +14,7 @@ export function pushLink(team, { quality = '720p', fps, password, mode = 'browse
   return u.toString();
 }
 
-export function viewLink(team, { bitrate = 3000, noAudio = false, password } = {}) {
+export function viewLink(team, { bitrate = 3000, meter = false, password } = {}) {
   if (team.source.kind === 'twitch') {
     const u = new URL('https://player.twitch.tv/');
     u.searchParams.set('channel', team.source.channel);
@@ -26,7 +26,8 @@ export function viewLink(team, { bitrate = 3000, noAudio = false, password } = {
   u.searchParams.set('view', team.source.room);
   u.searchParams.set('videobitrate', String(bitrate));
   u.searchParams.set('cleanoutput', '');
-  if (noAudio) u.searchParams.set('noaudio', '');
+  // Tiles del panel: altavoz callado pero con audio recibido, y nivel de cada cámara para los medidores (noaudio impediría medir).
+  if (meter) { u.searchParams.set('mutespeaker', ''); u.searchParams.set('getloudness', ''); }
   if (password) u.searchParams.set('password', password);
   return u.toString();
 }

@@ -144,3 +144,11 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 
 .sp-aud { opacity: .5; }
 .sp-aud.on { opacity: 1; border-color: var(--ok); background: #6fa08a33; }
+
+/* Medidor de audio (estilo ATEM): barra vertical semitransparente a la izquierda de cada ventana */
+.vu { position: absolute; left: 6px; top: 6px; bottom: 36px; width: 9px; z-index: 6; pointer-events: none; border-radius: 2px; overflow: hidden;
+  background: linear-gradient(to top, #4f9d69 0 62%, #c4a24a 62% 86%, #b5656b 86%); opacity: .82; box-shadow: 0 0 0 1px #000a; }
+.vu::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000a 0 1px, transparent 1px) 0 0 / 100% calc(100% / 14); }
+.vu-off { position: absolute; left: 0; right: 0; top: 0; height: 100%; background: #0b0d12cc; }
+.vu-peak { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #fff; opacity: 0; }
+.tile.pre .vu, .tile.pgm .vu { top: 30px; bottom: 30px; width: 11px; }

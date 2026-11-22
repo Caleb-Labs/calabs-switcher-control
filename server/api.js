@@ -17,7 +17,7 @@ export function sourcesRoute(config, profile = { tileBitrate: 2000, programBitra
     if (url.pathname !== '/api/sources') return false;
     const state = ctx.getState();
     const control = url.searchParams.get('for') === 'control';
-    const opts = { bitrate: control ? profile.tileBitrate : profile.programBitrate, noAudio: control, password: state.conn.password };
+    const opts = { bitrate: control ? profile.tileBitrate : profile.programBitrate, meter: control, password: state.conn.password };
     const cams = config.aerial ? [...config.teams, config.aerial] : config.teams;
     const list = cams.map((_, i) => ({ id: `cam${i + 1}`, kind: cams[i].source.kind, url: viewLink(effectiveTeam(config, state, i), opts) }));
     list.push({ id: 'vtr', kind: 'vtr', url: null });

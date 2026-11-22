@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseHTML } from 'linkedom';
-import { createSourceElement, mountOnly, neededIds } from '../public/shared/sources.js';
+import { createSourceElement, mountOnly, neededIds, applyVolumes } from '../public/shared/sources.js';
 
 const setup = () => {
   const { document } = parseHTML('<div id="c"></div>');
@@ -69,4 +69,13 @@ test('mountOnly reemplaza el elemento cuando cambia la variante (nosignal <-> li
   mountOnly(c, ['cam4'], make, () => status);
   assert.equal(c.children.length, 1);
   assert.equal(c.firstElementChild.tagName, 'IFRAME');
+});
+
+test('applyVolumes silencia los videos, salvo el que lleva medidor (su audio va solo al analizador)', () => {
+  const c = setup();
+  const mk = (id, metered) => { const v = document.createElement('video'); v.dataset.sourceId = id; if (metered) v.dataset.metered = '1'; c.append(v); return v; };
+  const a = mk('plain', false); const b = mk('vtr', true);
+  applyVolumes(c, () => 0);
+  assert.equal(a.muted, true);
+  assert.notEqual(b.muted, true);
 });

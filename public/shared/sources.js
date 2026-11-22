@@ -93,7 +93,7 @@ export function volumeFor(state, id) {
 export function applyVolumes(container, volumeOf) {
   for (const el of container.children) {
     const v = volumeOf(el.dataset.sourceId);
-    if (el.tagName === 'VIDEO') { el.muted = v === 0; el.volume = v; }
+    if (el.tagName === 'VIDEO') { if (el.dataset.metered) continue; el.muted = v === 0; el.volume = v; } // con medidor: el audio va solo al analizador
     else if (el.tagName === 'IFRAME' && el.dataset.kind === 'vdo') {
       el.contentWindow?.postMessage({ volume: v }, 'https://vdo.ninja');
     }

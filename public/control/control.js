@@ -12,6 +12,7 @@ import { initGcStylePanel } from './gcstylepanel.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
+import { initMeters } from './meters.js';
 
 const mv = document.getElementById('mv');
 const tiles = new Map();
@@ -64,6 +65,7 @@ bigInput.onchange = () => bigInput.blur(); // si no, el slider se queda con el f
 document.getElementById('sz-reset').onclick = () => { sizes = clampSizes(null); try { localStorage.removeItem('multicam.sizes'); } catch { /* nada */ } applySizes(); };
 window.addEventListener('resize', () => { if (preGfx) { applyScale(preGfx); applyScale(pgmGfx); } });
 
+const meters = initMeters();
 const splitPanel = initSplitPanel({ send });
 const mixer = initMixer({ send });
 const gcMove = initGcMove({ send });
@@ -151,6 +153,11 @@ function build(state) {
     }
     tile.append(label, badge, hit);
     mv.append(tile); tiles.set(s.id, tile);
+    if (s.kind !== 'split') { // medidor de audio (el VTR se mide con un analizador sobre su video)
+      meters.attach(tile, s.id);
+      const vid = tile.querySelector('video');
+      if (s.kind === 'vtr' && vid) meters.attachVideo(vid, s.id);
+    }
   }
 }
 
@@ -186,7 +193,7 @@ function render() {
   if (!sources || !lastState) return;
   const key = activeSrc(lastState).map((x) => x.id).join();
   if (key !== builtKey) { // cambió qué cámaras se ven: se reconstruye la grilla
-    mv.replaceChildren(); tiles.clear(); slotEls.clear(); mirror = null; mirrorId = null;
+    mv.replaceChildren(); tiles.clear(); slotEls.clear(); meters.reset(); mirror = null; mirrorId = null;
     build(lastState);
     builtKey = key;
   }
@@ -277,6 +284,7 @@ function reloadSources() { loadSources().then(() => { builtKey = null; render();
 // Detección automática (mejor esfuerzo) por los eventos del iframe de VDO.Ninja.
 window.addEventListener('message', (e) => {
   if (!sources || !lastState) return;
+  meters.onMessage(e, sources);
   const r = statusFromMessage(e, sources);
   if (r && lastState.sources.find((x) => x.id === r.id)?.status !== r.status) send({ type: 'SOURCE_STATUS', ...r });
 });
@@ -294,7 +302,7 @@ function syncVtrPanel() {
   vtrSel.value = current ?? '';
   document.getElementById('vtr-empty').hidden = files.some((f) => f !== '@tabla');
   const v = tiles.get('vtr')?.querySelector('video');
-  if (v) { syncVtr(v, lastState.vtr); v.muted = true; v.onended = () => send({ type: 'VTR_PAUSE' }); }
+  if (v) { syncVtr(v, lastState.vtr); if (!v.dataset.metered) v.muted = true; v.onended = () => send({ type: 'VTR_PAUSE' }); }
 }
 vtrSel.onchange = () => send({ type: 'VTR_SELECT', file: vtrSel.value });
 document.getElementById('vtr-play').onclick = () => send({ type: 'VTR_PLAY' });

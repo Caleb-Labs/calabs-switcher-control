@@ -80,6 +80,8 @@ Es una fuente más (`s`): se manda a Preview y se toma con CUT/FADE. En el panel
 ## Cámaras visibles y nombres
 Arriba: **Equipos [N]** oculta del todo las cámaras sobrantes (tiles, botones, mezclador, teclas); la cámara aérea cuenta como una más (la última, `9`). Doble clic en el nombre de una cámara para personalizarlo.
 
+Cada ventana del multiview (cámaras, Preview, Program y VTR) lleva un **medidor de audio** vertical a la izquierda, con marca de pico. Mide la señal que entra, antes de los faders. Solo está en `/control`; `/program` queda limpio. Los tiles del panel cargan el audio de VDO.Ninja con el altavoz callado (`mutespeaker` + `getloudness`), así que suman un poco de ancho de banda de audio.
+
 ## Macropad Redragon SS-552 (10 teclas + 4 diales)
 Dos formas (usa la que permita tu Redragon Station):
 1. **Ejecutar un programa** (funciona aunque el foco esté en OBS): en cada tecla/dial pon `macropad\cmd.bat <comando>`.

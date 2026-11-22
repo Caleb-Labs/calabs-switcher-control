@@ -61,9 +61,12 @@ test('parseConfig conserva emergencyLogo', () => {
   assert.equal(parseConfig({ teams: eight() }).emergencyLogo, null);
 });
 
-test('viewLink con noAudio agrega noaudio; sin él no', () => {
-  assert.ok(new URL(viewLink(vdo('x'), { noAudio: true })).searchParams.has('noaudio'));
-  assert.ok(!new URL(viewLink(vdo('x'))).searchParams.has('noaudio'));
+test('viewLink con meter calla el altavoz y pide niveles (sin noaudio, que dejaría sin audio que medir); sin él no', () => {
+  const p = new URL(viewLink(vdo('x'), { meter: true })).searchParams;
+  assert.ok(p.has('mutespeaker') && p.has('getloudness'));
+  assert.ok(!p.has('noaudio'));
+  const q = new URL(viewLink(vdo('x'))).searchParams;
+  assert.ok(!q.has('mutespeaker') && !q.has('getloudness') && !q.has('noaudio'));
 });
 
 test('parseConfig acepta una cámara aérea opcional y la valida', () => {

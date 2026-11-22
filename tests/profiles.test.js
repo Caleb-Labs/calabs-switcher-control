@@ -47,8 +47,10 @@ test('/api/sources?for=control usa tileBitrate y el resto programBitrate', async
   assert.match(await get('?for=program'), /videobitrate=2500/);
 });
 
-test('los links de /control salen sin audio y los de /program con audio', async () => {
+test('los links de /control salen con altavoz callado y niveles; los de /program con audio normal', async () => {
   const get = async (q) => (await (await fetch(`http://127.0.0.1:${srv.port}/api/sources${q}`)).json())[0].url;
-  assert.match(await get('?for=control'), /noaudio/);
-  assert.doesNotMatch(await get(''), /noaudio/);
+  assert.match(await get('?for=control'), /mutespeaker/);
+  assert.match(await get('?for=control'), /getloudness/);
+  assert.doesNotMatch(await get('?for=control'), /noaudio/);
+  assert.doesNotMatch(await get(''), /noaudio|mutespeaker|getloudness/);
 });

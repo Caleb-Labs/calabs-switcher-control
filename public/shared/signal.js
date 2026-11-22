@@ -2,7 +2,7 @@
 // Eventos documentados: "view-connection" (value true/false, streamID). "end-view-connection" se acepta por si existe.
 // Si el evento no llega, el operador puede marcar la cámara a mano desde /control.
 
-const roomOf = (url) => {
+export const roomOf = (url) => {
   try { return new URL(url).searchParams.get('view'); } catch { return null; }
 };
 
