@@ -1,0 +1,91 @@
+import { test, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
+import WebSocket from 'ws';
+import { startServer } from '../server/index.js';
+
+const team = (i) => ({ name: `Equipo ${i}`, players: ['a', 'b'], source: { kind: 'vdo', room: `r${i}` } });
+const config = { teams: Array.from({ length: 8 }, (_, i) => team(i + 1)) };
+
+const servers = [];
+async function boot() {
+  const srv = await startServer({ port: 0, config, publicDir: fileURLToPath(new URL('../public', import.meta.url)) });
+  servers.push(srv);
+  return srv;
+}
+after(() => Promise.all(servers.map((s) => s.close())));
+
+// Cliente con cola de mensajes para esperar el siguiente estado.
+function client(port) {
+  const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`);
+  const queue = [];
+  const waiters = [];
+  ws.on('message', (raw) => {
+    const msg = JSON.parse(raw);
+    const w = waiters.shift();
+    if (w) w(msg); else queue.push(msg);
+  });
+  return {
+    ws,
+    open: () => new Promise((res) => ws.once('open', res)),
+    next: () => new Promise((res) => { const m = queue.shift(); m ? res(m) : waiters.push(res); }),
+    send: (obj) => ws.send(typeof obj === 'string' ? obj : JSON.stringify(obj)),
+    close: () => ws.close(),
+  };
+}
+
+test('un cliente nuevo recibe el estado inicial', async () => {
+  const { port } = await boot();
+  const c = client(port);
+  const msg = await c.next();
+  assert.equal(msg.type, 'state');
+  assert.equal(msg.state.program, 'cam1');
+  c.close();
+});
+
+test('una acción de un cliente llega a otro cliente', async () => {
+  const { port } = await boot();
+  const a = client(port), b = client(port);
+  await a.next(); await b.next();
+  a.send({ type: 'action', action: { type: 'SET_PREVIEW', id: 'cam3' } });
+  const msg = await b.next();
+  assert.equal(msg.state.preview, 'cam3');
+  a.close(); b.close();
+});
+
+test('acciones malformadas se ignoran sin tirar el servidor', async () => {
+  const { port } = await boot();
+  const a = client(port);
+  await a.next();
+  a.send('{esto no es json');
+  a.send({ type: 'action', action: { type: 'NO_EXISTE' } });
+  a.send({ type: 'otra-cosa' });
+  a.send({ type: 'action', action: { type: 'SET_PREVIEW', id: 'cam4' } });
+  const msg = await a.next();
+  assert.equal(msg.state.preview, 'cam4');
+  a.close();
+});
+
+test('un cliente que llega tarde recibe el estado actual (recarga de página)', async () => {
+  const { port } = await boot();
+  const a = client(port);
+  await a.next();
+  a.send({ type: 'action', action: { type: 'SET_PREVIEW', id: 'cam5' } });
+  await a.next();
+  a.send({ type: 'action', action: { type: 'TAKE', mode: 'cut' } });
+  await a.next();
+  const late = client(port);
+  const msg = await late.next();
+  assert.equal(msg.state.program, 'cam5');
+  assert.equal(msg.state.preview, 'cam1');
+  a.close(); late.close();
+});
+
+test('sirve archivos estáticos y no permite salir de public/', async () => {
+  const { port } = await boot();
+  const ok = await fetch(`http://127.0.0.1:${port}/shared/client.js`);
+  assert.equal(ok.status, 200);
+  assert.match(ok.headers.get('content-type'), /javascript/);
+  const bad = await fetch(`http://127.0.0.1:${port}/..%2fpackage.json`);
+  assert.equal(bad.status, 404);
+});
