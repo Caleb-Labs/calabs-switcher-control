@@ -1,10 +1,12 @@
 import { viewLink } from './links.js';
 
 // GET /api/sources -> [{id, kind, url}] (url null para el VTR)
-export function sourcesRoute(config, linkOpts = {}) {
+// ?for=control usa el bitrate chico de los tiles; el resto (program) el bitrate de salida.
+export function sourcesRoute(config, profile = { tileBitrate: 2000, programBitrate: 3000 }) {
   return async (req, res, url) => {
     if (url.pathname !== '/api/sources') return false;
-    const list = config.teams.map((t, i) => ({ id: `cam${i + 1}`, kind: t.source.kind, url: viewLink(t, linkOpts) }));
+    const bitrate = url.searchParams.get('for') === 'control' ? profile.tileBitrate : profile.programBitrate;
+    const list = config.teams.map((t, i) => ({ id: `cam${i + 1}`, kind: t.source.kind, url: viewLink(t, { bitrate }) }));
     list.push({ id: 'vtr', kind: 'vtr', url: null });
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify(list));

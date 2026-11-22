@@ -1,0 +1,8 @@
+{
+  "default": "720p",
+  "profiles": {
+    "720p":       { "tileBitrate": 2000, "programBitrate": 3000 },
+    "480p-tiles": { "tileBitrate": 1000, "programBitrate": 3000 },
+    "ligero":     { "tileBitrate": 600,  "programBitrate": 1800 }
+  }
+}

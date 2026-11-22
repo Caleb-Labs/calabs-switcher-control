@@ -12,7 +12,7 @@ export function parseConfig(raw) {
     else if (s?.kind === 'twitch') { if (!s.channel) throw new Error(`Equipo ${n}: la fuente twitch necesita channel`); }
     else throw new Error(`Equipo ${n}: source.kind debe ser "vdo" o "twitch"`);
   });
-  return { teams, sheet: raw.sheet ?? null, emergencyLogo: raw.emergencyLogo ?? null };
+  return { teams, sheet: raw.sheet ?? null, emergencyLogo: raw.emergencyLogo ?? null, profile: raw.profile };
 }
 
 export function loadConfig(path) {

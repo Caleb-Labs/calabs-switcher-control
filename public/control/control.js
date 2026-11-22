@@ -126,7 +126,7 @@ document.querySelectorAll('[data-gc]').forEach((b) => {
 });
 document.getElementById('btn-emergency').onclick = () => send({ type: 'EMERGENCY', on: !lastState?.emergency });
 
-fetch('/api/sources').then((r) => r.json()).then((list) => { sources = list; render(); });
+fetch('/api/sources?for=control').then((r) => r.json()).then((list) => { sources = list; render(); });
 
 // Detección automática (mejor esfuerzo) por los eventos del iframe de VDO.Ninja.
 window.addEventListener('message', (e) => {
