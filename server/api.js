@@ -1,20 +1,53 @@
-import { viewLink } from './links.js';
+import { viewLink, pushLink } from './links.js';
 import { commandToAction } from './commands.js';
 import { originAllowed } from './origin.js';
 
 // GET /api/sources -> [{id, kind, url}] (url null para el VTR)
-// ?for=control usa el bitrate chico de los tiles; el resto (program) el bitrate de salida.
+// Equipo "efectivo" de una cámara: la sala sale del estado (editable en el panel), no solo de la config.
+function effectiveTeam(config, state, i) {
+  const cams = config.aerial ? [...config.teams, config.aerial] : config.teams;
+  const t = cams[i];
+  const room = state.conn.rooms[`cam${i + 1}`];
+  return t.source.kind === 'vdo' && room ? { ...t, source: { ...t.source, room } } : t;
+}
+
+// GET /api/sources -> [{id, kind, url}]. ?for=control usa el bitrate chico de los tiles; el resto (program) el de salida.
 export function sourcesRoute(config, profile = { tileBitrate: 2000, programBitrate: 3000 }) {
-  return async (req, res, url) => {
+  return async (req, res, url, ctx) => {
     if (url.pathname !== '/api/sources') return false;
+    const state = ctx.getState();
     const control = url.searchParams.get('for') === 'control';
-    const opts = { bitrate: control ? profile.tileBitrate : profile.programBitrate, noAudio: control };
+    const opts = { bitrate: control ? profile.tileBitrate : profile.programBitrate, noAudio: control, password: state.conn.password };
     const cams = config.aerial ? [...config.teams, config.aerial] : config.teams;
-    const list = cams.map((t, i) => ({ id: `cam${i + 1}`, kind: t.source.kind, url: viewLink(t, opts) }));
+    const list = cams.map((_, i) => ({ id: `cam${i + 1}`, kind: cams[i].source.kind, url: viewLink(effectiveTeam(config, state, i), opts) }));
     list.push({ id: 'vtr', kind: 'vtr', url: null });
     list.push({ id: 'split', kind: 'split', url: null });
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify(list));
+    return true;
+  };
+}
+
+// GET /api/links -> por cámara activa: sala y links (navegador, OBS cámara virtual, vista) con la contraseña y calidad actuales.
+export function linksRoute(config) {
+  return async (req, res, url, ctx) => {
+    if (url.pathname !== '/api/links') return false;
+    const state = ctx.getState();
+    const { password, quality, fps } = state.conn;
+    const cams = config.aerial ? [...config.teams, config.aerial] : config.teams;
+    const out = state.sources.filter((s) => s.active && s.kind !== 'vtr' && s.kind !== 'split').map((s) => {
+      const i = cams.findIndex((_, k) => `cam${k + 1}` === s.id);
+      const team = effectiveTeam(config, state, i);
+      if (s.kind !== 'vdo') return { id: s.id, label: s.label, kind: s.kind, channel: team.source.channel };
+      return {
+        id: s.id, label: s.label, kind: 'vdo', room: team.source.room, password,
+        browser: pushLink(team, { quality, fps, password, mode: 'browser' }),
+        vcam: pushLink(team, { quality, fps, password, mode: 'vcam' }),
+        view: viewLink(team, { password }),
+      };
+    });
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify(out));
     return true;
   };
 }

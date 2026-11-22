@@ -7,6 +7,7 @@ import { initSplitPanel } from './splitpanel.js';
 import { uploadFile } from './upload.js';
 import { initMixer } from './mixer.js';
 import { initGcMove } from './gcmove.js';
+import { initConnPanel } from './connpanel.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
@@ -18,6 +19,7 @@ let lastState = null;
 let teams = [];
 let preGfx = null, pgmGfx = null, preSlot = null, preBadge = null, preNote = null;
 let seenSeq = null;
+let lastConnRev = null;
 let builtKey = null;
 const slotEls = new Map();
 const activeSrc = (st) => st.sources.filter((x) => x.active);
@@ -64,6 +66,7 @@ window.addEventListener('resize', () => { if (preGfx) { applyScale(preGfx); appl
 const splitPanel = initSplitPanel({ send });
 const mixer = initMixer({ send });
 const gcMove = initGcMove({ send });
+const connPanel = initConnPanel({ send });
 
 function build(state) {
   applySizes();
@@ -191,6 +194,9 @@ function render() {
   if (splitEl) renderSplitView(splitEl, lastState);
   splitPanel.render(lastState);
   mixer.render(lastState);
+  connPanel.render(lastState);
+  if (lastConnRev !== null && lastState.connRev !== lastConnRev) reloadSources(); // cambió una sala/contraseña/calidad: se reconectan las cámaras
+  lastConnRev = lastState.connRev;
   gcMove.render(lastState);
   syncGraphics(preGfx, lastState, 'preview'); applyScale(preGfx);
   syncGraphics(pgmGfx, lastState, 'live'); applyScale(pgmGfx);
@@ -248,7 +254,9 @@ document.querySelectorAll('[data-gc]').forEach((b) => {
 });
 document.getElementById('btn-emergency').onclick = () => send({ type: 'EMERGENCY', on: !lastState?.emergency });
 
-fetch('/api/sources?for=control').then((r) => r.json()).then((list) => { sources = list; render(); });
+const loadSources = () => fetch('/api/sources?for=control').then((r) => r.json()).then((list) => { sources = list; });
+loadSources().then(() => render());
+function reloadSources() { loadSources().then(() => { builtKey = null; render(); }); }
 
 // Detección automática (mejor esfuerzo) por los eventos del iframe de VDO.Ninja.
 window.addEventListener('message', (e) => {

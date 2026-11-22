@@ -10,6 +10,7 @@ let sources = null;      // [{id, kind, url}] desde /api/sources
 let lastState = null;
 let lastSeq = 0;
 let lastTone = null;
+let lastConnRev = null;
 let initialized = false;
 let fading = false;
 let fadeTimer = null;
@@ -74,7 +75,13 @@ function beep() {
   } catch (e) { console.error('bip:', e); }
 }
 
+function reloadSources() {
+  fetch('/api/sources').then((r) => r.json()).then((list) => { sources = list; stage.replaceChildren(); if (lastState) render(lastState); });
+}
+
 function render(state) {
+  if (lastConnRev !== null && state.connRev !== lastConnRev) { lastConnRev = state.connRev; reloadSources(); return; } // cambió una sala/contraseña/calidad
+  lastConnRev = state.connRev;
   if (lastTone !== null && state.toneSeq !== lastTone) beep();
   lastTone = state.toneSeq;
   if (sources) renderStage(state); // primero la imagen: un gráfico dañado nunca debe congelar el switch

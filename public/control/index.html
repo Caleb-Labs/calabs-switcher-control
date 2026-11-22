@@ -58,6 +58,18 @@
   <span id="vtr-audio" class="vtr-status"></span>
   <span id="vtr-empty" hidden>aún no hay archivos: usa "Subir archivos"</span>
 </section>
+<details id="connpanel">
+  <summary>Conexión de cámaras (VDO.Ninja)</summary>
+  <div class="cn-top">
+    <label>Contraseña del torneo <input id="cn-pass" type="text" maxlength="49" placeholder="(sin contraseña)"></label>
+    <button id="cn-pass-save">Guardar</button>
+    <label>Calidad <select id="cn-quality"><option value="1080p">1080p</option><option value="720p">720p</option></select></label>
+    <label>FPS <select id="cn-fps"><option value="30">30</option><option value="60">60</option></select></label>
+    <button id="cn-random">Generar salas aleatorias</button>
+  </div>
+  <div id="cn-rows"></div>
+  <p class="hint">Cada cámara entra por su propio link; la contraseña es la misma para todo el torneo (solo letras y números). Si cambias la contraseña, la calidad o una sala, hay que volver a enviar los links. «Link navegador» comparte la pantalla desde el navegador; «Link OBS» es para usar la cámara virtual de OBS (la entrada WHIP de OBS no sirve aquí: solo admite un espectador). Un solo jugador por equipo envía la señal.</p>
+</details>
 <details id="mixer">
   <summary>Mezclador de audio</summary>
   <div id="mix-rows"></div>

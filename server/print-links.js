@@ -8,5 +8,5 @@ const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const real = here('../config/teams.json');
 const config = loadConfig(process.env.CONFIG ?? (fs.existsSync(real) ? real : here('../config/teams.example.json')));
 for (const t of config.aerial ? [...config.teams, config.aerial] : config.teams) {
-  console.log(`${t.name}\n  ${t.source.kind === 'vdo' ? pushLink(t) : `(Twitch: ${t.source.channel})`}\n`);
+  console.log(`${t.name}\n  ${t.source.kind === 'vdo' ? pushLink(t, { quality: '1080p', fps: 30 }) : `(Twitch: ${t.source.channel})`}\n`);
 }

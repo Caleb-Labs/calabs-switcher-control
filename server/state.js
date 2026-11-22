@@ -74,6 +74,21 @@ export function normalizeSplit(raw, camIds) {
 const slug = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pelea';
 const camIdsOf = (state) => state.sources.filter((x) => x.active && x.kind !== 'vtr' && x.kind !== 'split').map((x) => x.id);
 const NAME_MAX = 30;
+const ROOM_RE = /^[A-Za-z0-9_-]{3,50}$/;
+const PASS_RE = /^[A-Za-z0-9]{0,49}$/;
+
+// Ajustes de conexión de las cámaras (VDO.Ninja): salas, contraseña única del torneo, calidad y fps.
+function cleanConn(raw, defaultRooms) {
+  const r = isPlainObj(raw) ? raw : {};
+  const rooms = { ...defaultRooms };
+  if (isPlainObj(r.rooms)) for (const [id, room] of Object.entries(r.rooms)) if (Object.hasOwn(defaultRooms, id) && typeof room === 'string' && ROOM_RE.test(room)) rooms[id] = room;
+  return {
+    password: typeof r.password === 'string' && PASS_RE.test(r.password) ? r.password : '',
+    quality: r.quality === '720p' || r.quality === '1080p' ? r.quality : '1080p',
+    fps: r.fps === 30 || r.fps === 60 ? r.fps : 30,
+    rooms,
+  };
+}
 const cleanCamNames = (raw, camIds) => Object.fromEntries(Object.entries(isPlainObj(raw) ? raw : {}).filter(([id, v]) => camIds.includes(id) && typeof v === 'string' && v.trim()).map(([id, v]) => [id, v.trim().slice(0, NAME_MAX)]));
 
 // Lista de fuentes visibles: cámaras (con nombre personalizado y activas según cantidad/aérea) + VTR + pantalla dividida.
@@ -132,7 +147,7 @@ const withSlots = (state, fn) => {
 };
 
 // Lo que se guarda en disco (data/split.json) para sobrevivir a reinicios.
-export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, aerialOn: state.aerialOn });
+export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, aerialOn: state.aerialOn, conn: state.conn });
 
 export function createState(config) {
   const saved = config.saved ?? { split: config.splitSaved, gcPos: config.gcPosSaved }; // compatibilidad con el formato anterior
@@ -151,9 +166,15 @@ export function createState(config) {
   const camCount = Number.isInteger(saved.camCount) && saved.camCount >= 1 && saved.camCount <= teamCount ? saved.camCount : teamCount;
   const aerialOn = typeof saved.aerialOn === 'boolean' ? saved.aerialOn : true;
   const sources = buildSources(base, camNames, camCount, aerialOn, []);
+  const defaultRooms = Object.fromEntries([
+    ...config.teams.map((t, i) => (t.source?.kind === 'vdo' ? [`cam${i + 1}`, t.source.room] : null)),
+    config.aerial?.source?.kind === 'vdo' ? [`cam${config.teams.length + 1}`, config.aerial.source.room] : null,
+  ].filter(Boolean));
   return {
     sources,
     srcBase: base,
+    conn: cleanConn(saved.conn, defaultRooms),
+    connRev: 0,
     camNames,
     camCount,
     aerialOn,
@@ -358,6 +379,23 @@ export function reduce(state, action) {
     case 'SET_AERIAL':
       if (!state.srcBase.some((b) => b.aerial) || typeof action.on !== 'boolean') return state;
       return fixRefs(rebuild({ ...state, aerialOn: action.on }));
+    case 'CONN_SET': {
+      const patch = {};
+      if ('password' in action) { if (typeof action.password !== 'string' || !PASS_RE.test(action.password)) return state; patch.password = action.password; }
+      if ('quality' in action) { if (action.quality !== '720p' && action.quality !== '1080p') return state; patch.quality = action.quality; }
+      if ('fps' in action) { if (action.fps !== 30 && action.fps !== 60) return state; patch.fps = action.fps; }
+      return Object.keys(patch).length ? { ...state, conn: { ...state.conn, ...patch }, connRev: state.connRev + 1 } : state;
+    }
+    case 'CONN_ROOM':
+      if (typeof action.id !== 'string' || !Object.hasOwn(state.conn.rooms, action.id) || typeof action.room !== 'string' || !ROOM_RE.test(action.room)) return state;
+      return { ...state, conn: { ...state.conn, rooms: { ...state.conn.rooms, [action.id]: action.room } }, connRev: state.connRev + 1 };
+    case 'CONN_ROOMS': {
+      if (!isPlainObj(action.rooms)) return state;
+      const rooms = { ...state.conn.rooms };
+      let n = 0;
+      for (const [id, room] of Object.entries(action.rooms)) if (Object.hasOwn(rooms, id) && typeof room === 'string' && ROOM_RE.test(room)) { rooms[id] = room; n++; }
+      return n ? { ...state, conn: { ...state.conn, rooms }, connRev: state.connRev + 1 } : state;
+    }
     case 'FADE_TIME':
       return isNum(action.ms) ? { ...state, fadeMs: Math.min(5000, Math.max(100, Math.round(action.ms))) } : state;
     case 'FADE_STEP':

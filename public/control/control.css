@@ -114,3 +114,11 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .tile.sel { outline: 2px dashed var(--warn); outline-offset: -4px; }
 .mix-row.sel .mix-name { text-decoration: underline; }
 .fade-t input[type=checkbox] { width: auto; }
+
+#connpanel { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#connpanel summary { cursor: pointer; color: var(--muted); }
+.cn-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0; }
+.cn-top input[type=text], .cn-row input[type=text], .cn-top select { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px; font: inherit; }
+#cn-rows { display: grid; gap: 4px; max-width: 900px; }
+.cn-row { display: grid; grid-template-columns: 140px 200px auto auto auto; gap: 8px; align-items: center; }
+#connpanel .hint { color: var(--muted); font-size: 12px; max-width: 900px; }
