@@ -4,15 +4,15 @@
 @keyframes g-in { from { opacity: 0; } to { opacity: 1; } }
 .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.gc-name { --gk: 1; left: 80px; top: auto; bottom: 90px; width: calc(620px * var(--gk)); height: auto; min-height: calc(120px * var(--gk)); box-sizing: border-box; background: #1c1f25ee; border-left: calc(8px * var(--gk)) solid var(--accent, #6f8fb0); padding: calc(14px * var(--gk)) calc(24px * var(--gk)); }
-.gc-name .team { font-size: calc(48px * var(--gk)); font-weight: 700; }
-.gc-name .player { font-size: calc(34px * var(--gk)); color: #aeb4bf; }
+.gc-name { --gk: 1; left: 80px; top: auto; bottom: 90px; width: calc(620px * var(--gk)); height: auto; min-height: calc(120px * var(--gk)); box-sizing: border-box; background: var(--gc-bg, #1c1f25ee); border-left: calc(8px * var(--gk)) solid var(--gc-accent, #6f8fb0); padding: calc(14px * var(--gk)) calc(24px * var(--gk)); }
+.gc-name .team { font-size: calc(48px * var(--gk)); font-weight: 700; color: var(--gc-text, #e4e6ea); }
+.gc-name .player { font-size: calc(34px * var(--gk)); color: var(--gc-sub, #aeb4bf); }
 .gc-name .logo { position: absolute; right: calc(16px * var(--gk)); top: calc(16px * var(--gk)); height: calc(88px * var(--gk)); }
 
-.scoreboard, .standings { background: #1c1f25ee; padding: 18px 24px; }
-.scoreboard { left: 60px; top: 60px; width: 520px; height: auto; font-size: 30px; }
+.scoreboard, .standings { background: var(--gc-bg, #1c1f25ee); color: var(--gc-text, #e4e6ea); padding: 18px 24px; }
+.scoreboard { --gk: 1; left: 60px; top: 60px; width: 520px; height: auto; font-size: 30px; transform: scale(var(--gk)); transform-origin: 0 0; }
 .standings { left: 460px; top: 120px; width: 1000px; height: auto; font-size: 44px; }
-.row { display: grid; grid-template-columns: 70px 1fr 120px; gap: 12px; padding: 6px 0; border-bottom: 1px solid #2b2f37; }
+.row { display: grid; grid-template-columns: 70px 1fr 120px; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--gc-accent, #2b2f37); }
 .row .pts { text-align: right; font-variant-numeric: tabular-nums; }
 
 .nosignal { width: 1920px; height: 1080px; background: #14161a; display: grid; place-items: center; font-size: 96px; color: #b89a5e; letter-spacing: 8px; }
@@ -22,3 +22,31 @@
 .standings.full { left: 0; top: 0; width: 1920px; height: 1080px; padding: 110px 380px; font-size: 56px; background: #14161a; }
 .emergency .media { width: 1920px; height: 1080px; object-fit: contain; background: #000; }
 .emergency .logo { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* Plantilla subida: reemplaza el fondo y la barra del GC por la imagen (diseñada a 620 x 120 px con tamaño 1) */
+.gc-name.has-tpl { background: var(--gc-tpl) center / 100% 100% no-repeat; border-left: 0; min-height: 0; height: calc(120px * var(--gk)); }
+
+/* Efectos de entrada y salida (usan translate/scale/opacity para no chocar con el transform de tamaño) */
+@keyframes fx-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fx-slide-l-in { from { translate: -120% 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes fx-slide-r-in { from { translate: 120% 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes fx-slide-u-in { from { translate: 0 90px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes fx-zoom-in { from { scale: 0.6; opacity: 0; } to { scale: 1; opacity: 1; } }
+@keyframes fx-type-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes fx-fade-out { to { opacity: 0; } }
+@keyframes fx-slide-l-out { to { translate: -120% 0; opacity: 0; } }
+@keyframes fx-slide-r-out { to { translate: 120% 0; opacity: 0; } }
+@keyframes fx-slide-d-out { to { translate: 0 90px; opacity: 0; } }
+@keyframes fx-zoom-out { to { scale: 0.6; opacity: 0; } }
+.fx-in-fade { animation: fx-fade-in 450ms ease-out both; }
+.fx-in-slide-left { animation: fx-slide-l-in 550ms cubic-bezier(.2, .8, .2, 1) both; }
+.fx-in-slide-right { animation: fx-slide-r-in 550ms cubic-bezier(.2, .8, .2, 1) both; }
+.fx-in-slide-up { animation: fx-slide-u-in 500ms cubic-bezier(.2, .8, .2, 1) both; }
+.fx-in-zoom { animation: fx-zoom-in 400ms cubic-bezier(.2, .8, .2, 1) both; }
+.fx-in-typewriter { animation: fx-type-in 900ms steps(26) both; }
+.fx-out-fade { animation: fx-fade-out 450ms ease-in forwards; }
+.fx-out-slide-left { animation: fx-slide-l-out 450ms ease-in forwards; }
+.fx-out-slide-right { animation: fx-slide-r-out 450ms ease-in forwards; }
+.fx-out-slide-down { animation: fx-slide-d-out 450ms ease-in forwards; }
+.fx-out-zoom { animation: fx-zoom-out 450ms ease-in forwards; }
+.fx-out-none { display: none; }

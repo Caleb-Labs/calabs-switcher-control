@@ -70,6 +70,36 @@
   <div id="cn-rows"></div>
   <p class="hint">Cada cámara entra por su propio link; la contraseña es la misma para todo el torneo (solo letras y números). Si cambias la contraseña, la calidad o una sala, hay que volver a enviar los links. «Link navegador» comparte la pantalla desde el navegador; «Link OBS» es para usar la cámara virtual de OBS (la entrada WHIP de OBS no sirve aquí: solo admite un espectador). Un solo jugador por equipo envía la señal.</p>
 </details>
+<details id="gcstyle">
+  <summary>Estilo de los GC (colores, tamaño, plantilla, efectos, salida automática)</summary>
+  <div class="gs-body">
+    <div class="gs-controls">
+      <label>Editar el estilo de
+        <select id="gs-target"><option value="name">GC de pantalla única</option><option value="split">GC de pantalla dividida</option><option value="score">Marcador</option></select>
+      </label>
+      <div class="gs-grid">
+        <label>Fondo <input type="color" id="gs-bg"></label>
+        <label>Opacidad del fondo <input type="range" id="gs-alpha" min="0" max="100"> <span id="gs-alpha-val"></span></label>
+        <label>Texto <input type="color" id="gs-text"></label>
+        <label>Subtítulo <input type="color" id="gs-sub"></label>
+        <label>Acento <input type="color" id="gs-accent"></label>
+        <label>Tamaño <input type="range" id="gs-scale" min="30" max="300"> <span id="gs-scale-val"></span></label>
+        <label>Entrada <select id="gs-in"></select></label>
+        <label>Salida <select id="gs-out"></select></label>
+        <label title="0 = lo bajas tú a mano">Se baja solo a los <input type="number" id="gs-hide" min="0" max="600" step="1"> segundos</label>
+      </div>
+      <div id="gs-tpl-box" class="gs-tpl">
+        <label>Plantilla <select id="gs-tpl"></select></label>
+        <label class="btn">Subir plantilla<input id="gs-tpl-up" type="file" accept=".png,.jpg,.jpeg,.svg" hidden></label>
+        <button id="gs-tpl-clear">Quitar</button>
+        <button id="gs-tpl-mold">Molde PNG</button>
+        <span class="hint">Plantilla PNG con transparencia de <b>620 × 120 px</b> (usa 1240 × 240 para más nitidez); con tamaño 100 % ocupa 620 × 120 px del lienzo 1920 × 1080. El texto va encima, dentro del recuadro punteado del molde. Para la pantalla dividida la plantilla se achica sola según el recuadro.</span>
+      </div>
+      <button id="gs-replay">Ver la entrada otra vez</button>
+    </div>
+    <div id="gs-preview"><div id="gs-stage" class="gfx"></div></div>
+  </div>
+</details>
 <details id="mixer">
   <summary>Mezclador de audio</summary>
   <div id="mix-rows"></div>

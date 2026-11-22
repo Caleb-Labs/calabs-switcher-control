@@ -1,4 +1,5 @@
 // Estado puro del switcher. Sin efectos: reduce(state, action) devuelve un estado nuevo.
+import { cleanStyle, patchStyle, STYLE_TARGETS } from '../public/shared/gcstyle.js';
 
 // ---------- Pantalla dividida ----------
 // Rectángulos en fracciones del lienzo 1920x1080 (w y h iguales = recuadro 16:9).
@@ -147,7 +148,7 @@ const withSlots = (state, fn) => {
 };
 
 // Lo que se guarda en disco (data/split.json) para sobrevivir a reinicios.
-export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, aerialOn: state.aerialOn, conn: state.conn });
+export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, aerialOn: state.aerialOn, conn: state.conn, gcStyle: state.gcStyle });
 
 export function createState(config) {
   const saved = config.saved ?? { split: config.splitSaved, gcPos: config.gcPosSaved }; // compatibilidad con el formato anterior
@@ -173,6 +174,7 @@ export function createState(config) {
   return {
     sources,
     srcBase: base,
+    gcStyle: Object.fromEntries(STYLE_TARGETS.map((k) => [k, cleanStyle(saved.gcStyle?.[k])])),
     conn: cleanConn(saved.conn, defaultRooms),
     connRev: 0,
     camNames,
@@ -259,7 +261,9 @@ export function reduce(state, action) {
         const found = cur && files.includes(cur) ? cur : files.find((f) => BG_FILE(n).test(f));
         if (found) bgs[n] = found;
       }
-      return { ...state, emergencyFile: files.includes(state.emergencyFile) ? state.emergencyFile : null, vtr: { ...state.vtr, files, current, playing: kept ? state.vtr.playing : false }, split: { ...state.split, bgs } };
+      const lostTpl = STYLE_TARGETS.some((k) => state.gcStyle[k].template && !files.includes(state.gcStyle[k].template));
+      const gcStyle = lostTpl ? Object.fromEntries(STYLE_TARGETS.map((k) => [k, state.gcStyle[k].template && !files.includes(state.gcStyle[k].template) ? { ...state.gcStyle[k], template: null } : state.gcStyle[k]])) : state.gcStyle;
+      return { ...state, gcStyle, emergencyFile: files.includes(state.emergencyFile) ? state.emergencyFile : null, vtr: { ...state.vtr, files, current, playing: kept ? state.vtr.playing : false }, split: { ...state.split, bgs } };
     }
     case 'VTR_SELECT':
       return state.vtr.files.includes(action.file) ? { ...state, vtr: { ...state.vtr, current: action.file } } : state;
@@ -379,6 +383,13 @@ export function reduce(state, action) {
     case 'SET_AERIAL':
       if (!state.srcBase.some((b) => b.aerial) || typeof action.on !== 'boolean') return state;
       return fixRefs(rebuild({ ...state, aerialOn: action.on }));
+    case 'GC_STYLE': {
+      if (typeof action.target !== 'string' || !STYLE_TARGETS.includes(action.target)) return state;
+      const patch = action.patch;
+      if (patch && typeof patch === 'object' && typeof patch.template === 'string' && (!/\.(png|jpe?g|svg)$/i.test(patch.template) || !state.vtr.files.includes(patch.template))) return state;
+      const next = patchStyle(state.gcStyle[action.target], patch);
+      return next ? { ...state, gcStyle: { ...state.gcStyle, [action.target]: next } } : state;
+    }
     case 'CONN_SET': {
       const patch = {};
       if ('password' in action) { if (typeof action.password !== 'string' || !PASS_RE.test(action.password)) return state; patch.password = action.password; }

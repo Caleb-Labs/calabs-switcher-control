@@ -8,6 +8,7 @@ import { uploadFile } from './upload.js';
 import { initMixer } from './mixer.js';
 import { initGcMove } from './gcmove.js';
 import { initConnPanel } from './connpanel.js';
+import { initGcStylePanel } from './gcstylepanel.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
@@ -67,6 +68,7 @@ const splitPanel = initSplitPanel({ send });
 const mixer = initMixer({ send });
 const gcMove = initGcMove({ send });
 const connPanel = initConnPanel({ send });
+const gcStylePanel = initGcStylePanel({ send });
 
 function build(state) {
   applySizes();
@@ -195,6 +197,7 @@ function render() {
   splitPanel.render(lastState);
   mixer.render(lastState);
   connPanel.render(lastState);
+  gcStylePanel.render(lastState);
   if (lastConnRev !== null && lastState.connRev !== lastConnRev) reloadSources(); // cambió una sala/contraseña/calidad: se reconectan las cámaras
   lastConnRev = lastState.connRev;
   gcMove.render(lastState);

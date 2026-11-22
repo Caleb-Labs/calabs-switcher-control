@@ -122,3 +122,16 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 #cn-rows { display: grid; gap: 4px; max-width: 900px; }
 .cn-row { display: grid; grid-template-columns: 140px 200px auto auto auto; gap: 8px; align-items: center; }
 #connpanel .hint { color: var(--muted); font-size: 12px; max-width: 900px; }
+
+#gcstyle { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#gcstyle summary { cursor: pointer; color: var(--muted); }
+.gs-body { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; align-items: flex-start; }
+.gs-controls { display: grid; gap: 10px; min-width: 320px; flex: 1 1 360px; }
+.gs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 14px; align-items: center; }
+.gs-grid label, .gs-tpl label { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; }
+.gs-grid input[type=color] { width: 40px; height: 26px; padding: 0; border: 1px solid var(--line); background: none; }
+.gs-grid select, .gs-grid input[type=number], .gs-tpl select, #gs-target { background: #262a32; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px; font: inherit; }
+.gs-grid input[type=number] { width: 64px; }
+.gs-tpl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.gs-tpl .hint { color: var(--muted); font-size: 12px; max-width: 620px; }
+#gs-preview { position: relative; width: min(480px, 100%); aspect-ratio: 16 / 9; background: #2a2f3a repeating-conic-gradient(#323845 0 25%, #262b35 0 50%) 0 0 / 24px 24px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
