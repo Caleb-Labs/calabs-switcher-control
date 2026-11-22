@@ -1,0 +1,12 @@
+:root {
+  --bg: #14161a; --panel: #1c1f25; --line: #2b2f37;
+  --text: #cfd3da; --muted: #8a909b;
+  --accent: #6f8fb0;   /* azul apagado */
+  --live: #b5656b;     /* rojo apagado: al aire */
+  --ok: #6fa08a;       /* verde apagado: preview / ok */
+  --warn: #b89a5e;
+  --fade-ms: 500ms;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; }
+.src { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; opacity: 1; transition: opacity var(--fade-ms); }
