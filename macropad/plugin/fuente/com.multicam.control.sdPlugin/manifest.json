@@ -1,0 +1,26 @@
+{
+  "Name": "Multicam",
+  "Version": "1.0.0.0",
+  "Author": "Multicam",
+  "Description": "Controla el switcher Multicam: cortes, cámaras, VTR, GC, audio y emergencia.",
+  "UUID": "com.multicam.control",
+  "SDKVersion": 2,
+  "Category": "Multicam",
+  "CategoryIcon": "imgs/plugin/category",
+  "Icon": "imgs/plugin/icon",
+  "CodePath": "bin/plugin.js",
+  "Nodejs": { "Version": "20" },
+  "Software": { "MinimumVersion": "6.4" },
+  "OS": [{ "Platform": "windows", "MinimumVersion": "10" }],
+  "Actions": [
+    {
+      "Name": "Comando Multicam",
+      "UUID": "com.multicam.control.comando",
+      "Tooltip": "Manda un comando al switcher Multicam (corte, cámara, VTR, emergencia...).",
+      "Icon": "imgs/accion/lista",
+      "PropertyInspectorPath": "ui/comando.html",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "imgs/accion/tecla", "TitleAlignment": "bottom" }]
+    }
+  ]
+}

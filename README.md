@@ -88,7 +88,8 @@ Cada ventana del multiview (cámaras, Preview, Program y VTR) lleva un **medidor
 Dos formas (usa la que permita tu Redragon Station):
 1. **Ejecutar un programa** (funciona aunque el foco esté en OBS): en cada tecla/dial pon `macropad\cmd.bat <comando>`.
 2. **Un archivo por comando** (si el software solo deja elegir un archivo o una aplicación y no admite argumentos): en `macropad\botones\` hay un `.bat` por cada comando (`cut.bat`, `fade.bat`, `emergency-toggle.bat`, `cam3.bat`…). Cada tecla apunta al suyo, sin argumentos. Hay dos versiones de cada uno: `.bat` (muestra un instante una ventana negra) y **`.vbs` (sin ventana, la recomendada)**. Si se añaden comandos nuevos: `npm run botones`.
-3. **Mandar una tecla:** las de la tabla de arriba; solo funcionan con el panel en primer plano.
+3. **Plugin `.sdPlugin`** (si tu software del macropad importa plugins tipo Stream Deck): `macropad\plugin\dist\com.multicam.control.sdPlugin`. Se lo das al software (importar o doble clic) y aparece la categoría **Multicam** con la acción **Comando Multicam**: en cada tecla eliges el comando de una lista en español (y el puerto, 3000 por defecto). La tecla muestra ✗ si la app no está abierta o no responde. Se regenera con `npm run plugin`. Es la versión de prueba: solo teclas, sin diales ni estado.
+4. **Mandar una tecla:** las de la tabla de arriba; solo funcionan con el panel en primer plano.
 
 | Control | Girar → | Girar ← | Presionar |
 |---|---|---|---|
