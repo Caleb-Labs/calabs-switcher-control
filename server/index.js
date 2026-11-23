@@ -32,7 +32,7 @@ async function serveStatic(root, urlPath, res) {
 // Acciones que puede mandar un cliente. SCOREBOARD_* y VTR_FILES son internas del servidor.
 const CLIENT_ACTIONS = new Set([
   'SET_PREVIEW', 'TAKE', 'SET_AUDIO_MASTER', 'SOURCE_STATUS', 'GC_ARM', 'GC_LIVE', 'GC_OFF',
-  'EMERGENCY', 'VTR_SELECT', 'VTR_PLAY', 'VTR_PAUSE', 'VTR_NEXT',
+  'EMERGENCY', 'VTR_SELECT', 'VTR_PLAY', 'VTR_PAUSE', 'VTR_ENDED', 'VTR_NEXT',
   'VTR_PREV', 'VTR_TOGGLE', 'PREVIEW_STEP', 'AUDIO_MASTER_STEP', 'ADJUST_VOLUME', 'TOGGLE_MUTE',
   'EMERGENCY_TOGGLE', 'GC_NAME_PREVIEW', 'GC_PLAYER_NEXT',
   'SPLIT_SET_COUNT', 'SPLIT_SET_CAMS', 'SPLIT_SET_CAM', 'SPLIT_SET_RECT', 'SPLIT_RESET_LAYOUT', 'SPLIT_SET_BG',
@@ -89,7 +89,7 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
     ws.on('message', (raw) => {
       let msg;
       try { msg = JSON.parse(raw); } catch { return; }
-      if (msg?.type === 'action' && CLIENT_ACTIONS.has(msg.action?.type)) dispatch(msg.action);
+      if (msg?.type === 'action' && CLIENT_ACTIONS.has(msg.action?.type)) { const { now, ...action } = msg.action; dispatch(action); } // la hora la pone el servidor, no el cliente
     });
     ws.on('error', () => {});
   });

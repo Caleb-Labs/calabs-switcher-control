@@ -59,6 +59,9 @@ function renderStage(state) {
   initialized = true;
 }
 
+// Reloj del VTR: si el video se desvía del reloj del servidor, vuelve al punto correcto (así coincide con las copias del panel).
+setInterval(() => { const v = find('vtr'); if (lastState && v?.tagName === 'VIDEO') syncVtr(v, lastState.vtr); }, 1000);
+
 // Bip de prueba: comprueba que el audio de esta página llega a OBS (independiente de cámaras y VTR).
 function beep() {
   try {

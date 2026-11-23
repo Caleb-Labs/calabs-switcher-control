@@ -13,11 +13,21 @@ export function vtrPlan({ current, playing }) {
   return { kind: 'video', url, play: !!playing };
 }
 
-export function syncVtr(el, vtr) {
+// En qué segundo va el VTR según el reloj compartido (el servidor guarda pos y since).
+export function vtrPosition(vtr, now = Date.now()) {
+  return vtr.playing && vtr.since != null ? vtr.pos + Math.max(0, now - vtr.since) / 1000 : vtr.pos ?? 0;
+}
+
+const DRIFT = 0.35; // segundos de desvío que se toleran antes de saltar al punto del reloj
+
+export function syncVtr(el, vtr, now = Date.now()) {
   const plan = vtrPlan(vtr);
   if (plan.kind === 'video') {
     el.removeAttribute('poster');
     if (el.getAttribute('src') !== plan.url) el.setAttribute('src', plan.url);
+    let target = vtrPosition(vtr, now);
+    if (Number.isFinite(el.duration)) target = Math.min(target, el.duration);
+    if (Math.abs((el.currentTime ?? 0) - target) > DRIFT) el.currentTime = target; // todas las pantallas van en el mismo punto
     if (plan.play) el.play?.().catch(() => {}); else el.pause?.();
     return;
   }

@@ -302,8 +302,13 @@ function syncVtrPanel() {
   vtrSel.value = current ?? '';
   document.getElementById('vtr-empty').hidden = files.some((f) => f !== '@tabla');
   const v = tiles.get('vtr')?.querySelector('video');
-  if (v) { syncVtr(v, lastState.vtr); if (!v.dataset.metered) v.muted = true; v.onended = () => send({ type: 'VTR_PAUSE' }); }
+  if (v) { syncVtr(v, lastState.vtr); if (!v.dataset.metered) v.muted = true; v.onended = () => send({ type: 'VTR_ENDED' }); }
 }
+// Reloj del VTR: todas las copias (ventana del VTR y Preview espejo) se mantienen en el mismo segundo que /program.
+setInterval(() => {
+  if (!lastState) return;
+  for (const v of [tiles.get('vtr')?.querySelector('video'), mirror?.querySelector('video')]) if (v) syncVtr(v, lastState.vtr);
+}, 1000);
 vtrSel.onchange = () => send({ type: 'VTR_SELECT', file: vtrSel.value });
 document.getElementById('vtr-play').onclick = () => send({ type: 'VTR_PLAY' });
 document.getElementById('vtr-pause').onclick = () => send({ type: 'VTR_PAUSE' });

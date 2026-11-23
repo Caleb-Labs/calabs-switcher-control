@@ -1,5 +1,6 @@
 // Estado puro del switcher. Sin efectos: reduce(state, action) devuelve un estado nuevo.
 import { cleanStyle, patchStyle, STYLE_TARGETS } from '../public/shared/gcstyle.js';
+import { vtrPosition } from '../public/shared/vtr.js';
 
 // ---------- Pantalla dividida ----------
 // Rectángulos en fracciones del lienzo 1920x1080 (w y h iguales = recuadro 16:9).
@@ -126,6 +127,10 @@ function fixRefs(state) {
   }
   return { ...state, program, preview, mix, mixSel: ok(state.mixSel) ? state.mixSel : act[0], audioMaster: state.audioMaster && !ok(state.audioMaster) ? null : state.audioMaster, split: { ...state.split, layouts } };
 }
+// Reloj del VTR: guarda en qué segundo va (pos) y desde cuándo corre (since). La hora puede venir en la acción (pruebas).
+const nowOf = (a) => (Number.isFinite(a?.now) ? a.now : Date.now());
+const vtrPaused = (vtr, now) => ({ ...vtr, playing: false, pos: vtrPosition(vtr, now), since: null });
+const vtrRestart = (vtr, file, now) => ({ ...vtr, current: file, pos: 0, since: vtr.playing ? now : null });
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const teamOf = (sources, id) => sources.find((x) => x.id === id)?.team ?? '';
 
@@ -203,7 +208,7 @@ export function createState(config) {
     vtrDefault: config.vtrDefault ?? null,
     audio: { cam: { level: 1, muted: false }, vtr: { level: 1, muted: false } },
     gcPlayer: 0,
-    vtr: { files: [], current: null, playing: false },
+    vtr: { files: [], current: null, playing: false, pos: 0, since: null }, // pos/since: reloj compartido (todas las pantallas calculan de aquí en qué segundo va)
     scoreboard: { teams: [], updatedAt: null, stale: false },
   };
 }
@@ -268,29 +273,34 @@ export function reduce(state, action) {
       }
       const lostTpl = STYLE_TARGETS.some((k) => state.gcStyle[k].template && !files.includes(state.gcStyle[k].template));
       const gcStyle = lostTpl ? Object.fromEntries(STYLE_TARGETS.map((k) => [k, state.gcStyle[k].template && !files.includes(state.gcStyle[k].template) ? { ...state.gcStyle[k], template: null } : state.gcStyle[k]])) : state.gcStyle;
-      return { ...state, gcStyle, emergencyFile: files.includes(state.emergencyFile) ? state.emergencyFile : null, vtr: { ...state.vtr, files, current, playing: kept ? state.vtr.playing : false }, split: { ...state.split, bgs } };
+      return { ...state, gcStyle, emergencyFile: files.includes(state.emergencyFile) ? state.emergencyFile : null, vtr: kept ? { ...state.vtr, files } : { ...state.vtr, files, current, playing: false, pos: 0, since: null }, split: { ...state.split, bgs } };
     }
     case 'VTR_SELECT':
-      return state.vtr.files.includes(action.file) ? { ...state, vtr: { ...state.vtr, current: action.file } } : state;
+      if (!state.vtr.files.includes(action.file)) return state;
+      return action.file === state.vtr.current ? state : { ...state, vtr: vtrRestart(state.vtr, action.file, nowOf(action)) };
     case 'VTR_PLAY':
-      return state.vtr.current ? { ...state, vtr: { ...state.vtr, playing: true } } : state;
+      if (!state.vtr.current || state.vtr.playing) return state;
+      return { ...state, vtr: { ...state.vtr, playing: true, since: nowOf(action) } };
     case 'VTR_PAUSE':
-      return { ...state, vtr: { ...state.vtr, playing: false } };
+      return state.vtr.playing ? { ...state, vtr: vtrPaused(state.vtr, nowOf(action)) } : state;
+    case 'VTR_ENDED': // el video llegó al final: se detiene y vuelve al inicio
+      return state.vtr.playing ? { ...state, vtr: { ...state.vtr, playing: false, pos: 0, since: null } } : state;
     case 'VTR_NEXT': {
       const { files, current } = state.vtr;
       if (!files.length) return state;
       const next = files[(files.indexOf(current) + 1) % files.length];
-      return { ...state, vtr: { ...state.vtr, current: next } };
+      return { ...state, vtr: vtrRestart(state.vtr, next, nowOf(action)) };
     }
 
     case 'VTR_PREV': {
       const { files, current } = state.vtr;
       if (!files.length) return state;
       const i = files.indexOf(current);
-      return { ...state, vtr: { ...state.vtr, current: files[i < 0 ? files.length - 1 : (i - 1 + files.length) % files.length] } };
+      return { ...state, vtr: vtrRestart(state.vtr, files[i < 0 ? files.length - 1 : (i - 1 + files.length) % files.length], nowOf(action)) };
     }
     case 'VTR_TOGGLE':
-      return state.vtr.current ? { ...state, vtr: { ...state.vtr, playing: !state.vtr.playing } } : state;
+      if (!state.vtr.current) return state;
+      return { ...state, vtr: state.vtr.playing ? vtrPaused(state.vtr, nowOf(action)) : { ...state.vtr, playing: true, since: nowOf(action) } };
 
     case 'PREVIEW_STEP': {
       const ids = state.sources.filter((x) => x.active).map((x) => x.id);

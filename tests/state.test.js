@@ -65,8 +65,8 @@ test('EMERGENCY on/off', () => {
 test('VTR: files, select, play, pause, next', () => {
   let s = reduce(createState(config), { type: 'VTR_FILES', files: ['a.mp4', 'b.png'] });
   s = reduce(s, { type: 'VTR_SELECT', file: 'a.mp4' });
-  s = reduce(s, { type: 'VTR_PLAY' });
-  assert.deepEqual(s.vtr, { files: ['a.mp4', 'b.png'], current: 'a.mp4', playing: true });
+  s = reduce(s, { type: 'VTR_PLAY', now: 5000 });
+  assert.deepEqual(s.vtr, { files: ['a.mp4', 'b.png'], current: 'a.mp4', playing: true, pos: 0, since: 5000 });
   s = reduce(s, { type: 'VTR_NEXT' });
   assert.equal(s.vtr.current, 'b.png');
   s = reduce(s, { type: 'VTR_PAUSE' });
