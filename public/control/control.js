@@ -14,6 +14,7 @@ import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
 import { initMeters } from './meters.js';
 import { initTabs } from './tabs.js';
+import { vtrCounter } from '/shared/vtrcount.js';
 
 const mv = document.getElementById('mv');
 const tiles = new Map();
@@ -156,6 +157,9 @@ function build(state) {
     }
     tile.append(label, badge, hit);
     mv.append(tile); tiles.set(s.id, tile);
+    if (s.kind === 'vtr') { // contador del VTR sobre su ventana (lo que falta / total)
+      const cnt = document.createElement('span'); cnt.className = 'vtr-count'; cnt.hidden = true; tile.append(cnt);
+    }
     if (s.kind !== 'split') { // medidor de audio (el VTR se mide con un analizador sobre su video)
       meters.attach(tile, s.id);
       const vid = tile.querySelector('video');
@@ -181,6 +185,7 @@ function syncMirror() {
     mirror.style.gridArea = 'pre';
     const badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = badgeText('pre', label);
     mirror.append(createSourceElement(meta, { url: meta.url }), badge);
+    if (id === 'vtr') { const cnt = document.createElement('span'); cnt.className = 'vtr-count'; cnt.hidden = true; mirror.append(cnt); }
     mv.append(mirror);
     mirrorId = id;
   }
@@ -307,6 +312,20 @@ function syncVtrPanel() {
   const v = tiles.get('vtr')?.querySelector('video');
   if (v) { syncVtr(v, lastState.vtr); if (!v.dataset.metered) v.muted = true; v.onended = () => send({ type: 'VTR_ENDED' }); }
 }
+// Contador del VTR (-02:28 / 03:10): mismo reloj que /program, así que marca lo mismo que OBS; en pausa se queda quieto.
+function updateVtrCounters() {
+  if (!lastState) return;
+  const c = vtrCounter(lastState.vtr, tiles.get('vtr')?.querySelector('video')?.duration, Date.now());
+  for (const el of document.querySelectorAll('.vtr-count')) {
+    el.hidden = !c;
+    if (!c) continue;
+    if (el.textContent !== c.text) el.textContent = c.text;
+    el.classList.toggle('warn', c.warn);
+    el.classList.toggle('paused', c.paused);
+  }
+}
+setInterval(updateVtrCounters, 200);
+
 // Reloj del VTR: todas las copias (ventana del VTR y Preview espejo) se mantienen en el mismo segundo que /program.
 setInterval(() => {
   if (!lastState) return;
