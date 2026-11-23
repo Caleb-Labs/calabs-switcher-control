@@ -1,109 +1,217 @@
-# Multicam Switcher
+<div align="center">
 
-Un "ATEM" web para torneos: recibe las cámaras de los equipos (VDO.Ninja), tiene multiview con Preview/Program, pantalla dividida,
-GC con estilos, marcador desde Google Sheets, VTR, emergencia y mezclador de audio. OBS solo carga la salida `/program`.
+<img src="Logos/CaLabs_logo_completo_sin_fondo.png" alt="CaLabs" width="260">
 
-## Requisitos
-- Windows con **Node.js 20+** y Chrome/Edge.
-- Red: con 9 cámaras a 1080p30 calcula unos 40–60 Mbps de bajada. Si tu PC o tu red van justas, usa el perfil `720p` (ver "Rendimiento").
+# 🎛️ CaLabs Switcher Control
 
-## Primer uso
-1. Doble clic en `start.bat`. La primera vez crea `config\teams.json` y lo abre: pon tus equipos (nombre y sala) y, si quieres, la cámara aérea.
-2. Vuelve a abrir `start.bat`: levanta el servidor y abre el panel como ventana de aplicación (Edge sin pestañas); si no hay Edge, usa tu navegador en `http://localhost:3000/control/`.
-3. Tus datos (pantalla dividida, peleas, GC, nombres, salas, contraseña, emergencia) se guardan solos en `data/split.json`. **Haz una copia de ese archivo** si te importa conservarlos. El servidor escucha solo en esta PC (`HOST=0.0.0.0` para cambiarlo).
+**A browser-based multicamera video switcher (vision mixer) for live tournament productions.**
+*Un switcher de video multicámara (mezclador de video) que funciona en el navegador, para producciones de torneos en vivo.*
 
-## Teclas
-| Tecla | Acción |
-|---|---|
-| `1`–`8` | cámara de cada equipo a Preview |
-| `9` | cámara aérea a Preview |
-| `0` | VTR a Preview |
-| `s` | pantalla dividida a Preview |
-| `Espacio` | **CUT** (Preview ↔ Program) |
-| `Enter` | **FADE** |
-| `[` `]` | cámara anterior / siguiente en Preview |
-| `-` `=` `m` | volumen de las cámaras / mute |
-| `,` `.` `p` | VTR anterior / siguiente / play-pausa |
+`Beta 0.1 · Node.js + WebRTC (VDO.Ninja) + OBS`
 
-Click en un tile = a Preview. Doble clic sobre el nombre de una cámara = ponerle tu propio nombre. `⚠` marca "sin señal" a mano; `🔊` enciende/apaga su audio. Si la misma cámara está en Preview y Program, la ventana Preview la muestra igual (abre una segunda conexión a ese jugador mientras coincidan).
+</div>
 
-## Conectar las cámaras (VDO.Ninja)
-Abre el desplegable **"Conexión de cámaras"**:
-- **Contraseña del torneo** (solo letras y números; la misma para todas), **calidad** (1080p/720p) y **FPS**.
-- Cada cámara tiene su propia **sala** (editable). «Generar salas aleatorias» crea salas difíciles de adivinar.
-- Por cámara: **Link navegador**, **Link OBS** y **Mensaje para el jugador** (texto listo para pegar en Discord/WhatsApp con los pasos).
-- Si cambias contraseña, calidad o una sala, hay que volver a enviar los links (las cámaras se reconectan solas en el panel y en `/program`).
-- Un solo jugador por equipo envía la señal.
+---
 
-**Dos formas de transmitir:**
-1. **Navegador (la más simple):** el jugador abre el *Link navegador*, comparte su pantalla/ventana y marca *compartir audio* (compartir solo una ventana normalmente no incluye audio).
-2. **OBS (mejor calidad):** el jugador pulsa *Iniciar cámara virtual* en OBS, abre el *Link OBS* y elige "OBS Virtual Camera" (y un cable de audio virtual para el sonido del juego). **No uses la salida WHIP de OBS**: solo admite un espectador y esta aplicación abre varias conexiones por cámara.
+## 🇬🇧 English
 
-La cámara aérea se conecta igual que las demás (con el nombre que le pongas). `npm run links` imprime los links base en la terminal.
+CaLabs Switcher Control is a **video production switcher that runs in your browser**. Players send their game from home, you cut between them in a control panel with **Preview and Program** (the classic switcher workflow, in the spirit of hardware mixers), and **OBS** takes one clean 1920×1080 output page to stream or send out over NDI. No capture cards, no video cables, no expensive hardware.
 
-## OBS y salida NDI
-- Agrega una **Browser Source**: URL `http://localhost:3000/program/`, ancho 1920, alto 1080, **FPS 30**, y marca **"Controlar audio mediante OBS"**.
-- **NDI:** lo saca OBS, no esta aplicación. Con el plugin DistroAV (OBS-NDI) usa *Salida NDI del programa* o *Salida NDI dedicada* a 1080p30. El NDI consume mucha red (~100–150 Mbps por flujo): usa cable gigabit.
-- Si abres OBS antes que el servidor, actualiza la fuente del navegador.
+> 🌍 **Language note:** the control panel is currently in **Spanish only**. This README is bilingual; an English interface is on the roadmap.
 
-## GC (gráficos)
-- **GC nombre:** Título y Subtítulo libres (elegir un equipo solo rellena el título). "a preview" → se ve solo en la ventana Preview; "al aire" → sale; "bajar" → se va.
-- **Mover GC:** arrastra el GC de nombre y el marcador donde quieras (se guarda; en vivo si están al aire).
-- **Estilo de los GC** (desplegable), separado para *pantalla única*, *pantalla dividida* y *marcador*: colores (fondo, opacidad, texto, subtítulo, acento), **tamaño**, **plantilla PNG** (620 × 120 px; usa 1240 × 240 para más nitidez; descarga el «Molde PNG»), **efecto de entrada** (aparecer, deslizar izquierda/derecha, subir, zoom, máquina de escribir), **efecto de salida** y **«Se baja solo a los N segundos»** (0 = manual). La vista previa se ve al lado.
+![Switcher](docs/capturas/01_switcher.png)
+*Multiview with live audio meters on every source, Preview and Program, and the always-visible EMERGENCY button. (Demo with test sources.)*
 
-## Marcador (Google Sheets)
-1. Crea una hoja importando `config/sheet-template.csv` (columnas: Equipo, Puntos, Posición). Compártela con "Cualquiera con el enlace puede ver".
-2. En Google Cloud habilita la **Google Sheets API** y crea una **clave de API**.
-3. En `config\teams.json`: `"sheet": {"id": "ID_DE_LA_HOJA", "range": "'Hoja 1'!A2:C9", "apiKey": "TU_CLAVE"}` (el rango **sin** la fila de títulos; si la pestaña tiene espacios, entre comillas simples).
-4. Reinicia el servidor. Cambia un punto en la hoja: en ~3 s se actualiza. Prueba con **Marcador → a preview → al aire**.
-Si falla, el panel muestra "marcador sin actualizar" y deja el último dato. Sin Google Sheets el marcador sale vacío.
+### ✨ What it does today
+- 🎚️ **Switcher** with Preview / Program, **CUT** and **FADE** (adjustable duration) and keyboard control
+- 📺 **Multiview** with a **live audio level meter on every source**, safe-area guides on Preview and a big **EMERGENCY** button that is always one click away
+- 🎥 **Cameras over VDO.Ninja (WebRTC):** each player joins with **one link per camera**, from a browser or from OBS's virtual camera. Room names, shared tournament password and 1080p30 are set from the panel
+- 🔢 **Show only the cameras you need** (1 to 9; the aerial camera counts as one more), so a small tournament does not need nine windows
+- 🧩 **Split screen** for 2 to 9 cameras with backgrounds, a graphic per box, per-box audio and saved "fights"
+- 🎨 **On-screen graphics:** names and scoreboard (from Google Sheets) with styles, PNG templates, in/out effects and auto-hide
+- 🎬 **VTR media player** for images and videos, **kept in sync** between the panel and the output, with a **countdown timer** (`-02:28 / 03:10`) that blinks red in the last 10 seconds; the emergency can be an image or a video
+- 🔊 **Audio mixer** per camera and VTR, master level and a test beep
+- 🧭 **Switcher-style layout:** a page bar at the bottom (Switcher, Split screen, Connection, Audio, Media, Graphics) and the multiview always on top
+- 🕹️ **Hardware control:** a plugin for **keys and dials** of the macropad, one launcher per command, and a plain HTTP API (`POST /api/do/<command>`) that works even with OBS in front
+- 🖥️ **Clean output:** `/program` is a 1920×1080 page that OBS loads as a *Browser Source* (OBS does the NDI)
+- 🧪 About **300 automated tests**
 
-## Pantalla dividida (peleas)
-Es una fuente más (`s`): se manda a Preview y se toma con CUT/FADE. En el panel:
-1. **Cámaras en pantalla:** clic en los botones de las cámaras (hasta 9, en el orden que quieras); se acomodan solas (2 quedan lado a lado). Los desplegables con nombre ("Izquierda", "Derecha"…) cambian quién va dónde.
-2. **Arrastra** los recuadros para moverlos y la esquina para el tamaño ("mantener 16:9" evita franjas). «Restablecer posiciones» devuelve recuadros **y GC** a su sitio.
-3. **GC por recuadro:** título y subtítulo en cada uno (se rellena con el nombre del equipo; lo que escribas se respeta). Arrastra la etiqueta roja dentro del recuadro. «GC de la dividida»: a preview / al aire / bajar.
-4. **Audio:** el 🔊 de cada recuadro elige qué cámaras suenan **mientras la dividida está al aire** (al salir vuelve el mezclador como estaba).
-5. **Fondos por cantidad** (desplegable): elige la cantidad, «Cargar fondo», y «Molde PNG» descarga una guía 1920×1080 con las medidas en píxeles de cada recuadro para mandar a diseñar el fondo. También se detecta `split-2.png`, `split-3.png`… en `vtr/`.
-6. **Peleas:** nombre + «Guardar» recuerda cámaras, posiciones, textos y audio; «Cargar» las recupera.
+| Split screen | Connection | Audio | Graphics |
+|:--:|:--:|:--:|:--:|
+| ![Split screen](docs/capturas/02_split-screen.png) | ![Connection](docs/capturas/03_connection.png) | ![Audio](docs/capturas/04_audio.png) | ![Graphics](docs/capturas/05_graphics.png) |
 
-## VTR y emergencia
-- **VTR:** «Subir archivos» (videos `.mp4 .webm .mov` o imágenes `.png .jpg .svg`; también puedes copiarlos a `vtr/`). Fader de volumen en su tile. La "Tabla de posiciones" sale por el VTR. `"vtrDefault": "standby.png"` en la config lo deja con una imagen por defecto.
-- **Emergencia:** botón **EMERGENCIA** (pone/quita). Elige una **foto o un video** (se repite, sin sonido) con «Emergencia: …» o súbelo con «Subir».
+### 🧱 How it works
 
-## Audio
-- **Faders en cada cámara** y el **Mezclador de audio** (desplegable): varias cámaras pueden sonar a la vez, cada una a su nivel; también nivel general y VTR. Cada cámara con audio encendido es una conexión extra a ese jugador.
-- El audio **sale solo por `/program`** (la fuente del navegador en OBS). El panel va en silencio a propósito. Para oírlo: en OBS, *Propiedades avanzadas de audio* → *Monitoreo de audio* → «Solo monitor» o «Monitor y salida».
-- **Probar audio:** el botón "Probar audio (bip)" del mezclador hace sonar un bip en `/program`: si el medidor de OBS se mueve, el audio llega bien a OBS.
-- **VTR:** suena solo si está **al aire** y en **▶**; el panel te dice el motivo si no se oye.
+```
+ Players (browser or OBS virtual camera)
+        │  WebRTC, through VDO.Ninja
+        ▼
+ ┌──────────────────────────────┐        ┌─────────────────────────────────┐
+ │  /control  (operator panel)  │  ───►  │  /program  (clean 1920×1080)    │ ──► OBS Browser Source ──► stream / NDI
+ │  multiview · Preview/Program │ state  │  what goes on air               │
+ └──────────────────────────────┘        └─────────────────────────────────┘
+        ▲
+        │  keys and dials (plugin) · keyboard · HTTP API
+```
 
-## Cámaras visibles y nombres
-Arriba: **Equipos [N]** oculta del todo las cámaras sobrantes (tiles, botones, mezclador, teclas); la cámara aérea cuenta como una más (la última, `9`). Doble clic en el nombre de una cámara para personalizarlo.
+The **state lives in the server** (one small Node.js program), so the panel, the output and the macropad always agree. This program **does not stream by itself**: OBS carries the output out.
 
-**Salas de las cámaras:** el nombre solo puede llevar letras, números y `_` (3 a 50). Nada de guiones: VDO.Ninja los cambia por `_` y la sala del jugador dejaría de coincidir con la del panel. En `config/teams.json` la sala puede ir en blanco y se escribe en **Conexión de cámaras** (o con **Salas aleatorias**); mientras esté en blanco la ventana dice «SIN SALA» y no hay links.
+### 💿 Run it
+Requires **Windows 10/11 (also runs in WSL)**, **[Node.js](https://nodejs.org/) 20+**, **[OBS Studio](https://obsproject.com/)** and Chrome or Edge. For NDI from OBS you also need the DistroAV plugin.
 
-Cada ventana del multiview (cámaras, Preview, Program y VTR) lleva un **medidor de audio** vertical a la izquierda, con marca de pico. Mide la señal que entra, antes de los faders. Solo está en `/control`; `/program` queda limpio. Los tiles del panel cargan el audio de VDO.Ninja con el altavoz callado (`mutespeaker` + `getloudness`), así que suman un poco de ancho de banda de audio.
+1. Download or clone this repository.
+2. Double-click **`start.bat`**. The first time it creates `config/teams.json` from the example and opens it: put your team names. Run it again to start.
+3. Open the panel at `http://localhost:3000/control/`.
+4. In OBS add a **Browser Source**: URL `http://localhost:3000/program/`, **1920 × 1080**, **30 fps**, and tick *Control audio via OBS*.
+5. In the **Connection** tab write a room name for each camera (**letters, numbers and `_` only — no hyphens**, VDO.Ninja changes them and the player would not match), optionally set a password, and send each player their own link.
 
-## Macropad Redragon SS-552 (10 teclas + 4 diales)
-Dos formas (usa la que permita tu Redragon Station):
-1. **Ejecutar un programa** (funciona aunque el foco esté en OBS): en cada tecla/dial pon `macropad\cmd.bat <comando>`.
-2. **Un archivo por comando** (si el software solo deja elegir un archivo o una aplicación y no admite argumentos): en `macropad\botones\` hay un `.bat` por cada comando (`cut.bat`, `fade.bat`, `emergency-toggle.bat`, `cam3.bat`…). Cada tecla apunta al suyo, sin argumentos. Hay dos versiones de cada uno: `.bat` (muestra un instante una ventana negra) y **`.vbs` (sin ventana, la recomendada)**. Si se añaden comandos nuevos: `npm run botones`.
-3. **Plugin `.sdPlugin`** (si tu software del macropad importa plugins tipo Stream Deck): `macropad\plugin\dist\com.multicam.control.sdPlugin`. Se lo das al software (importar o doble clic) y aparece la categoría **Multicam** con la acción **Comando Multicam**: en cada tecla eliges el comando de una lista en español (y el puerto, 3000 por defecto). La tecla muestra ✗ si la app no está abierta o no responde. Se regenera con `npm run plugin`. Trae también la acción **Dial Multicam** (para las ruedas): eliges un comando al **girar a la derecha**, otro al **girar a la izquierda** y otro al **presionar** (un giro rápido manda hasta 10 pasos seguidos, en orden). La acción declara `Keypad`, `Knob` y `Encoder` (el software de ruedas del proyecto llama «Knob» a las ruedas); si por lo que sea queda en una tecla, pulsarla manda el comando de «Presionar». El software (Stream Station) **no trae Node**, así que el plugin arranca por `bin/lanzador.cmd`, que busca un `node.exe` (uno propio en `bin\`, el del `PATH`, el de Elgato o el de Archivos de programa) y lanza `plugin.js` oculto; hace falta tener Node instalado (ya lo usas para la app). Tras instalar el plugin hay que **reiniciar Stream Station** (solo lanza los plugins al arrancar). Para diagnosticar, el plugin anota lo que manda el software al girar en `%TEMP%\multicam-plugin.log` (máx. 400 líneas). Es una versión de prueba: aún sin estado en las teclas (que EMERGENCIA se ponga roja).
-4. **Mandar una tecla:** las de la tabla de arriba; solo funcionan con el panel en primer plano.
+Other systems: `npm install && npm start`. Tests: `npm test`. The full operating manual (in Spanish) is in [`docs/MANUAL.md`](docs/MANUAL.md).
 
-| Control | Girar → | Girar ← | Presionar |
-|---|---|---|---|
-| Dial 1 (cámara a preview) | `preview-next` | `preview-prev` | `cut` |
-| Dial 2 (elegir cámara de audio; borde punteado) | `mix-next` | `mix-prev` | `mix-toggle` |
-| Dial 3 (volumen de la cámara elegida) | `mix-up` | `mix-down` | `mute` |
-| Dial 4 (duración del fade) | `fade-longer` | `fade-shorter` | `fade` |
+### 🗺️ Roadmap
 
-Teclas sugeridas: `cut`, `fade`, `gc-name-preview`, `gc-name-live`, `gc-name-off`, `gc-score-live`, `gc-score-off`, `split-gc-live`, `vtr-toggle`, `emergency-toggle`.
-Otros comandos: `cam1`…`cam9`, `vtr`, `split`, `audio-next/prev/clear`, `vol-up/down`, `mute`, `vtr-vol-up/down`, `vtr-mute`, `vtr-play/pause/next/prev`, `gc-score-preview`, `gc-player-next`, `split-gc-preview/off`, `emergency-on/off`, `test-tone`.
-Prueba sin macropad: `curl -X POST http://127.0.0.1:3000/api/do/cut` (solo POST; rechaza peticiones de otras páginas web).
+**✅ Done**
+- [x] ~~🎚️ Switcher with Preview / Program, CUT and adjustable FADE~~
+- [x] ~~📺 Multiview with audio meters on every source and safe-area guides on Preview~~
+- [x] ~~🎥 Cameras over VDO.Ninja with one link per camera, shared password and 1080p30~~ — *tested end to end with a real player*
+- [x] ~~🔢 Choose how many cameras are shown (1 to 9, aerial camera included)~~
+- [x] ~~🧩 Split screen for 2 to 9 cameras with backgrounds, per-box graphics and audio, and saved fights~~
+- [x] ~~🎨 Graphics with styles, templates, effects and auto-hide, and a scoreboard from Google Sheets~~
+- [x] ~~🎬 VTR synced between panel and output, with a countdown and a red warning in the last 10 s~~
+- [x] ~~🚨 EMERGENCY button always visible, with an image or video~~
+- [x] ~~🔊 Audio mixer per camera and VTR~~
+- [x] ~~🧭 Switcher-style page bar at the bottom~~ — first step of the redesign
+- [x] ~~🕹️ Macropad control: plugin with keys and dials, per-command launchers and an HTTP API~~ — *tested on the real macropad*
+- [x] ~~🔤 Safe room names (no hyphens) and "no room yet" state~~
 
-## Rendimiento
-`"profile": "1080p30" | "720p" | "480p-tiles" | "ligero"` en `config\teams.json` (o variable `PROFILE`); se editan en `config/profiles.json`. La medición con emisores reales sigue pendiente: `docs/superpowers/notes/perf-spike.md`.
+**🔜 Still to come**
+- [ ] 🎞️ **Stinger transitions:** upload your own transparent WebM, choose the exact second where the cut happens (for example 5 s of a 10 s clip) and keep its sound
+- [ ] 🚨 Emergency video: **loop on/off**, optional sound and its own upload button
+- [ ] 🎛️ Finish the switcher-style redesign, step by step
+- [ ] 🧪 **Real-world tests with 8–9 simultaneous players** and a performance measurement
+- [ ] 🔊 Calibrate the audio meters with real gameplay and check the levels inside OBS
+- [ ] 📊 Try the scoreboard with a real Google Sheet; check GC effects and camera-drop detection live
+- [ ] 🔴 Macropad keys that change with the state (for example EMERGENCY lit while it is on)
+- [ ] ⏪ Instant replay (the last minutes of each camera) *(idea)*
+- [ ] 📱 A QR link to use a phone as the aerial camera
+- [ ] 🗑️ Delete uploaded media from the panel
+- [ ] 🌐 English interface
+> 💡 Ideas or feedback? Open an issue. 🙌
 
-## Desarrollo
-`npm test` (≈10 s). Diseño: `docs/superpowers/specs/`. Plan: `docs/superpowers/plans/`. Variable `SPLIT_FILE` guarda los datos en otro archivo (para pruebas; por defecto `data/split.json`).
+### 🔒 Security and your data
+
+**What the program stores, and where.** Everything stays on your PC and **none of it is part of this repository**:
+- `config/teams.json` — your teams and rooms
+- `data/split.json` — split-screen layouts, graphic positions and styles, camera names and connection settings (including the tournament password)
+- `vtr/` — the media you upload
+
+**How it is protected.** The server listens only on `127.0.0.1` (your own PC) and checks the origin of every WebSocket and API request, so a web page you visit cannot control it. Uploads are limited by type and size, SVG files run sandboxed, and text coming from Google Sheets is always shown as text, never as HTML.
+
+**What it connects to.** VDO.Ninja (the video from your players, peer to peer) and Google Sheets (only if you set up the scoreboard). Nothing is sent to the author. The tournament password travels inside each player's link, so share the links privately.
+
+### 🤖 Built with AI
+This project was **designed and directed by Caleb (CaLabs)** and **built with the help of AI**: the code and documentation were written together with **Claude**, an AI assistant made by Anthropic. Features are checked with automated tests and tried by a person on real hardware.
+
+> ✍️ *Co-created with Claude (Anthropic)* 🧡
+
+### ⚖️ Credits and notice
+Video transport is provided by **[VDO.Ninja](https://vdo.ninja/)** (by Steve Seguin). This is an independent project, **not affiliated with, endorsed by or sponsored by** Blackmagic Design, Microsoft, the OBS Project, Elgato or VDO.Ninja. ATEM, OBS, NDI and the other names mentioned belong to their owners and are used only to describe compatibility.
+
+---
+
+## 🇨🇱 Español
+
+CaLabs Switcher Control es un **switcher de producción de video que funciona en el navegador**. Los jugadores mandan su juego desde su casa, tú cortas entre ellos en un panel con **Preview y Program** (el flujo clásico de un switcher, al estilo de los mezcladores de hardware), y **OBS** toma una sola página de salida limpia de 1920×1080 para transmitir o sacar por NDI. Sin capturadoras, sin cables de video, sin equipos caros.
+
+> 🌍 **Nota de idioma:** el panel de control está por ahora **solo en español**. Este README es bilingüe; la interfaz en inglés está en la hoja de ruta.
+
+![Switcher](docs/capturas/01_switcher.png)
+*Multiview con medidores de audio en vivo en cada fuente, Preview y Program, y el botón EMERGENCIA siempre a la vista. (Demostración con fuentes de prueba.)*
+
+### ✨ Qué hace hoy
+- 🎚️ **Switcher** con Preview / Program, **CUT** y **FADE** (duración ajustable) y control por teclado
+- 📺 **Multiview** con un **medidor de audio en vivo en cada fuente**, guías de zona segura en Preview y un gran botón de **EMERGENCIA** siempre a un clic
+- 🎥 **Cámaras por VDO.Ninja (WebRTC):** cada jugador entra con **un link por cámara**, desde el navegador o con la cámara virtual de OBS. Las salas, la contraseña única del torneo y el 1080p30 se ajustan desde el panel
+- 🔢 **Muestra solo las cámaras que necesitas** (de 1 a 9; la cámara aérea cuenta como una más), así un torneo chico no necesita nueve ventanas
+- 🧩 **Pantalla dividida** de 2 a 9 cámaras con fondos, un gráfico por recuadro, audio por recuadro y "peleas" guardadas
+- 🎨 **Gráficas en pantalla:** nombres y marcador (desde Google Sheets) con estilos, plantillas PNG, efectos de entrada y salida y salida automática
+- 🎬 **VTR** para imágenes y videos, **sincronizado** entre el panel y la salida, con un **contador** (`-02:28 / 03:10`) que parpadea en rojo en los últimos 10 segundos; la emergencia puede ser una imagen o un video
+- 🔊 **Mezclador de audio** por cámara y VTR, nivel general y un bip de prueba
+- 🧭 **Diseño estilo switcher:** barra de páginas abajo (Mezclador, Cámaras en pantalla, Conexión, Audio, Multimedia, GC) y el multiview siempre arriba
+- 🕹️ **Control por hardware:** un plugin para las **teclas y los diales** del macropad, un lanzador por comando y una API HTTP simple (`POST /api/do/<comando>`) que funciona incluso con OBS al frente
+- 🖥️ **Salida limpia:** `/program` es una página de 1920×1080 que OBS carga como *fuente de navegador* (el NDI lo hace OBS)
+- 🧪 Cerca de **300 pruebas automáticas**
+
+| Pantalla dividida | Conexión | Audio | Gráficas |
+|:--:|:--:|:--:|:--:|
+| ![Pantalla dividida](docs/capturas/02_split-screen.png) | ![Conexión](docs/capturas/03_connection.png) | ![Audio](docs/capturas/04_audio.png) | ![Gráficas](docs/capturas/05_graphics.png) |
+
+### 🧱 Cómo funciona
+Mismo esquema de arriba: los jugadores mandan su señal por **VDO.Ninja**, el **panel `/control`** es donde cortas, y la **página `/program`** es la salida limpia que **OBS** carga como fuente de navegador. El **estado vive en el servidor** (un programa chico de Node.js), así que el panel, la salida y el macropad siempre coinciden. Este programa **no transmite por sí mismo**: OBS lleva la salida hacia afuera.
+
+### 💿 Cómo usarlo
+Necesitas **Windows 10/11 (también corre en WSL)**, **[Node.js](https://nodejs.org/) 20 o superior**, **[OBS Studio](https://obsproject.com/)** y Chrome o Edge. Para NDI desde OBS hace falta además el plugin DistroAV.
+
+1. Descarga o clona este repositorio.
+2. Doble clic en **`start.bat`**. La primera vez crea `config/teams.json` desde el ejemplo y lo abre: pon los nombres de tus equipos. Vuelve a abrirlo para arrancar.
+3. Abre el panel en `http://localhost:3000/control/`.
+4. En OBS agrega una **fuente de navegador**: URL `http://localhost:3000/program/`, **1920 × 1080**, **30 fps**, y marca *Controlar audio mediante OBS*.
+5. En la pestaña **Conexión** escribe una sala para cada cámara (**solo letras, números y `_` — nada de guiones**, VDO.Ninja los cambia y el jugador no coincidiría), pon una contraseña si quieres, y mándale a cada jugador su propio link.
+
+En otros sistemas: `npm install && npm start`. Pruebas: `npm test`. El manual de operación completo está en [`docs/MANUAL.md`](docs/MANUAL.md).
+
+### 🗺️ Próximas actualizaciones
+
+**✅ Ya hecho**
+- [x] ~~🎚️ Switcher con Preview / Program, CUT y FADE ajustable~~
+- [x] ~~📺 Multiview con medidores de audio en cada fuente y guías de zona segura en Preview~~
+- [x] ~~🎥 Cámaras por VDO.Ninja con un link por cámara, contraseña única y 1080p30~~ — *probado de punta a punta con un jugador real*
+- [x] ~~🔢 Elegir cuántas cámaras se ven (1 a 9, con la aérea incluida)~~
+- [x] ~~🧩 Pantalla dividida de 2 a 9 cámaras con fondos, gráficos y audio por recuadro, y peleas guardadas~~
+- [x] ~~🎨 Gráficas con estilos, plantillas, efectos y salida automática, y marcador desde Google Sheets~~
+- [x] ~~🎬 VTR sincronizado entre el panel y la salida, con contador y aviso rojo en los últimos 10 s~~
+- [x] ~~🚨 Botón de EMERGENCIA siempre visible, con imagen o video~~
+- [x] ~~🔊 Mezclador de audio por cámara y VTR~~
+- [x] ~~🧭 Barra de páginas estilo switcher abajo~~ — primer paso del rediseño
+- [x] ~~🕹️ Control por macropad: plugin con teclas y diales, lanzadores por comando y API HTTP~~ — *probado en el macropad real*
+- [x] ~~🔤 Salas con nombres seguros (sin guiones) y estado "sin sala"~~
+
+**🔜 Lo que falta**
+- [ ] 🎞️ **Transiciones stinger:** subir tu propio WebM con transparencia, elegir el segundo exacto donde ocurre el corte (por ejemplo a los 5 s de un clip de 10 s) y conservar su sonido
+- [ ] 🚨 Video de emergencia: **repetir sí/no**, sonido opcional y su propio botón de subida
+- [ ] 🎛️ Terminar el rediseño estilo switcher, paso a paso
+- [ ] 🧪 **Pruebas reales con 8–9 jugadores a la vez** y medición de rendimiento
+- [ ] 🔊 Calibrar los medidores de audio con gameplay real y revisar los niveles dentro de OBS
+- [ ] 📊 Probar el marcador con un Google Sheet real; ver los efectos de GC y la detección de cámara caída en vivo
+- [ ] 🔴 Teclas del macropad que cambian según el estado (por ejemplo EMERGENCIA encendida mientras está activa)
+- [ ] ⏪ Repetición instantánea (los últimos minutos de cada cámara) *(idea)*
+- [ ] 📱 Un link con QR para usar un celular como cámara aérea
+- [ ] 🗑️ Borrar archivos subidos desde el panel
+- [ ] 🌐 Interfaz en inglés
+> 💡 ¿Ideas o comentarios? Abre un issue. 🙌
+
+### 🔒 Seguridad y tus datos
+
+**Qué guarda el programa y dónde.** Todo queda en tu PC y **nada de esto forma parte de este repositorio**:
+- `config/teams.json` — tus equipos y salas
+- `data/split.json` — diseños de pantalla dividida, posiciones y estilos de gráficas, nombres de cámaras y ajustes de conexión (incluida la contraseña del torneo)
+- `vtr/` — los archivos que subes
+
+**Cómo se protege.** El servidor escucha solo en `127.0.0.1` (tu propio PC) y revisa el origen de cada petición WebSocket y de la API, así que una página web que visites no puede controlarlo. Las subidas se limitan por tipo y tamaño, los SVG corren aislados y los textos que vienen de Google Sheets siempre se muestran como texto, nunca como HTML.
+
+**A qué se conecta.** VDO.Ninja (el video de tus jugadores, de punto a punto) y Google Sheets (solo si configuras el marcador). No se envía nada al autor. La contraseña del torneo viaja dentro del link de cada jugador, así que comparte los links en privado.
+
+### 🤖 Creado con IA
+Este proyecto fue **diseñado y dirigido por Caleb (CaLabs)** y **creado con ayuda de inteligencia artificial**: el código y la documentación se escribieron junto a **Claude**, un asistente de IA de Anthropic. Las funciones se comprueban con pruebas automáticas y las prueba una persona en equipos reales.
+
+> ✍️ *Co-creado con Claude (Anthropic)* 🧡
+
+### ⚖️ Créditos y aviso
+El transporte de video lo hace **[VDO.Ninja](https://vdo.ninja/)** (de Steve Seguin). Este es un proyecto independiente, **sin afiliación, respaldo ni patrocinio** de Blackmagic Design, Microsoft, el proyecto OBS, Elgato ni VDO.Ninja. ATEM, OBS, NDI y los demás nombres mencionados pertenecen a sus dueños y se usan solo para describir compatibilidad.
+
+---
+
+<div align="center">
+
+Made with 💙 and 🤖 AI by **CaLabs** · All rights reserved © CaLabs · *Todos los derechos reservados*
+
+</div>
