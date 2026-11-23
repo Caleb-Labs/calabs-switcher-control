@@ -8,7 +8,7 @@
   "Category": "Multicam",
   "CategoryIcon": "imgs/plugin/category",
   "Icon": "imgs/plugin/icon",
-  "CodePath": "bin/plugin.js",
+  "CodePath": "bin/lanzador.cmd",
   "Nodejs": {
     "Version": "20"
   },

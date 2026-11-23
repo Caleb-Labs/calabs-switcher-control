@@ -231,6 +231,19 @@ test('el manifiesto es coherente y todos los archivos que nombra existen', () =>
   }
 });
 
+test('el lanzador .cmd (como el de los plugins de Node que sí corren en Stream Station) pasa los argumentos y arranca Node oculto', () => {
+  const m = JSON.parse(fs.readFileSync(path.join(PLUGIN_DIR, 'manifest.json'), 'utf8'));
+  assert.equal(m.CodePath, 'bin/lanzador.cmd', 'Stream Station no trae Node: arranca el .cmd, no el .js');
+  const cmd = fs.readFileSync(path.join(PLUGIN_DIR, 'bin', 'lanzador.cmd'), 'utf8');
+  assert.ok(cmd.includes('\r\n') && !/[^\r]\n/.test(cmd), 'saltos de línea de Windows (CRLF)');
+  assert.match(cmd, /plugin\.js" %\*/, 'reenvía todos los argumentos del software');
+  assert.match(cmd, /-WindowStyle Hidden/, 'sin ventana');
+  assert.match(cmd, /where node\.exe/, 'busca el Node del sistema');
+  assert.match(cmd, /Elgato\\StreamDeck\\NodeJS/, 'y el de Elgato si está instalado');
+  assert.match(cmd, /%BASE_DIR%node\.exe/, 'y uno propio dentro del plugin, si se pone');
+  assert.match(cmd, /exit \/b 1/, 'sale con error si no hay Node');
+});
+
 test('buildPlugin arma un zip con la carpeta .sdPlugin adentro, listo para importar', () => {
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'plg-')); cleanup.push(() => fs.rmSync(out, { recursive: true, force: true }));
   const file = buildPlugin(out);
