@@ -33,7 +33,8 @@ test('readProfiles con archivo inexistente devuelve un perfil de emergencia usab
   assert.equal(typeof p.programBitrate, 'number');
 });
 
-const config = loadConfig(fileURLToPath(new URL('../config/teams.example.json', import.meta.url)));
+const example = loadConfig(fileURLToPath(new URL('../config/teams.example.json', import.meta.url)));
+const config = { ...example, teams: example.teams.map((t, i) => ({ ...t, source: { ...t.source, room: `sala_eq${i + 1}` } })) }; // el ejemplo trae las salas en blanco
 const srv = await startServer({
   port: 0, config, publicDir: fileURLToPath(new URL('../public', import.meta.url)),
   extraRoutes: [sourcesRoute(config, { tileBitrate: 800, programBitrate: 2500 })],

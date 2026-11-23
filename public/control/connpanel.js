@@ -1,4 +1,5 @@
 import { playerMessage, randomRoom } from './messages.js';
+import { cleanRoomInput } from '/shared/room.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -15,7 +16,7 @@ export function initConnPanel({ send }) {
   $('cn-fps').onchange = (e) => { send({ type: 'CONN_SET', fps: Number(e.target.value) }); e.target.blur(); };
   $('cn-random').onclick = () => {
     if (!confirm('Esto cambia las salas de TODAS las cámaras: tendrás que volver a enviar los links. ¿Continuar?')) return;
-    send({ type: 'CONN_ROOMS', rooms: Object.fromEntries(links.filter((l) => l.kind === 'vdo').map((l) => [l.id, randomRoom('sot')])) });
+    send({ type: 'CONN_ROOMS', rooms: Object.fromEntries(links.filter((l) => l.kind === 'vdo').map((l) => [l.id, randomRoom()])) });
   };
 
   const copy = async (text, btn) => {
@@ -30,9 +31,14 @@ export function initConnPanel({ send }) {
       const name = document.createElement('strong'); name.textContent = l.label;
       row.append(name);
       if (l.kind !== 'vdo') { const t = document.createElement('span'); t.textContent = `Twitch: ${l.channel ?? ''}`; row.append(t); return row; }
-      const room = document.createElement('input'); room.type = 'text'; room.value = l.room; room.maxLength = 50; room.title = 'Sala (ID) de esta cámara';
-      room.onchange = () => { send({ type: 'CONN_ROOM', id: l.id, room: room.value.trim() }); };
-      const mk = (text, fn) => { const b = document.createElement('button'); b.textContent = text; b.onclick = () => fn(b); return b; };
+      const room = document.createElement('input'); room.type = 'text'; room.value = l.room; room.maxLength = 50;
+      room.placeholder = 'escribe la sala'; room.title = 'Sala de esta cámara: solo letras, números y _ (VDO.Ninja cambia el resto por _, y la sala dejaría de coincidir)';
+      room.onchange = () => {
+        const v = cleanRoomInput(room.value); // lo no permitido (guiones, espacios, acentos) pasa a _
+        room.value = v;
+        if (v.length >= 3 && v !== l.room) send({ type: 'CONN_ROOM', id: l.id, room: v });
+      };
+      const mk = (text, fn) => { const b = document.createElement('button'); b.textContent = text; b.onclick = () => fn(b); b.disabled = !l.room; if (!l.room) b.title = 'Primero escribe la sala de esta cámara'; return b; };
       row.append(room,
         mk('Link navegador', (b) => copy(l.browser, b)),
         mk('Link OBS', (b) => copy(l.vcam, b)),

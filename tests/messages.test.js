@@ -21,7 +21,7 @@ test('el mensaje menciona la contraseña solo si hay una', () => {
 });
 
 test('randomRoom genera salas válidas y distintas, difíciles de adivinar', () => {
-  const rooms = new Set(Array.from({ length: 50 }, () => randomRoom('sot')));
+  const rooms = new Set(Array.from({ length: 50 }, () => randomRoom()));
   assert.equal(rooms.size, 50);
-  for (const r of rooms) assert.match(r, /^sot-[a-z0-9]{8}$/);
+  for (const r of rooms) assert.match(r, /^[a-z0-9]{10}$/);
 });

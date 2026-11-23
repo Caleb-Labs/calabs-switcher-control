@@ -5,7 +5,9 @@ import { startServer } from '../server/index.js';
 import { sourcesRoute, teamsRoute } from '../server/api.js';
 import { loadConfig } from '../server/config.js';
 
-const config = loadConfig(fileURLToPath(new URL('../config/teams.example.json', import.meta.url)));
+// El ejemplo del repo trae las salas en blanco; aquí se rellenan para probar las urls.
+const example = loadConfig(fileURLToPath(new URL('../config/teams.example.json', import.meta.url)));
+const config = { ...example, teams: example.teams.map((t, i) => (t.source.kind === 'vdo' ? { ...t, source: { ...t.source, room: `sala_eq${i + 1}` } } : t)), aerial: { ...example.aerial, source: { ...example.aerial.source, room: 'sala_aerea' } } };
 const srv = await startServer({
   port: 0, config, publicDir: fileURLToPath(new URL('../public', import.meta.url)),
   extraRoutes: [sourcesRoute(config), teamsRoute(config)],
@@ -18,10 +20,10 @@ test('/api/sources lista 8 cámaras con su url (vdo o twitch) y el vtr sin url',
   const list = await res.json();
   assert.equal(list.length, 11); // 8 equipos + aérea + vtr + split
   assert.equal(list[0].id, 'cam1');
-  assert.match(list[0].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-eq1/);
-  assert.match(list[6].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-eq7/); // todas las cámaras del ejemplo son VDO.Ninja
+  assert.match(list[0].url, /^https:\/\/vdo\.ninja\/\?view=sala_eq1/);
+  assert.match(list[6].url, /^https:\/\/vdo\.ninja\/\?view=sala_eq7/); // todas las cámaras del ejemplo son VDO.Ninja
   assert.equal(list[8].id, 'cam9');
-  assert.match(list[8].url, /^https:\/\/vdo\.ninja\/\?view=sot-torneo-aerea/);
+  assert.match(list[8].url, /^https:\/\/vdo\.ninja\/\?view=sala_aerea/);
   assert.deepEqual(list[9], { id: 'vtr', kind: 'vtr', url: null });
   assert.deepEqual(list[10], { id: 'split', kind: 'split', url: null });
 });

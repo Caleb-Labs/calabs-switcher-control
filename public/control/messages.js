@@ -17,9 +17,9 @@ ${pass}
 Si algo no conecta, avísame antes de empezar.`;
 }
 
-// Sala aleatoria (difícil de adivinar) para una cámara.
-export function randomRoom(prefix = 'sot') {
-  const bytes = new Uint8Array(8);
+// Sala aleatoria (difícil de adivinar): 10 letras y números, sin guiones (VDO.Ninja no los respeta).
+export function randomRoom() {
+  const bytes = new Uint8Array(10);
   (globalThis.crypto ?? { getRandomValues: (a) => a.map(() => Math.floor(Math.random() * 256)) }).getRandomValues(bytes);
-  return `${prefix}-${[...bytes].map((b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('')}`;
+  return [...bytes].map((b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
 }

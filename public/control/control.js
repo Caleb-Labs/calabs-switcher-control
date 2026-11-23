@@ -100,6 +100,7 @@ function build(state) {
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.append(createSourceElement(meta, { url: meta.url }));
+    if ((meta.kind === 'vdo') && !meta.url) tile.classList.add('noroom'); // sin sala todavía (se escribe en Conexión de cámaras)
     const label = document.createElement('span'); label.className = 'label'; label.textContent = s.label;
     if (s.kind === 'vdo' || s.kind === 'twitch') {
       label.title = 'Doble clic para ponerle tu propio nombre';

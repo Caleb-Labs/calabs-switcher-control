@@ -10,7 +10,7 @@ import { volumeFor } from '../public/shared/sources.js';
 import { keyToAction } from '../public/control/keymap.js';
 import { parseConfig } from '../server/config.js';
 
-const team = (i) => ({ name: `Equipo ${i}`, players: [`J${i}A`, `J${i}B`], source: { kind: 'vdo', room: `r${i}` }, logo: i === 1 ? 'logos/e1.png' : undefined });
+const team = (i) => ({ name: `Equipo ${i}`, players: [`J${i}A`, `J${i}B`], source: { kind: 'vdo', room: `sala${i}` }, logo: i === 1 ? 'logos/e1.png' : undefined });
 const config = { teams: Array.from({ length: 8 }, (_, i) => team(i + 1)) };
 const S = (c = config) => createState(c);
 const apply = (s, ...actions) => actions.reduce(reduce, s);

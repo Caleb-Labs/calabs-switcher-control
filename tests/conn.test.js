@@ -61,19 +61,19 @@ test('CONN_SET valida contraseña (alfanumérica, vacía permitida), calidad y f
 });
 
 test('CONN_ROOM cambia la sala de una cámara (solo ids válidos y nombres seguros)', () => {
-  const s = apply(S(), { type: 'CONN_ROOM', id: 'cam2', room: 'mi-sala_2' });
-  assert.equal(s.conn.rooms.cam2, 'mi-sala_2');
+  const s = apply(S(), { type: 'CONN_ROOM', id: 'cam2', room: 'mi_sala_2' });
+  assert.equal(s.conn.rooms.cam2, 'mi_sala_2');
   assert.equal(s.connRev, 1);
   const s0 = S();
-  for (const bad of [{ id: 'cam2', room: 'ab' }, { id: 'cam2', room: 'con espacio' }, { id: 'cam2', room: 'ñandú' }, { id: 'cam7', room: 'sala-7' }, { id: 'nope', room: 'sala-x' }, { id: 'toString', room: 'sala-x' }, { id: 'cam2', room: 5 }]) {
+  for (const bad of [{ id: 'cam2', room: 'ab' }, { id: 'cam2', room: 'con espacio' }, { id: 'cam2', room: 'con-guion' }, { id: 'cam2', room: 'ñandú' }, { id: 'cam7', room: 'sala-7' }, { id: 'nope', room: 'sala-x' }, { id: 'toString', room: 'sala-x' }, { id: 'cam2', room: 5 }]) {
     assert.equal(apply(s0, { type: 'CONN_ROOM', ...bad }), s0);
   }
 });
 
 test('CONN_ROOMS aplica varias salas a la vez (para generar salas aleatorias)', () => {
-  const s = apply(S(), { type: 'CONN_ROOMS', rooms: { cam1: 'sot-aaaa1111', cam2: 'sot-bbbb2222', cam7: 'no-twitch', nope: 'xxxxxx' } });
-  assert.equal(s.conn.rooms.cam1, 'sot-aaaa1111');
-  assert.equal(s.conn.rooms.cam2, 'sot-bbbb2222');
+  const s = apply(S(), { type: 'CONN_ROOMS', rooms: { cam1: 'sot_aaaa1111', cam2: 'sot_bbbb2222', cam7: 'no_twitch', nope: 'xxxxxx' } });
+  assert.equal(s.conn.rooms.cam1, 'sot_aaaa1111');
+  assert.equal(s.conn.rooms.cam2, 'sot_bbbb2222');
   assert.equal(s.conn.rooms.cam7, undefined);
   assert.equal(s.connRev, 1);
   const s0 = S();
@@ -81,11 +81,11 @@ test('CONN_ROOMS aplica varias salas a la vez (para generar salas aleatorias)', 
 });
 
 test('la conexión se guarda en disco', () => {
-  const s = apply(S(), { type: 'CONN_SET', password: 'Clave1', quality: '720p' }, { type: 'CONN_ROOM', id: 'cam3', room: 'sala-tres' });
+  const s = apply(S(), { type: 'CONN_SET', password: 'Clave1', quality: '720p' }, { type: 'CONN_ROOM', id: 'cam3', room: 'sala_tres' });
   const r = S({ ...config, saved: JSON.parse(JSON.stringify(persistable(s))) });
   assert.equal(r.conn.password, 'Clave1');
   assert.equal(r.conn.quality, '720p');
-  assert.equal(r.conn.rooms.cam3, 'sala-tres');
+  assert.equal(r.conn.rooms.cam3, 'sala_tres');
   const bad = S({ ...config, saved: { conn: { password: 'con espacio', quality: 'x', fps: 1, rooms: { cam1: 'ñ', cam7: 'x1234', nope: 'abcdef' } } } });
   assert.equal(bad.conn.password, '');
   assert.equal(bad.conn.quality, '1080p');
@@ -102,10 +102,10 @@ const get = async (p) => (await fetch(`http://127.0.0.1:${srv.port}${p}`)).json(
 
 test('/api/sources usa las salas y la contraseña actuales del estado', async () => {
   srv.dispatch({ type: 'CONN_SET', password: 'Clave123' });
-  srv.dispatch({ type: 'CONN_ROOM', id: 'cam2', room: 'sala-nueva' });
+  srv.dispatch({ type: 'CONN_ROOM', id: 'cam2', room: 'sala_nueva' });
   const list = await get('/api/sources?for=control');
   const u = new URL(list[1].url);
-  assert.equal(u.searchParams.get('view'), 'sala-nueva');
+  assert.equal(u.searchParams.get('view'), 'sala_nueva');
   assert.equal(u.searchParams.get('password'), 'Clave123');
   assert.match(list[6].url, /^https:\/\/player\.twitch\.tv\//);
 });
@@ -115,13 +115,13 @@ test('/api/links lista por cámara activa: sala, link para el navegador, link pa
   const links = await get('/api/links');
   assert.deepEqual(links.map((l) => l.id), ['cam1', 'cam2', 'cam3']);
   const c2 = links.find((l) => l.id === 'cam2');
-  assert.equal(c2.room, 'sala-nueva');
+  assert.equal(c2.room, 'sala_nueva');
   const b = new URL(c2.browser);
-  assert.equal(b.searchParams.get('push'), 'sala-nueva');
+  assert.equal(b.searchParams.get('push'), 'sala_nueva');
   assert.ok(b.searchParams.has('screenshare'));
   assert.equal(b.searchParams.get('quality'), '0');
   assert.equal(b.searchParams.get('password'), 'Clave123');
   assert.ok(new URL(c2.vcam).searchParams.has('webcam'));
-  assert.equal(new URL(c2.view).searchParams.get('view'), 'sala-nueva');
+  assert.equal(new URL(c2.view).searchParams.get('view'), 'sala_nueva');
   assert.equal(c2.password, 'Clave123');
 });

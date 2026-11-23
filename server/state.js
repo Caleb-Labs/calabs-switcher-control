@@ -1,6 +1,7 @@
 // Estado puro del switcher. Sin efectos: reduce(state, action) devuelve un estado nuevo.
 import { cleanStyle, patchStyle, STYLE_TARGETS } from '../public/shared/gcstyle.js';
 import { vtrPosition } from '../public/shared/vtr.js';
+import { isValidRoom } from '../public/shared/room.js';
 
 // ---------- Pantalla dividida ----------
 // Rectángulos en fracciones del lienzo 1920x1080 (w y h iguales = recuadro 16:9).
@@ -79,14 +80,13 @@ export function normalizeSplit(raw, camIds) {
 const slug = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pelea';
 const camIdsOf = (state) => state.sources.filter((x) => x.active && x.kind !== 'vtr' && x.kind !== 'split').map((x) => x.id);
 const NAME_MAX = 30;
-const ROOM_RE = /^[A-Za-z0-9_-]{3,50}$/;
 const PASS_RE = /^[A-Za-z0-9]{0,49}$/;
 
 // Ajustes de conexión de las cámaras (VDO.Ninja): salas, contraseña única del torneo, calidad y fps.
 function cleanConn(raw, defaultRooms) {
   const r = isPlainObj(raw) ? raw : {};
   const rooms = { ...defaultRooms };
-  if (isPlainObj(r.rooms)) for (const [id, room] of Object.entries(r.rooms)) if (Object.hasOwn(defaultRooms, id) && typeof room === 'string' && ROOM_RE.test(room)) rooms[id] = room;
+  if (isPlainObj(r.rooms)) for (const [id, room] of Object.entries(r.rooms)) if (Object.hasOwn(defaultRooms, id) && typeof room === 'string' && isValidRoom(room)) rooms[id] = room;
   return {
     password: typeof r.password === 'string' && PASS_RE.test(r.password) ? r.password : '',
     quality: r.quality === '720p' || r.quality === '1080p' ? r.quality : '1080p',
@@ -416,13 +416,13 @@ export function reduce(state, action) {
       return Object.keys(patch).length ? { ...state, conn: { ...state.conn, ...patch }, connRev: state.connRev + 1 } : state;
     }
     case 'CONN_ROOM':
-      if (typeof action.id !== 'string' || !Object.hasOwn(state.conn.rooms, action.id) || typeof action.room !== 'string' || !ROOM_RE.test(action.room)) return state;
+      if (typeof action.id !== 'string' || !Object.hasOwn(state.conn.rooms, action.id) || typeof action.room !== 'string' || !isValidRoom(action.room)) return state;
       return { ...state, conn: { ...state.conn, rooms: { ...state.conn.rooms, [action.id]: action.room } }, connRev: state.connRev + 1 };
     case 'CONN_ROOMS': {
       if (!isPlainObj(action.rooms)) return state;
       const rooms = { ...state.conn.rooms };
       let n = 0;
-      for (const [id, room] of Object.entries(action.rooms)) if (Object.hasOwn(rooms, id) && typeof room === 'string' && ROOM_RE.test(room)) { rooms[id] = room; n++; }
+      for (const [id, room] of Object.entries(action.rooms)) if (Object.hasOwn(rooms, id) && typeof room === 'string' && isValidRoom(room)) { rooms[id] = room; n++; }
       return n ? { ...state, conn: { ...state.conn, rooms }, connRev: state.connRev + 1 } : state;
     }
     case 'FADE_TIME':

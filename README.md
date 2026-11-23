@@ -80,6 +80,8 @@ Es una fuente más (`s`): se manda a Preview y se toma con CUT/FADE. En el panel
 ## Cámaras visibles y nombres
 Arriba: **Equipos [N]** oculta del todo las cámaras sobrantes (tiles, botones, mezclador, teclas); la cámara aérea cuenta como una más (la última, `9`). Doble clic en el nombre de una cámara para personalizarlo.
 
+**Salas de las cámaras:** el nombre solo puede llevar letras, números y `_` (3 a 50). Nada de guiones: VDO.Ninja los cambia por `_` y la sala del jugador dejaría de coincidir con la del panel. En `config/teams.json` la sala puede ir en blanco y se escribe en **Conexión de cámaras** (o con **Salas aleatorias**); mientras esté en blanco la ventana dice «SIN SALA» y no hay links.
+
 Cada ventana del multiview (cámaras, Preview, Program y VTR) lleva un **medidor de audio** vertical a la izquierda, con marca de pico. Mide la señal que entra, antes de los faders. Solo está en `/control`; `/program` queda limpio. Los tiles del panel cargan el audio de VDO.Ninja con el altavoz callado (`mutespeaker` + `getloudness`), así que suman un poco de ancho de banda de audio.
 
 ## Macropad Redragon SS-552 (10 teclas + 4 diales)

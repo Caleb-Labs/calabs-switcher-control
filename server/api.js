@@ -19,7 +19,11 @@ export function sourcesRoute(config, profile = { tileBitrate: 2000, programBitra
     const control = url.searchParams.get('for') === 'control';
     const opts = { bitrate: control ? profile.tileBitrate : profile.programBitrate, meter: control, password: state.conn.password };
     const cams = config.aerial ? [...config.teams, config.aerial] : config.teams;
-    const list = cams.map((_, i) => ({ id: `cam${i + 1}`, kind: cams[i].source.kind, url: viewLink(effectiveTeam(config, state, i), opts) }));
+    const list = cams.map((_, i) => {
+      const team = effectiveTeam(config, state, i);
+      const noRoom = team.source.kind === 'vdo' && !team.source.room; // sin sala todavía: no hay a dónde conectarse
+      return { id: `cam${i + 1}`, kind: cams[i].source.kind, url: noRoom ? null : viewLink(team, opts) };
+    });
     list.push({ id: 'vtr', kind: 'vtr', url: null });
     list.push({ id: 'split', kind: 'split', url: null });
     res.writeHead(200, { 'content-type': 'application/json' });
@@ -39,6 +43,7 @@ export function linksRoute(config) {
       const i = cams.findIndex((_, k) => `cam${k + 1}` === s.id);
       const team = effectiveTeam(config, state, i);
       if (s.kind !== 'vdo') return { id: s.id, label: s.label, kind: s.kind, channel: team.source.channel };
+      if (!team.source.room) return { id: s.id, label: s.label, kind: 'vdo', room: '', password, browser: null, vcam: null, view: null };
       return {
         id: s.id, label: s.label, kind: 'vdo', room: team.source.room, password,
         browser: pushLink(team, { quality, fps, password, mode: 'browser' }),

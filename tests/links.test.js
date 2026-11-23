@@ -5,7 +5,7 @@ import { loadConfig, parseConfig } from '../server/config.js';
 import { pushLink, viewLink } from '../server/links.js';
 
 const vdo = (room) => ({ name: 'E', players: ['a', 'b'], source: { kind: 'vdo', room } });
-const eight = () => Array.from({ length: 8 }, (_, i) => vdo(`r${i}`));
+const eight = () => Array.from({ length: 8 }, (_, i) => vdo(`sala${i}`));
 
 test('el ejemplo del repo es una config válida de 8 equipos', () => {
   const cfg = loadConfig(fileURLToPath(new URL('../config/teams.example.json', import.meta.url)));
@@ -15,14 +15,15 @@ test('el ejemplo del repo es una config válida de 8 equipos', () => {
 
 test('parseConfig rechaza menos o más de 8 equipos', () => {
   assert.throws(() => parseConfig({ teams: eight().slice(0, 7) }), /8 equipos/);
-  assert.throws(() => parseConfig({ teams: [...eight(), vdo('x')] }), /8 equipos/);
+  assert.throws(() => parseConfig({ teams: [...eight(), vdo('sala9')] }), /8 equipos/);
 });
 
 test('parseConfig rechaza equipos sin 2 jugadores, sin nombre o sin fuente válida', () => {
   const bad = (patch) => { const t = eight(); t[0] = { ...t[0], ...patch }; return { teams: t }; };
   assert.throws(() => parseConfig(bad({ players: ['solo uno'] })), /2 jugadores/);
   assert.throws(() => parseConfig(bad({ name: '  ' })), /nombre/);
-  assert.throws(() => parseConfig(bad({ source: { kind: 'vdo' } })), /room/);
+  assert.equal(parseConfig(bad({ source: { kind: 'vdo' } })).teams[0].source.room, ''); // la sala puede ir en blanco
+  assert.throws(() => parseConfig(bad({ source: { kind: 'vdo', room: 'ab' } })), /sala/);
   assert.throws(() => parseConfig(bad({ source: { kind: 'twitch' } })), /channel/);
   assert.throws(() => parseConfig(bad({ source: { kind: 'discord' } })), /kind/);
 });
@@ -73,6 +74,6 @@ test('parseConfig acepta una cámara aérea opcional y la valida', () => {
   const aerial = { name: 'Aérea', source: { kind: 'vdo', room: 'aerea' } };
   assert.deepEqual(parseConfig({ teams: eight(), aerial }).aerial, aerial);
   assert.equal(parseConfig({ teams: eight() }).aerial, null);
-  assert.throws(() => parseConfig({ teams: eight(), aerial: { name: 'x', source: { kind: 'vdo' } } }), /aérea.*room/);
-  assert.throws(() => parseConfig({ teams: eight(), aerial: { source: { kind: 'vdo', room: 'a' } } }), /aérea.*nombre/);
+  assert.throws(() => parseConfig({ teams: eight(), aerial: { name: 'x', source: { kind: 'vdo', room: 'ab' } } }), /aérea.*sala/i);
+  assert.throws(() => parseConfig({ teams: eight(), aerial: { source: { kind: 'vdo', room: 'aerea' } } }), /aérea.*nombre/);
 });
