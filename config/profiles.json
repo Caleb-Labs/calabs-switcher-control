@@ -16,6 +16,10 @@
     "1080p30": {
       "tileBitrate": 2500,
       "programBitrate": 6000
+    },
+    "1080p30-tiles-ligeros": {
+      "tileBitrate": 1000,
+      "programBitrate": 6000
     }
   }
 }

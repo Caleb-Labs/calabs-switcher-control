@@ -54,3 +54,11 @@ test('los links de /control salen con altavoz callado y niveles; los de /program
   assert.doesNotMatch(await get('?for=control'), /noaudio/);
   assert.doesNotMatch(await get(''), /noaudio|mutespeaker|getloudness/);
 });
+
+test('perfil 1080p30-tiles-ligeros: tiles livianos pero el Program al aire conserva el bitrate de 1080p30', () => {
+  const p = loadProfile('1080p30-tiles-ligeros', profiles, () => assert.fail('el perfil debe existir'));
+  const full = loadProfile('1080p30', profiles);
+  assert.equal(p.programBitrate, full.programBitrate);
+  assert.ok(p.tileBitrate < full.tileBitrate);
+  assert.ok(p.tileBitrate >= 800);
+});
