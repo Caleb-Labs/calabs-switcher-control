@@ -12,43 +12,40 @@ const DIST = fileURLToPath(new URL('./dist', import.meta.url));
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// ---------- pantalla de ajustes de la tecla (sin recursos externos: funciona sin internet) ----------
-export function comandoHtml() {
-  const grupos = GRUPOS.map((g) => `        <optgroup label="${esc(g.nombre)}">\n${g.comandos.map((c) => `          <option value="${esc(c)}">${esc(ETIQUETAS[c])}</option>`).join('\n')}\n        </optgroup>`).join('\n');
+// ---------- pantallas de ajustes (sin recursos externos: funcionan sin internet) ----------
+const opcionesComandos = () => `        <option value="">Elige un comando…</option>\n${GRUPOS.map((g) => `        <optgroup label="${esc(g.nombre)}">\n${g.comandos.map((c) => `          <option value="${esc(c)}">${esc(ETIQUETAS[c])}</option>`).join('\n')}\n        </optgroup>`).join('\n')}`;
+
+// campos: [{ id, key, etiqueta, tipo: 'comando' | 'puerto' }]; "key" es el nombre del ajuste que lee plugin.js
+function paginaAjustes(titulo, campos, nota) {
+  const filas = campos.map((c) => c.tipo === 'comando'
+    ? `  <div class="fila">\n    <label for="${c.id}">${esc(c.etiqueta)}</label>\n    <select id="${c.id}">\n${opcionesComandos()}\n    </select>\n  </div>`
+    : `  <div class="fila">\n    <label for="${c.id}">${esc(c.etiqueta)}</label>\n    <input id="${c.id}" type="number" min="1" max="65535" placeholder="3000">\n  </div>`).join('\n');
+  const campoJs = JSON.stringify(campos.map((c) => ({ id: c.id, key: c.key, num: c.tipo === 'puerto' })));
   return `<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Comando Multicam</title>
+  <title>${esc(titulo)}</title>
   <style>
     body { margin: 0; padding: 10px 12px; background: #2d2d2d; color: #d8d8d8; font: 11px/1.4 "Segoe UI", system-ui, sans-serif; }
     .fila { display: flex; align-items: center; margin: 8px 0; gap: 10px; }
-    label { width: 78px; color: #9a9a9a; flex: none; }
+    label { width: 96px; color: #9a9a9a; flex: none; }
     select, input { flex: 1; min-width: 0; background: #3d3d3d; color: #e6e6e6; border: 1px solid #1f1f1f; border-radius: 3px; padding: 5px 6px; font: inherit; }
-    .nota { color: #8a8a8a; margin: 10px 0 0 88px; }
+    .nota { color: #8a8a8a; margin: 10px 0 0 106px; }
   </style>
 </head>
 <body>
-  <div class="fila">
-    <label for="comando">Comando</label>
-    <select id="comando">
-        <option value="">Elige un comando…</option>
-${grupos}
-    </select>
-  </div>
-  <div class="fila">
-    <label for="puerto">Puerto</label>
-    <input id="puerto" type="number" min="1" max="65535" placeholder="3000">
-  </div>
-  <div class="nota">La app Multicam debe estar abierta. Puerto 3000 salvo que lo hayas cambiado.</div>
+${filas}
+  <div class="nota">${esc(nota)}</div>
   <script>
+    var CAMPOS = ${campoJs};
     var ws = null, uuid = null, settings = {};
     function pintar() {
-      document.getElementById('comando').value = settings.command || '';
-      document.getElementById('puerto').value = settings.port || '';
+      CAMPOS.forEach(function (c) { document.getElementById(c.id).value = settings[c.key] || ''; });
     }
     function guardar() {
-      settings = { command: document.getElementById('comando').value, port: Number(document.getElementById('puerto').value) || undefined };
+      settings = {};
+      CAMPOS.forEach(function (c) { var v = document.getElementById(c.id).value; settings[c.key] = c.num ? (Number(v) || undefined) : v; });
       if (ws && ws.readyState === 1) ws.send(JSON.stringify({ event: 'setSettings', context: uuid, payload: settings }));
     }
     function connectElgatoStreamDeckSocket(port, inUUID, registerEvent, info, actionInfo) {
@@ -62,13 +59,24 @@ ${grupos}
         if (m.event === 'didReceiveSettings') { settings = (m.payload || {}).settings || {}; pintar(); }
       };
     }
-    document.getElementById('comando').onchange = guardar;
-    document.getElementById('puerto').onchange = guardar;
+    CAMPOS.forEach(function (c) { document.getElementById(c.id).onchange = guardar; });
   </script>
 </body>
 </html>
 `;
 }
+
+const NOTA = 'La app Multicam debe estar abierta. Puerto 3000 salvo que lo hayas cambiado.';
+export const comandoHtml = () => paginaAjustes('Comando Multicam', [
+  { id: 'comando', key: 'command', etiqueta: 'Comando', tipo: 'comando' },
+  { id: 'puerto', key: 'port', etiqueta: 'Puerto', tipo: 'puerto' },
+], NOTA);
+export const dialHtml = () => paginaAjustes('Dial Multicam', [
+  { id: 'derecha', key: 'right', etiqueta: 'Girar →', tipo: 'comando' },
+  { id: 'izquierda', key: 'left', etiqueta: 'Girar ←', tipo: 'comando' },
+  { id: 'presionar', key: 'push', etiqueta: 'Presionar', tipo: 'comando' },
+  { id: 'puerto', key: 'port', etiqueta: 'Puerto', tipo: 'puerto' },
+], NOTA + ' Un giro rápido manda varios pasos seguidos (hasta 10).');
 
 // ---------- CRC32 y PNG (sin librerías) ----------
 const TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -174,6 +182,7 @@ export function buildPlugin(outDir = DIST) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   fs.writeFileSync(path.join(PLUGIN_DIR, 'ui', 'comando.html'), comandoHtml());
+  fs.writeFileSync(path.join(PLUGIN_DIR, 'ui', 'dial.html'), dialHtml());
   writeIcons();
   console.log(`Listo: ${buildPlugin()}`);
 }

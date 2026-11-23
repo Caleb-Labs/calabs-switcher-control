@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Dial Multicam</title>
+  <style>
+    body { margin: 0; padding: 10px 12px; background: #2d2d2d; color: #d8d8d8; font: 11px/1.4 "Segoe UI", system-ui, sans-serif; }
+    .fila { display: flex; align-items: center; margin: 8px 0; gap: 10px; }
+    label { width: 96px; color: #9a9a9a; flex: none; }
+    select, input { flex: 1; min-width: 0; background: #3d3d3d; color: #e6e6e6; border: 1px solid #1f1f1f; border-radius: 3px; padding: 5px 6px; font: inherit; }
+    .nota { color: #8a8a8a; margin: 10px 0 0 106px; }
+  </style>
+</head>
+<body>
+  <div class="fila">
+    <label for="derecha">Girar →</label>
+    <select id="derecha">
+        <option value="">Elige un comando…</option>
+        <optgroup label="Cortes y transiciones">
+          <option value="cut">Corte (CUT)</option>
+          <option value="fade">Fundido (FADE)</option>
+          <option value="fade-longer">Fundido más largo</option>
+          <option value="fade-shorter">Fundido más corto</option>
+        </optgroup>
+        <optgroup label="Emergencia">
+          <option value="emergency-toggle">EMERGENCIA: encender / apagar</option>
+          <option value="emergency-on">EMERGENCIA: encender</option>
+          <option value="emergency-off">EMERGENCIA: apagar</option>
+        </optgroup>
+        <optgroup label="Cámaras a Preview">
+          <option value="cam1">Cámara 1 a Preview</option>
+          <option value="cam2">Cámara 2 a Preview</option>
+          <option value="cam3">Cámara 3 a Preview</option>
+          <option value="cam4">Cámara 4 a Preview</option>
+          <option value="cam5">Cámara 5 a Preview</option>
+          <option value="cam6">Cámara 6 a Preview</option>
+          <option value="cam7">Cámara 7 a Preview</option>
+          <option value="cam8">Cámara 8 a Preview</option>
+          <option value="cam9">Cámara 9 a Preview</option>
+          <option value="vtr">VTR a Preview</option>
+          <option value="split">Pantalla dividida a Preview</option>
+          <option value="preview-next">Preview: cámara siguiente</option>
+          <option value="preview-prev">Preview: cámara anterior</option>
+        </optgroup>
+        <optgroup label="VTR">
+          <option value="vtr-toggle">VTR: reproducir / pausar</option>
+          <option value="vtr-play">VTR: reproducir</option>
+          <option value="vtr-pause">VTR: pausar</option>
+          <option value="vtr-next">VTR: archivo siguiente</option>
+          <option value="vtr-prev">VTR: archivo anterior</option>
+        </optgroup>
+        <optgroup label="GC (nombre y marcador)">
+          <option value="gc-name-preview">GC nombre: a Preview</option>
+          <option value="gc-name-live">GC nombre: al aire</option>
+          <option value="gc-name-off">GC nombre: bajar</option>
+          <option value="gc-player-next">GC nombre: siguiente jugador</option>
+          <option value="gc-score-preview">Marcador: a Preview</option>
+          <option value="gc-score-live">Marcador: al aire</option>
+          <option value="gc-score-off">Marcador: bajar</option>
+          <option value="split-gc-preview">GC de la dividida: a Preview</option>
+          <option value="split-gc-live">GC de la dividida: al aire</option>
+          <option value="split-gc-off">GC de la dividida: bajar</option>
+        </optgroup>
+        <optgroup label="Audio">
+          <option value="audio-next">Audio principal: cámara siguiente</option>
+          <option value="audio-prev">Audio principal: cámara anterior</option>
+          <option value="audio-clear">Audio principal: ninguna</option>
+          <option value="vol-up">Volumen de cámara: subir</option>
+          <option value="vol-down">Volumen de cámara: bajar</option>
+          <option value="mute">Cámara: silenciar / activar</option>
+          <option value="vtr-vol-up">Volumen del VTR: subir</option>
+          <option value="vtr-vol-down">Volumen del VTR: bajar</option>
+          <option value="vtr-mute">VTR: silenciar / activar</option>
+          <option value="mix-next">Mezclador: cámara siguiente</option>
+          <option value="mix-prev">Mezclador: cámara anterior</option>
+          <option value="mix-up">Mezclador: subir volumen</option>
+          <option value="mix-down">Mezclador: bajar volumen</option>
+          <option value="mix-toggle">Mezclador: encender / apagar la elegida</option>
+          <option value="test-tone">Probar audio (bip)</option>
+        </optgroup>
+    </select>
+  </div>
+  <div class="fila">
+    <label for="izquierda">Girar ←</label>
+    <select id="izquierda">
+        <option value="">Elige un comando…</option>
+        <optgroup label="Cortes y transiciones">
+          <option value="cut">Corte (CUT)</option>
+          <option value="fade">Fundido (FADE)</option>
+          <option value="fade-longer">Fundido más largo</option>
+          <option value="fade-shorter">Fundido más corto</option>
+        </optgroup>
+        <optgroup label="Emergencia">
+          <option value="emergency-toggle">EMERGENCIA: encender / apagar</option>
+          <option value="emergency-on">EMERGENCIA: encender</option>
+          <option value="emergency-off">EMERGENCIA: apagar</option>
+        </optgroup>
+        <optgroup label="Cámaras a Preview">
+          <option value="cam1">Cámara 1 a Preview</option>
+          <option value="cam2">Cámara 2 a Preview</option>
+          <option value="cam3">Cámara 3 a Preview</option>
+          <option value="cam4">Cámara 4 a Preview</option>
+          <option value="cam5">Cámara 5 a Preview</option>
+          <option value="cam6">Cámara 6 a Preview</option>
+          <option value="cam7">Cámara 7 a Preview</option>
+          <option value="cam8">Cámara 8 a Preview</option>
+          <option value="cam9">Cámara 9 a Preview</option>
+          <option value="vtr">VTR a Preview</option>
+          <option value="split">Pantalla dividida a Preview</option>
+          <option value="preview-next">Preview: cámara siguiente</option>
+          <option value="preview-prev">Preview: cámara anterior</option>
+        </optgroup>
+        <optgroup label="VTR">
+          <option value="vtr-toggle">VTR: reproducir / pausar</option>
+          <option value="vtr-play">VTR: reproducir</option>
+          <option value="vtr-pause">VTR: pausar</option>
+          <option value="vtr-next">VTR: archivo siguiente</option>
+          <option value="vtr-prev">VTR: archivo anterior</option>
+        </optgroup>
+        <optgroup label="GC (nombre y marcador)">
+          <option value="gc-name-preview">GC nombre: a Preview</option>
+          <option value="gc-name-live">GC nombre: al aire</option>
+          <option value="gc-name-off">GC nombre: bajar</option>
+          <option value="gc-player-next">GC nombre: siguiente jugador</option>
+          <option value="gc-score-preview">Marcador: a Preview</option>
+          <option value="gc-score-live">Marcador: al aire</option>
+          <option value="gc-score-off">Marcador: bajar</option>
+          <option value="split-gc-preview">GC de la dividida: a Preview</option>
+          <option value="split-gc-live">GC de la dividida: al aire</option>
+          <option value="split-gc-off">GC de la dividida: bajar</option>
+        </optgroup>
+        <optgroup label="Audio">
+          <option value="audio-next">Audio principal: cámara siguiente</option>
+          <option value="audio-prev">Audio principal: cámara anterior</option>
+          <option value="audio-clear">Audio principal: ninguna</option>
+          <option value="vol-up">Volumen de cámara: subir</option>
+          <option value="vol-down">Volumen de cámara: bajar</option>
+          <option value="mute">Cámara: silenciar / activar</option>
+          <option value="vtr-vol-up">Volumen del VTR: subir</option>
+          <option value="vtr-vol-down">Volumen del VTR: bajar</option>
+          <option value="vtr-mute">VTR: silenciar / activar</option>
+          <option value="mix-next">Mezclador: cámara siguiente</option>
+          <option value="mix-prev">Mezclador: cámara anterior</option>
+          <option value="mix-up">Mezclador: subir volumen</option>
+          <option value="mix-down">Mezclador: bajar volumen</option>
+          <option value="mix-toggle">Mezclador: encender / apagar la elegida</option>
+          <option value="test-tone">Probar audio (bip)</option>
+        </optgroup>
+    </select>
+  </div>
+  <div class="fila">
+    <label for="presionar">Presionar</label>
+    <select id="presionar">
+        <option value="">Elige un comando…</option>
+        <optgroup label="Cortes y transiciones">
+          <option value="cut">Corte (CUT)</option>
+          <option value="fade">Fundido (FADE)</option>
+          <option value="fade-longer">Fundido más largo</option>
+          <option value="fade-shorter">Fundido más corto</option>
+        </optgroup>
+        <optgroup label="Emergencia">
+          <option value="emergency-toggle">EMERGENCIA: encender / apagar</option>
+          <option value="emergency-on">EMERGENCIA: encender</option>
+          <option value="emergency-off">EMERGENCIA: apagar</option>
+        </optgroup>
+        <optgroup label="Cámaras a Preview">
+          <option value="cam1">Cámara 1 a Preview</option>
+          <option value="cam2">Cámara 2 a Preview</option>
+          <option value="cam3">Cámara 3 a Preview</option>
+          <option value="cam4">Cámara 4 a Preview</option>
+          <option value="cam5">Cámara 5 a Preview</option>
+          <option value="cam6">Cámara 6 a Preview</option>
+          <option value="cam7">Cámara 7 a Preview</option>
+          <option value="cam8">Cámara 8 a Preview</option>
+          <option value="cam9">Cámara 9 a Preview</option>
+          <option value="vtr">VTR a Preview</option>
+          <option value="split">Pantalla dividida a Preview</option>
+          <option value="preview-next">Preview: cámara siguiente</option>
+          <option value="preview-prev">Preview: cámara anterior</option>
+        </optgroup>
+        <optgroup label="VTR">
+          <option value="vtr-toggle">VTR: reproducir / pausar</option>
+          <option value="vtr-play">VTR: reproducir</option>
+          <option value="vtr-pause">VTR: pausar</option>
+          <option value="vtr-next">VTR: archivo siguiente</option>
+          <option value="vtr-prev">VTR: archivo anterior</option>
+        </optgroup>
+        <optgroup label="GC (nombre y marcador)">
+          <option value="gc-name-preview">GC nombre: a Preview</option>
+          <option value="gc-name-live">GC nombre: al aire</option>
+          <option value="gc-name-off">GC nombre: bajar</option>
+          <option value="gc-player-next">GC nombre: siguiente jugador</option>
+          <option value="gc-score-preview">Marcador: a Preview</option>
+          <option value="gc-score-live">Marcador: al aire</option>
+          <option value="gc-score-off">Marcador: bajar</option>
+          <option value="split-gc-preview">GC de la dividida: a Preview</option>
+          <option value="split-gc-live">GC de la dividida: al aire</option>
+          <option value="split-gc-off">GC de la dividida: bajar</option>
+        </optgroup>
+        <optgroup label="Audio">
+          <option value="audio-next">Audio principal: cámara siguiente</option>
+          <option value="audio-prev">Audio principal: cámara anterior</option>
+          <option value="audio-clear">Audio principal: ninguna</option>
+          <option value="vol-up">Volumen de cámara: subir</option>
+          <option value="vol-down">Volumen de cámara: bajar</option>
+          <option value="mute">Cámara: silenciar / activar</option>
+          <option value="vtr-vol-up">Volumen del VTR: subir</option>
+          <option value="vtr-vol-down">Volumen del VTR: bajar</option>
+          <option value="vtr-mute">VTR: silenciar / activar</option>
+          <option value="mix-next">Mezclador: cámara siguiente</option>
+          <option value="mix-prev">Mezclador: cámara anterior</option>
+          <option value="mix-up">Mezclador: subir volumen</option>
+          <option value="mix-down">Mezclador: bajar volumen</option>
+          <option value="mix-toggle">Mezclador: encender / apagar la elegida</option>
+          <option value="test-tone">Probar audio (bip)</option>
+        </optgroup>
+    </select>
+  </div>
+  <div class="fila">
+    <label for="puerto">Puerto</label>
+    <input id="puerto" type="number" min="1" max="65535" placeholder="3000">
+  </div>
+  <div class="nota">La app Multicam debe estar abierta. Puerto 3000 salvo que lo hayas cambiado. Un giro rápido manda varios pasos seguidos (hasta 10).</div>
+  <script>
+    var CAMPOS = [{"id":"derecha","key":"right","num":false},{"id":"izquierda","key":"left","num":false},{"id":"presionar","key":"push","num":false},{"id":"puerto","key":"port","num":true}];
+    var ws = null, uuid = null, settings = {};
+    function pintar() {
+      CAMPOS.forEach(function (c) { document.getElementById(c.id).value = settings[c.key] || ''; });
+    }
+    function guardar() {
+      settings = {};
+      CAMPOS.forEach(function (c) { var v = document.getElementById(c.id).value; settings[c.key] = c.num ? (Number(v) || undefined) : v; });
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ event: 'setSettings', context: uuid, payload: settings }));
+    }
+    function connectElgatoStreamDeckSocket(port, inUUID, registerEvent, info, actionInfo) {
+      uuid = inUUID;
+      try { settings = (JSON.parse(actionInfo).payload || {}).settings || {}; } catch (e) { settings = {}; }
+      pintar();
+      ws = new WebSocket('ws://127.0.0.1:' + port);
+      ws.onopen = function () { ws.send(JSON.stringify({ event: registerEvent, uuid: uuid })); };
+      ws.onmessage = function (e) {
+        var m = JSON.parse(e.data);
+        if (m.event === 'didReceiveSettings') { settings = (m.payload || {}).settings || {}; pintar(); }
+      };
+    }
+    CAMPOS.forEach(function (c) { document.getElementById(c.id).onchange = guardar; });
+  </script>
+</body>
+</html>

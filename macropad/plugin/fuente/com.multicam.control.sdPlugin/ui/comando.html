@@ -6,9 +6,9 @@
   <style>
     body { margin: 0; padding: 10px 12px; background: #2d2d2d; color: #d8d8d8; font: 11px/1.4 "Segoe UI", system-ui, sans-serif; }
     .fila { display: flex; align-items: center; margin: 8px 0; gap: 10px; }
-    label { width: 78px; color: #9a9a9a; flex: none; }
+    label { width: 96px; color: #9a9a9a; flex: none; }
     select, input { flex: 1; min-width: 0; background: #3d3d3d; color: #e6e6e6; border: 1px solid #1f1f1f; border-radius: 3px; padding: 5px 6px; font: inherit; }
-    .nota { color: #8a8a8a; margin: 10px 0 0 88px; }
+    .nota { color: #8a8a8a; margin: 10px 0 0 106px; }
   </style>
 </head>
 <body>
@@ -86,13 +86,14 @@
   </div>
   <div class="nota">La app Multicam debe estar abierta. Puerto 3000 salvo que lo hayas cambiado.</div>
   <script>
+    var CAMPOS = [{"id":"comando","key":"command","num":false},{"id":"puerto","key":"port","num":true}];
     var ws = null, uuid = null, settings = {};
     function pintar() {
-      document.getElementById('comando').value = settings.command || '';
-      document.getElementById('puerto').value = settings.port || '';
+      CAMPOS.forEach(function (c) { document.getElementById(c.id).value = settings[c.key] || ''; });
     }
     function guardar() {
-      settings = { command: document.getElementById('comando').value, port: Number(document.getElementById('puerto').value) || undefined };
+      settings = {};
+      CAMPOS.forEach(function (c) { var v = document.getElementById(c.id).value; settings[c.key] = c.num ? (Number(v) || undefined) : v; });
       if (ws && ws.readyState === 1) ws.send(JSON.stringify({ event: 'setSettings', context: uuid, payload: settings }));
     }
     function connectElgatoStreamDeckSocket(port, inUUID, registerEvent, info, actionInfo) {
@@ -106,8 +107,7 @@
         if (m.event === 'didReceiveSettings') { settings = (m.payload || {}).settings || {}; pintar(); }
       };
     }
-    document.getElementById('comando').onchange = guardar;
-    document.getElementById('puerto').onchange = guardar;
+    CAMPOS.forEach(function (c) { document.getElementById(c.id).onchange = guardar; });
   </script>
 </body>
 </html>
