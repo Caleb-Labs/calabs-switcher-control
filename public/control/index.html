@@ -12,101 +12,16 @@
   <button id="btn-cut" class="take">CUT <kbd>Espacio</kbd></button>
   <button id="btn-fade" class="take">FADE <kbd>Enter</kbd></button>
   <label class="fade-t" title="Duración del fade (el dial del macropad: fade-longer / fade-shorter)">Duración <input id="fade-ms" type="range" min="100" max="5000" step="100"> <span id="fade-val"></span></label>
-  <span class="sizes">
-    <label>Tamaño de Preview/Program <input id="sz-big" type="range" min="0.2" max="0.5" step="0.01"></label>
-    <button id="sz-reset" title="Tamaños por defecto">↺</button>
-  </span>
-  <label class="fade-t" title="Cuántas cámaras se ven (la última es la aérea, si la hay); las demás se ocultan del todo">Equipos <select id="cam-count"></select></label>
-  <label class="fade-t" title="Muestra en Preview las guías de zona segura (acción 93 %, título 90 %); no salen en Program"><input type="checkbox" id="safe-on"> Zona segura</label>
+  <button id="btn-emergency" class="danger" title="Emergencia: pone la imagen o el video de emergencia al aire (siempre a mano)">EMERGENCIA</button>
   <span id="vol" title="Volumen (diales del macropad o teclas - =  m)"></span>
   <span id="warn" hidden></span>
 </header>
-<section id="gcpanel">
-  <label>Equipo <select id="gc-team"></select></label>
-  <label>Título <input id="gc-title" type="text" maxlength="60" placeholder="texto libre"></label>
-  <label>Subtítulo <input id="gc-sub" type="text" maxlength="60" placeholder="texto libre"></label>
-  <span class="grp">GC nombre:
-    <button data-gc="name" data-act="arm">a preview</button>
-    <button data-gc="name" data-act="live">al aire</button>
-    <button data-gc="name" data-act="off">bajar</button>
-  </span>
-  <span class="grp">Marcador:
-    <button data-gc="score" data-act="arm">a preview</button>
-    <button data-gc="score" data-act="live">al aire</button>
-    <button data-gc="score" data-act="off">bajar</button>
-  </span>
-  <button id="btn-emergency" class="danger">EMERGENCIA</button>
-  <label title="Foto o video que sale en la emergencia">Emergencia: <select id="em-file"></select></label>
-  <label class="btn">Subir<input id="em-upload" type="file" accept=".png,.jpg,.jpeg,.svg,.mp4,.webm,.mov" hidden></label>
-  <details id="gc-move">
-    <summary>Mover GC</summary>
-    <div class="gc-move-body">
-      <div id="gc-canvas"></div>
-      <div class="gc-move-help">
-        Arrastra cada GC al lugar que quieras (si está al aire, se mueve en vivo). Los GC de la pantalla dividida se mueven dentro de su recuadro, en el editor de abajo.
-        <div><button id="gc-reset-name">Restablecer GC nombre</button> <button id="gc-reset-score">Restablecer marcador</button></div>
-      </div>
-    </div>
-  </details>
-</section>
-<section id="vtrpanel">
-  <strong>VTR</strong>
-  <select id="vtr-files"></select>
-  <button id="vtr-play">▶</button><button id="vtr-pause">⏸</button><button id="vtr-next">⏭</button>
-  <label class="btn" title="Imágenes (png, jpg, svg) o videos (mp4, webm, mov)">Subir archivos<input id="vtr-upload" type="file" multiple accept=".png,.jpg,.jpeg,.svg,.mp4,.webm,.mov" hidden></label>
-  <span id="vtr-upload-status"></span>
-  <span id="vtr-audio" class="vtr-status"></span>
-  <span id="vtr-empty" hidden>aún no hay archivos: usa "Subir archivos"</span>
-</section>
-<details id="connpanel">
-  <summary>Conexión de cámaras (VDO.Ninja)</summary>
-  <div class="cn-top">
-    <label>Contraseña del torneo <input id="cn-pass" type="text" maxlength="49" placeholder="(sin contraseña)"></label>
-    <button id="cn-pass-save">Guardar</button>
-    <label>Calidad <select id="cn-quality"><option value="1080p">1080p</option><option value="720p">720p</option></select></label>
-    <label>FPS <select id="cn-fps"><option value="30">30</option><option value="60">60</option></select></label>
-    <button id="cn-random">Generar salas aleatorias</button>
-  </div>
-  <div id="cn-rows"></div>
-  <p class="hint">Cada cámara entra por su propio link; el nombre de la sala solo admite letras, números y «_» (nada de guiones: VDO.Ninja los cambia y la sala del jugador deja de coincidir con la del panel); la contraseña es la misma para todo el torneo (solo letras y números). Si cambias la contraseña, la calidad o una sala, hay que volver a enviar los links. «Link navegador» comparte la pantalla desde el navegador; «Link OBS» es para usar la cámara virtual de OBS (la entrada WHIP de OBS no sirve aquí: solo admite un espectador). Un solo jugador por equipo envía la señal.</p>
-</details>
-<details id="gcstyle">
-  <summary>Estilo de los GC (colores, tamaño, plantilla, efectos, salida automática)</summary>
-  <div class="gs-body">
-    <div class="gs-controls">
-      <label>Editar el estilo de
-        <select id="gs-target"><option value="name">GC de pantalla única</option><option value="split">GC de pantalla dividida</option><option value="score">Marcador</option></select>
-      </label>
-      <div class="gs-grid">
-        <label>Fondo <input type="color" id="gs-bg"></label>
-        <label>Opacidad del fondo <input type="range" id="gs-alpha" min="0" max="100"> <span id="gs-alpha-val"></span></label>
-        <label>Texto <input type="color" id="gs-text"></label>
-        <label>Subtítulo <input type="color" id="gs-sub"></label>
-        <label>Acento <input type="color" id="gs-accent"></label>
-        <label>Tamaño <input type="range" id="gs-scale" min="30" max="300"> <span id="gs-scale-val"></span></label>
-        <label>Entrada <select id="gs-in"></select></label>
-        <label>Salida <select id="gs-out"></select></label>
-        <label title="0 = lo bajas tú a mano">Se baja solo a los <input type="number" id="gs-hide" min="0" max="600" step="1"> segundos</label>
-      </div>
-      <div id="gs-tpl-box" class="gs-tpl">
-        <label>Plantilla <select id="gs-tpl"></select></label>
-        <label class="btn">Subir plantilla<input id="gs-tpl-up" type="file" accept=".png,.jpg,.jpeg,.svg" hidden></label>
-        <button id="gs-tpl-clear">Quitar</button>
-        <button id="gs-tpl-mold">Molde PNG</button>
-        <span class="hint">Plantilla PNG con transparencia de <b>620 × 120 px</b> (usa 1240 × 240 para más nitidez); con tamaño 100 % ocupa 620 × 120 px del lienzo 1920 × 1080. El texto va encima, dentro del recuadro punteado del molde. Para la pantalla dividida la plantilla se achica sola según el recuadro.</span>
-      </div>
-      <button id="gs-replay">Ver la entrada otra vez</button>
-    </div>
-    <div id="gs-preview"><div id="gs-stage" class="gfx"></div></div>
-  </div>
-</details>
-<details id="mixer">
-  <summary>Mezclador de audio</summary>
-  <div id="mix-rows"></div>
-  <p><button id="mix-tone">Probar audio (bip en /program)</button> <span class="hint">Si en OBS se mueve el medidor de la fuente del navegador al oír el bip, el audio de /program llega bien a OBS.</span></p>
-  <p class="hint">El audio sale por <code>/program</code> (la fuente del navegador en OBS). Activa la casilla de las cámaras que quieres escuchar y regula cada una. Para oírlo tú: en OBS, Propiedades avanzadas de audio → Monitoreo de audio → «Solo monitor» o «Monitor y salida» en esa fuente.</p>
-</details>
 <main id="mv"></main>
+<div id="pages">
+<section class="page" data-page="mezclador">
+  <div id="trans-panel"><strong>Transiciones</strong><span class="hint">CUT y FADE están arriba, siempre a mano. Aquí van a vivir los stingers (transición propia con su punto de corte).</span></div>
+</section>
+<section class="page" data-page="camaras" hidden>
 <section id="splitpanel">
   <div class="sp-pick">
     <strong>Cámaras en pantalla</strong>
@@ -147,4 +62,124 @@
     </div>
   </details>
 </section>
+</section>
+<section class="page" data-page="conexion" hidden>
+<details id="connpanel" class="pinned" open>
+  <summary>Conexión de cámaras (VDO.Ninja)</summary>
+  <div class="cn-top">
+    <label>Contraseña del torneo <input id="cn-pass" type="text" maxlength="49" placeholder="(sin contraseña)"></label>
+    <button id="cn-pass-save">Guardar</button>
+    <label>Calidad <select id="cn-quality"><option value="1080p">1080p</option><option value="720p">720p</option></select></label>
+    <label>FPS <select id="cn-fps"><option value="30">30</option><option value="60">60</option></select></label>
+    <button id="cn-random">Generar salas aleatorias</button>
+  </div>
+  <div id="cn-rows"></div>
+  <p class="hint">Cada cámara entra por su propio link; el nombre de la sala solo admite letras, números y «_» (nada de guiones: VDO.Ninja los cambia y la sala del jugador deja de coincidir con la del panel); la contraseña es la misma para todo el torneo (solo letras y números). Si cambias la contraseña, la calidad o una sala, hay que volver a enviar los links. «Link navegador» comparte la pantalla desde el navegador; «Link OBS» es para usar la cámara virtual de OBS (la entrada WHIP de OBS no sirve aquí: solo admite un espectador). Un solo jugador por equipo envía la señal.</p>
+</details>
+</section>
+<section class="page" data-page="audio" hidden>
+<details id="mixer" class="pinned" open>
+  <summary>Mezclador de audio</summary>
+  <div id="mix-rows"></div>
+  <p><button id="mix-tone">Probar audio (bip en /program)</button> <span class="hint">Si en OBS se mueve el medidor de la fuente del navegador al oír el bip, el audio de /program llega bien a OBS.</span></p>
+  <p class="hint">El audio sale por <code>/program</code> (la fuente del navegador en OBS). Activa la casilla de las cámaras que quieres escuchar y regula cada una. Para oírlo tú: en OBS, Propiedades avanzadas de audio → Monitoreo de audio → «Solo monitor» o «Monitor y salida» en esa fuente.</p>
+</details>
+</section>
+<section class="page" data-page="multimedia" hidden>
+<section id="vtrpanel">
+  <strong>VTR</strong>
+  <select id="vtr-files"></select>
+  <button id="vtr-play">▶</button><button id="vtr-pause">⏸</button><button id="vtr-next">⏭</button>
+  <label class="btn" title="Imágenes (png, jpg, svg) o videos (mp4, webm, mov)">Subir archivos<input id="vtr-upload" type="file" multiple accept=".png,.jpg,.jpeg,.svg,.mp4,.webm,.mov" hidden></label>
+  <span id="vtr-upload-status"></span>
+  <span id="vtr-audio" class="vtr-status"></span>
+  <span id="vtr-empty" hidden>aún no hay archivos: usa "Subir archivos"</span>
+</section>
+<section id="emergencypanel">
+  <strong>Emergencia</strong>
+  <label title="Foto o video que sale en la emergencia">Archivo: <select id="em-file"></select></label>
+  <label class="btn">Subir archivo<input id="em-upload" type="file" accept=".png,.jpg,.jpeg,.svg,.mp4,.webm,.mov" hidden></label>
+  <span class="hint">Foto o video; el botón rojo EMERGENCIA de arriba lo pone al aire desde cualquier pestaña.</span>
+</section>
+</section>
+<section class="page" data-page="gc" hidden>
+<section id="gcpanel">
+  <label>Equipo <select id="gc-team"></select></label>
+  <label>Título <input id="gc-title" type="text" maxlength="60" placeholder="texto libre"></label>
+  <label>Subtítulo <input id="gc-sub" type="text" maxlength="60" placeholder="texto libre"></label>
+  <span class="grp">GC nombre:
+    <button data-gc="name" data-act="arm">a preview</button>
+    <button data-gc="name" data-act="live">al aire</button>
+    <button data-gc="name" data-act="off">bajar</button>
+  </span>
+  <span class="grp">Marcador:
+    <button data-gc="score" data-act="arm">a preview</button>
+    <button data-gc="score" data-act="live">al aire</button>
+    <button data-gc="score" data-act="off">bajar</button>
+  </span>
+  <details id="gc-move">
+    <summary>Mover GC</summary>
+    <div class="gc-move-body">
+      <div id="gc-canvas"></div>
+      <div class="gc-move-help">
+        Arrastra cada GC al lugar que quieras (si está al aire, se mueve en vivo). Los GC de la pantalla dividida se mueven dentro de su recuadro, en el editor de abajo.
+        <div><button id="gc-reset-name">Restablecer GC nombre</button> <button id="gc-reset-score">Restablecer marcador</button></div>
+      </div>
+    </div>
+  </details>
+</section>
+<details id="gcstyle" class="pinned" open>
+  <summary>Estilo de los GC (colores, tamaño, plantilla, efectos, salida automática)</summary>
+  <div class="gs-body">
+    <div class="gs-controls">
+      <label>Editar el estilo de
+        <select id="gs-target"><option value="name">GC de pantalla única</option><option value="split">GC de pantalla dividida</option><option value="score">Marcador</option></select>
+      </label>
+      <div class="gs-grid">
+        <label>Fondo <input type="color" id="gs-bg"></label>
+        <label>Opacidad del fondo <input type="range" id="gs-alpha" min="0" max="100"> <span id="gs-alpha-val"></span></label>
+        <label>Texto <input type="color" id="gs-text"></label>
+        <label>Subtítulo <input type="color" id="gs-sub"></label>
+        <label>Acento <input type="color" id="gs-accent"></label>
+        <label>Tamaño <input type="range" id="gs-scale" min="30" max="300"> <span id="gs-scale-val"></span></label>
+        <label>Entrada <select id="gs-in"></select></label>
+        <label>Salida <select id="gs-out"></select></label>
+        <label title="0 = lo bajas tú a mano">Se baja solo a los <input type="number" id="gs-hide" min="0" max="600" step="1"> segundos</label>
+      </div>
+      <div id="gs-tpl-box" class="gs-tpl">
+        <label>Plantilla <select id="gs-tpl"></select></label>
+        <label class="btn">Subir plantilla<input id="gs-tpl-up" type="file" accept=".png,.jpg,.jpeg,.svg" hidden></label>
+        <button id="gs-tpl-clear">Quitar</button>
+        <button id="gs-tpl-mold">Molde PNG</button>
+        <span class="hint">Plantilla PNG con transparencia de <b>620 × 120 px</b> (usa 1240 × 240 para más nitidez); con tamaño 100 % ocupa 620 × 120 px del lienzo 1920 × 1080. El texto va encima, dentro del recuadro punteado del molde. Para la pantalla dividida la plantilla se achica sola según el recuadro.</span>
+      </div>
+      <button id="gs-replay">Ver la entrada otra vez</button>
+    </div>
+    <div id="gs-preview"><div id="gs-stage" class="gfx"></div></div>
+  </div>
+</details>
+</section>
+<section class="page" data-page="ajustes" hidden>
+<section id="settings">
+  <strong>Ajustes</strong>
+  <span class="sizes">
+    <label>Tamaño de Preview/Program <input id="sz-big" type="range" min="0.2" max="0.5" step="0.01"></label>
+    <button id="sz-reset" title="Tamaños por defecto">↺</button>
+  </span>
+  <label class="fade-t" title="Cuántas cámaras se ven (la última es la aérea, si la hay); las demás se ocultan del todo">Equipos <select id="cam-count"></select></label>
+  <label class="fade-t" title="Muestra en Preview las guías de zona segura (acción 93 %, título 90 %); no salen en Program"><input type="checkbox" id="safe-on"> Zona segura</label>
+</section>
+</section>
+</div>
+<nav id="tabs" aria-label="Páginas">
+  <button class="tab gear" data-tab="ajustes" title="Ajustes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Ajustes</span></button>
+  <div class="tabs-main">
+    <button class="tab" data-tab="mezclador"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M8 14v6"/></svg><span>Mezclador</span></button>
+    <button class="tab" data-tab="camaras"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="8" height="6" rx="1"/><rect x="13" y="6" width="8" height="6" rx="1"/><rect x="3" y="14" width="8" height="6" rx="1"/><rect x="13" y="14" width="8" height="6" rx="1"/></svg><span>Cámaras en pantalla</span></button>
+    <button class="tab" data-tab="conexion"><svg viewBox="0 0 24 24"><path d="M9 15l6-6M7.5 12.5l-2 2a3.5 3.5 0 005 5l2-2M16.5 11.5l2-2a3.5 3.5 0 00-5-5l-2 2"/></svg><span>Conexión</span></button>
+    <button class="tab" data-tab="audio"><svg viewBox="0 0 24 24"><path d="M6 4v16M12 4v16M18 4v16M4 9h4M10 15h4M16 8h4"/></svg><span>Audio</span></button>
+    <button class="tab" data-tab="multimedia"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/></svg><span>Multimedia</span></button>
+    <button class="tab" data-tab="gc"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 10h8M8 14h5"/></svg><span>GC</span></button>
+  </div>
+</nav>
 <script type="module" src="/control/control.js"></script>

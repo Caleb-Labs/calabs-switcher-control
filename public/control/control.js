@@ -13,6 +13,7 @@ import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
 import { initMeters } from './meters.js';
+import { initTabs } from './tabs.js';
 
 const mv = document.getElementById('mv');
 const tiles = new Map();
@@ -65,6 +66,7 @@ bigInput.onchange = () => bigInput.blur(); // si no, el slider se queda con el f
 document.getElementById('sz-reset').onclick = () => { sizes = clampSizes(null); try { localStorage.removeItem('multicam.sizes'); } catch { /* nada */ } applySizes(); };
 window.addEventListener('resize', () => { if (preGfx) { applyScale(preGfx); applyScale(pgmGfx); } });
 
+initTabs(); // barra de páginas de abajo
 const meters = initMeters();
 const splitPanel = initSplitPanel({ send });
 const mixer = initMixer({ send });

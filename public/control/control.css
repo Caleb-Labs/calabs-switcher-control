@@ -154,3 +154,25 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 .tile.pre .vu, .tile.pgm .vu { top: 30px; bottom: 30px; width: 11px; }
 
 .tile.noroom::after { content: 'SIN SALA'; position: absolute; inset: 0; display: grid; place-items: center; background: #111c; color: var(--muted); z-index: 2; font-size: 12px; letter-spacing: .08em; }
+
+/* ---- Barra de páginas (estilo ATEM) ---- */
+:root { --tab: #c98a4b; /* naranja apagado: pestaña activa */ }
+body { padding-bottom: 64px; }
+#tabs { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; z-index: 50; display: flex; align-items: stretch; background: #17191e; border-top: 1px solid var(--line); }
+#tabs .tabs-main { display: flex; justify-content: center; flex: 1; gap: 2px; }
+#tabs .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 84px; padding: 4px 12px; background: transparent; border: 0; border-radius: 0; color: var(--muted); font-size: 11px; line-height: 1.1; }
+#tabs .tab:hover { color: var(--text); background: #1d2026; border: 0; }
+#tabs .tab.active { color: var(--tab); background: #22252b; box-shadow: inset 0 2px 0 var(--tab); }
+#tabs .tab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#tabs .gear { min-width: 64px; border-right: 1px solid var(--line); }
+.page[hidden] { display: none; }
+#trans-panel, #settings, #emergencypanel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+#trans-panel .hint, #settings .hint, #emergencypanel .hint { color: var(--muted); font-size: 12px; }
+#settings .sizes { display: inline-flex; align-items: center; gap: 6px; }
+/* secciones que antes se plegaban: ahora son el contenido de su pestaña (sin plegar) */
+details.pinned > summary { list-style: none; pointer-events: none; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+details.pinned > summary::-webkit-details-marker { display: none; }
+/* Emergencia siempre a mano (arriba) */
+#btn-emergency { font-weight: 700; letter-spacing: .04em; padding: 6px 16px; }
+#btn-emergency.on { animation: em-pulse 1.1s ease-in-out infinite; }
+@keyframes em-pulse { 0%, 100% { box-shadow: 0 0 0 0 #b5656b00; } 50% { box-shadow: 0 0 0 4px #b5656b66; } }
