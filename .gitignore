@@ -5,3 +5,4 @@ config/teams.json
 vtr/*
 !vtr/.gitkeep
 data/
+macropad/botones/

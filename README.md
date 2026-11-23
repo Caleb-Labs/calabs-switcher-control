@@ -32,7 +32,7 @@ CaLabs Switcher Control is a **video production switcher that runs in your brows
 - 🎬 **VTR media player** for images and videos, **kept in sync** between the panel and the output, with a **countdown timer** (`-02:28 / 03:10`) that blinks red in the last 10 seconds; the emergency can be an image or a video
 - 🔊 **Audio mixer** per camera and VTR, master level and a test beep
 - 🧭 **Switcher-style layout:** a page bar at the bottom (Switcher, Split screen, Connection, Audio, Media, Graphics) and the multiview always on top
-- 🕹️ **Hardware control:** a plugin for **keys and dials** of the macropad, one launcher per command, and a plain HTTP API (`POST /api/do/<command>`) that works even with OBS in front
+- 🕹️ **Hardware control:** a plugin for **keys and dials** of the macropad, optional per-command launchers (`npm run botones`), and a plain HTTP API (`POST /api/do/<command>`) that works even with OBS in front
 - 🖥️ **Clean output:** `/program` is a 1920×1080 page that OBS loads as a *Browser Source* (OBS does the NDI)
 - 🧪 About **300 automated tests**
 
@@ -80,7 +80,7 @@ Other systems: `npm install && npm start`. Tests: `npm test`. The full operating
 - [x] ~~🚨 EMERGENCY button always visible, with an image or video~~
 - [x] ~~🔊 Audio mixer per camera and VTR~~
 - [x] ~~🧭 Switcher-style page bar at the bottom~~ — first step of the redesign
-- [x] ~~🕹️ Macropad control: plugin with keys and dials, per-command launchers and an HTTP API~~ — *tested on the real macropad*
+- [x] ~~🕹️ Macropad control: plugin with keys and dials, optional per-command launchers and an HTTP API~~ — *tested on the real macropad*
 - [x] ~~🔤 Safe room names (no hyphens) and "no room yet" state~~
 
 **🔜 Still to come**
@@ -137,7 +137,7 @@ CaLabs Switcher Control es un **switcher de producción de video que funciona en
 - 🎬 **VTR** para imágenes y videos, **sincronizado** entre el panel y la salida, con un **contador** (`-02:28 / 03:10`) que parpadea en rojo en los últimos 10 segundos; la emergencia puede ser una imagen o un video
 - 🔊 **Mezclador de audio** por cámara y VTR, nivel general y un bip de prueba
 - 🧭 **Diseño estilo switcher:** barra de páginas abajo (Mezclador, Cámaras en pantalla, Conexión, Audio, Multimedia, GC) y el multiview siempre arriba
-- 🕹️ **Control por hardware:** un plugin para las **teclas y los diales** del macropad, un lanzador por comando y una API HTTP simple (`POST /api/do/<comando>`) que funciona incluso con OBS al frente
+- 🕹️ **Control por hardware:** un plugin para las **teclas y los diales** del macropad, lanzadores opcionales por comando (`npm run botones`) y una API HTTP simple (`POST /api/do/<comando>`) que funciona incluso con OBS al frente
 - 🖥️ **Salida limpia:** `/program` es una página de 1920×1080 que OBS carga como *fuente de navegador* (el NDI lo hace OBS)
 - 🧪 Cerca de **300 pruebas automáticas**
 
@@ -172,7 +172,7 @@ En otros sistemas: `npm install && npm start`. Pruebas: `npm test`. El manual de
 - [x] ~~🚨 Botón de EMERGENCIA siempre visible, con imagen o video~~
 - [x] ~~🔊 Mezclador de audio por cámara y VTR~~
 - [x] ~~🧭 Barra de páginas estilo switcher abajo~~ — primer paso del rediseño
-- [x] ~~🕹️ Control por macropad: plugin con teclas y diales, lanzadores por comando y API HTTP~~ — *probado en el macropad real*
+- [x] ~~🕹️ Control por macropad: plugin con teclas y diales, lanzadores opcionales por comando y API HTTP~~ — *probado en el macropad real*
 - [x] ~~🔤 Salas con nombres seguros (sin guiones) y estado "sin sala"~~
 
 **🔜 Lo que falta**

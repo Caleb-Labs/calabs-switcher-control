@@ -18,7 +18,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 ## 2. Cómo arrancar
 1. `start.bat` (crea `config\teams.json` la primera vez; instala dependencias).
 2. Panel: `http://localhost:3000/control/` · Salida para OBS: `http://localhost:3000/program/` (Browser Source 1920×1080, **30 fps**, «Controlar audio mediante OBS»).
-3. `npm test` para las pruebas. `npm run botones` regenera los lanzadores del macropad; `npm run plugin` reconstruye el plugin.
+3. `npm test` para las pruebas. `npm run botones` genera (solo si hacen falta) los lanzadores `.bat`/`.vbs` del macropad en `macropad/botones/`, carpeta que git ignora; `npm run plugin` reconstruye el plugin.
 4. **Tras cambiar código del servidor hay que reiniciar** (cerrar la ventana negra «Multicam server» y abrir `start.bat`) y recargar la ventana de la app con `Ctrl+Shift+R`.
 
 ## 3. Lo que está hecho
@@ -45,7 +45,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - Mezclador: faders por cámara y VTR, nivel general, «Probar audio (bip)».
 
 **Macropad (Redragon SS-552; software «Stream Station» = HotSpot StreamDock)**
-- `POST /api/do/<comando>` (50 comandos en `server/commands.js`), `macropad/cmd.bat`, un `.bat` y un `.vbs` sin ventana por comando en `macropad/botones/`.
+- `POST /api/do/<comando>` (50 comandos en `server/commands.js`), `macropad/cmd.bat`; `npm run botones` crea un `.bat` y un `.vbs` sin ventana por comando en `macropad/botones/` (ignorada por git; solo para software que no admita el plugin).
 - **Plugin `.sdPlugin`** (`macropad/plugin/`, paquete en `macropad/plugin/dist/com.multicam.control.sdPlugin`): acción de tecla «Comando Multicam» (desplegable en español) y acción de rueda «Dial Multicam» (girar → / girar ← / presionar). **Confirmado por el usuario con su macropad real: el corte y los diales funcionan perfecto.**
 
 **Seguridad básica:** servidor solo en 127.0.0.1, chequeo de Origin (WS y API), subidas con lista blanca/tamaño, SVG sandbox, textos de Sheets como texto. **Persistencia:** `data/split.json` (variable `SPLIT_FILE` para otro archivo).
@@ -105,8 +105,8 @@ El usuario quiere subirlo como **«CaLabs - Switcher control»** con un README �
 - `public/control/` — panel (`control.js`, `tabs.js`, `meters.js`, `splitpanel.js`, `mixer.js`, `connpanel.js`, `gcstylepanel.js`, `gcmove.js`, `mold.js`, `messages.js`…).
 - `public/program/` — salida para OBS. `public/shared/` — lógica común (`sources`, `split`, `gcstyle`, `vtr`, `vtrcount`, `meter`, `room`, `signal`, `client`). `public/graphics/` — plantillas, capa de GC, CSS/efectos.
 - `config/` — `teams.json` (del usuario, ignorado), `teams.example.json` (salas en blanco), `profiles.json`, `sheet-template.csv`. `vtr/` (ignorado). `data/` (ignorado).
-- `macropad/` — `cmd.bat`, `botones/` (un `.bat` y un `.vbs` por comando), `generar-botones.js`, `plugin/` (`etiquetas.js`, `build.js`, `fuente/com.multicam.control.sdPlugin/`, `dist/`).
-- `Logos/` y `docs/capturas/` — material del README. `docs/MANUAL.md` — manual de operación. `docs/superpowers/` — diseño (`specs/`), plan (`plans/`), medición (`notes/`). `tests/` — 297 pruebas.
+- `macropad/` — `cmd.bat`, `generar-botones.js` (genera `botones/`, ignorada por git), `plugin/` (`etiquetas.js`, `build.js`, `fuente/com.multicam.control.sdPlugin/`, `dist/`).
+- `Logos/` y `docs/capturas/` — material del README. `docs/MANUAL.md` — manual de operación. `docs/superpowers/notes/` — medición de rendimiento (los diseños y planes viejos se borraron; siguen en el historial de git). `tests/` — 297 pruebas.
 
 ## 10. Registro de lo conversado (sesión 2026-11-22 y 23)
 1. **Cámaras ocultas:** el selector «Equipos» existía pero la barra no bajaba de línea y quedaba cortado; se arregló. Luego la aérea pasó a contar como una cámara más (1–9).
