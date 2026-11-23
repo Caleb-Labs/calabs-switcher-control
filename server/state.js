@@ -1,6 +1,7 @@
 // Estado puro del switcher. Sin efectos: reduce(state, action) devuelve un estado nuevo.
 import { cleanStyle, patchStyle, STYLE_TARGETS } from '../public/shared/gcstyle.js';
 import { vtrPosition } from '../public/shared/vtr.js';
+import { cleanStingers, pickSelected } from '../public/shared/stinger.js';
 import { isValidRoom } from '../public/shared/room.js';
 
 // ---------- Pantalla dividida ----------
@@ -156,7 +157,7 @@ const withSlots = (state, fn) => {
 };
 
 // Lo que se guarda en disco (data/split.json) para sobrevivir a reinicios.
-export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, conn: state.conn, gcStyle: state.gcStyle });
+export const persistable = (state) => ({ split: state.split, gcPos: state.gcPos, emergencyFile: state.emergencyFile, camNames: state.camNames, camCount: state.camCount, conn: state.conn, gcStyle: state.gcStyle, stingers: state.stingers, stingerSelected: state.stingerSelected });
 
 export function createState(config) {
   const saved = config.saved ?? { split: config.splitSaved, gcPos: config.gcPosSaved }; // compatibilidad con el formato anterior
@@ -193,6 +194,10 @@ export function createState(config) {
     split: withTeamTexts(normalizeSplit(saved.split, camIds), sources),
     emergencyFile: typeof saved.emergencyFile === 'string' ? saved.emergencyFile : null,
     splitGc: 'off',
+    stingers: cleanStingers(saved.stingers),
+    stingerSelected: pickSelected(cleanStingers(saved.stingers), saved.stingerSelected),
+    stingerSeq: 0,
+    stingerRun: null,
     fadeMs: 500,
     mixSel: camIds[0],
     toneSeq: 0,
@@ -274,7 +279,9 @@ export function reduce(state, action) {
       }
       const lostTpl = STYLE_TARGETS.some((k) => state.gcStyle[k].template && !files.includes(state.gcStyle[k].template));
       const gcStyle = lostTpl ? Object.fromEntries(STYLE_TARGETS.map((k) => [k, state.gcStyle[k].template && !files.includes(state.gcStyle[k].template) ? { ...state.gcStyle[k], template: null } : state.gcStyle[k]])) : state.gcStyle;
-      return { ...state, gcStyle, emergencyFile: files.includes(state.emergencyFile) ? state.emergencyFile : null, vtr: kept ? { ...state.vtr, files } : { ...state.vtr, files, current, playing: false, pos: 0, since: null }, split: { ...state.split, bgs } };
+      const stingers = state.stingers.filter((x) => files.includes(x.file));
+      const stingerKept = stingers.length === state.stingers.length ? {} : { stingers, stingerSelected: pickSelected(stingers, state.stingerSelected) };
+      return { ...state, ...stingerKept, gcStyle, emergencyFile: files.includes(state.emergencyFile) ? state.emergencyFile : null, vtr: kept ? { ...state.vtr, files } : { ...state.vtr, files, current, playing: false, pos: 0, since: null }, split: { ...state.split, bgs } };
     }
     case 'VTR_SELECT':
       if (!state.vtr.files.includes(action.file)) return state;
@@ -402,6 +409,35 @@ export function reduce(state, action) {
       if (!Number.isInteger(action.n) || action.n < 1 || action.n > max) return state;
       return fixRefs(rebuild({ ...state, camCount: action.n }));
     }
+    case 'STINGER_ADD': {
+      if (!state.vtr.files.includes(action.file) || action.file === '@tabla' || state.stingers.some((x) => x.file === action.file)) return state;
+      const stingers = [...state.stingers, { file: action.file, cutAt: 0 }];
+      return { ...state, stingers, stingerSelected: pickSelected(stingers, state.stingerSelected) };
+    }
+    case 'STINGER_REMOVE': {
+      if (!state.stingers.some((x) => x.file === action.file)) return state;
+      const stingers = state.stingers.filter((x) => x.file !== action.file);
+      return { ...state, stingers, stingerSelected: pickSelected(stingers, state.stingerSelected) };
+    }
+    case 'STINGER_CUT':
+      if (!Number.isFinite(action.at) || action.at < 0 || !state.stingers.some((x) => x.file === action.file)) return state;
+      return { ...state, stingers: state.stingers.map((x) => (x.file === action.file ? { ...x, cutAt: action.at } : x)) };
+    case 'STINGER_SELECT':
+      return state.stingers.some((x) => x.file === action.file) && action.file !== state.stingerSelected ? { ...state, stingerSelected: action.file } : state;
+    case 'STINGER_PLAY': {
+      const st = state.stingers.find((x) => x.file === state.stingerSelected);
+      if (!st || state.preview === state.program) return state;
+      const seq = state.stingerSeq + 1;
+      return { ...state, stingerSeq: seq, stingerRun: { seq, file: st.file, cutAt: st.cutAt, from: state.program, to: state.preview, cut: false } };
+    }
+    case 'STINGER_CUT_NOW': {
+      if (!state.stingerRun || action.seq !== state.stingerRun.seq || state.stingerRun.cut) return state;
+      const taken = reduce(state, { type: 'TAKE', mode: 'cut' });
+      return { ...taken, stingerRun: { ...state.stingerRun, cut: true } };
+    }
+    case 'STINGER_END':
+      return state.stingerRun && action.seq === state.stingerRun.seq ? { ...state, stingerRun: null } : state;
+
     case 'GC_STYLE': {
       if (typeof action.target !== 'string' || !STYLE_TARGETS.includes(action.target)) return state;
       const patch = action.patch;
