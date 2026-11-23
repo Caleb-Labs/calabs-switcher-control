@@ -87,3 +87,13 @@ test('sin run y sin elegida no hace nada ni falla', () => {
   assert.deepEqual(sent, []);
   assert.equal(video.hidden, true);
 });
+
+test('tras reiniciar el servidor (el seq vuelve a empezar), el primer lanzamiento sí se reproduce aunque repita el seq anterior', () => {
+  const { video, p } = mk();
+  p.onState({ stingerSelected: 'a b.webm', stingerRun: run() });
+  p.onEnded();
+  p.onState({ stingerSelected: 'a b.webm', stingerRun: null }); // el servidor limpió el run (o se reinició)
+  p.onState({ stingerSelected: 'a b.webm', stingerRun: run() }); // seq 1 otra vez
+  assert.equal(video.plays, 2);
+  assert.equal(video.hidden, false);
+});

@@ -104,3 +104,21 @@ test('persistencia: se guardan stingers y elegida; datos viejos sin esos campos 
   assert.equal(old.stingerSeq, 0);
   assert.equal(old.stingerRun, null);
 });
+
+test('si el operador ya cambió a mano durante el run, STINGER_CUT_NOW no devuelve la cámara', () => {
+  const run = apply(withFiles(), { type: 'STINGER_ADD', file: 'a.webm' }, { type: 'STINGER_PLAY' });
+  const manual = apply(run, { type: 'TAKE', mode: 'cut' }); // CUT a mano antes del segundo marcado: program = cam2
+  assert.equal(manual.program, 'cam2');
+  const after = apply(manual, { type: 'STINGER_CUT_NOW', seq: 1 });
+  assert.equal(after.program, 'cam2', 'sigue en la cámara a la que ya se cortó');
+  assert.equal(after.stingerRun.cut, true);
+  assert.equal(apply(after, { type: 'STINGER_CUT_NOW', seq: 1 }), after);
+});
+
+test('si el Preview cambió durante el run, el corte va a la cámara con la que se lanzó (run.to)', () => {
+  const run = apply(withFiles(), { type: 'STINGER_ADD', file: 'a.webm' }, { type: 'STINGER_PLAY' });
+  const moved = apply(run, { type: 'SET_PREVIEW', id: 'cam5' });
+  const cut = apply(moved, { type: 'STINGER_CUT_NOW', seq: 1 });
+  assert.equal(cut.program, run.stingerRun.to);
+  assert.equal(cut.preview, run.stingerRun.from);
+});

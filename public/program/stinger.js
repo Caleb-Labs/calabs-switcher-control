@@ -27,6 +27,7 @@ export function createStingerPlayer({ video, send }) {
         Promise.resolve(video.play()).catch(() => {});
       } else if (run && current && run.cut) sent = true; // el servidor ya cortó (seguro): no se pide otra vez
       else if (!run && current) stop();                  // el servidor limpió el lanzamiento
+      if (!run) lastSeq = 0; // sin lanzamiento en curso: si el servidor se reinició, su seq vuelve a empezar y no debe confundirse con el último visto
       if (!current) load(state.stingerSelected);
     },
     onFrame() {

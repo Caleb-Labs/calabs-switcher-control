@@ -431,9 +431,12 @@ export function reduce(state, action) {
       return { ...state, stingerSeq: seq, stingerRun: { seq, file: st.file, cutAt: st.cutAt, from: state.program, to: state.preview, cut: false } };
     }
     case 'STINGER_CUT_NOW': {
-      if (!state.stingerRun || action.seq !== state.stingerRun.seq || state.stingerRun.cut) return state;
-      const taken = reduce(state, { type: 'TAKE', mode: 'cut' });
-      return { ...taken, stingerRun: { ...state.stingerRun, cut: true } };
+      const run = state.stingerRun;
+      if (!run || action.seq !== run.seq || run.cut) return state;
+      const done = { ...run, cut: true };
+      if (state.program !== run.from) return { ...state, stingerRun: done }; // el operador ya cambió a mano: no se devuelve la cámara
+      const taken = reduce({ ...state, preview: run.to }, { type: 'TAKE', mode: 'cut' }); // corta a la cámara con la que se lanzó
+      return { ...taken, stingerRun: done };
     }
     case 'STINGER_END':
       return state.stingerRun && action.seq === state.stingerRun.seq ? { ...state, stingerRun: null } : state;
