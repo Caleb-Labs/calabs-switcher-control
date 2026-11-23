@@ -1,6 +1,6 @@
 # CaLabs Switcher Control — Estado del proyecto (para retomar)
 
-Última actualización: 2026-11-23 · Rama: `feat/multicam` · **301 pruebas pasando** (`npm test`) · Operación completa en `docs/MANUAL.md`.
+Última actualización: 2026-11-23 · Rama: `feat/multicam` · **329 pruebas pasando** (`npm test`) · Operación completa en `docs/MANUAL.md`.
 
 > Nombre del proyecto: **CaLabs Switcher Control** (antes «Multicam Switcher»). Nombre técnico: **web video switcher / vision mixer** (en español: mezclador / switcher de video; el oficio es «realización»). Repositorio: `Caleb-Labs/calabs-switcher-control` (ver §8).
 
@@ -40,6 +40,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - Emergencia con foto o video (hoy el video siempre repite y va mudo).
 
 **Pantalla dividida, GC, audio**
+- **Stinger (transición propia):** pestaña Mezclador (lista, «Agregar transición», editor con barra + «Cortar aquí» + número) y botón **TRANSICIÓN** arriba (tecla `t`, comando `stinger`). Estado en el reducer (`stingers`, `stingerSelected`, `stingerRun`); `/program` (`public/program/stinger.js`) reproduce el video y pide `STINGER_CUT_NOW` al llegar a `cutAt`; seguro en `server/stingerguard.js` (corta a `cutAt + 1,5 s` si `/program` no responde). Diseño: `docs/superpowers/specs/2026-11-23-stinger-design.md`. El stinger solo se ve en `/program`, no en las ventanas del panel.
 - Split 2–9 cámaras: **video real de cada cámara en su recuadro** cuando la dividida está en Preview/Program del panel (`public/control/splitview.js`; en la tira chica y en el editor de «Cámaras en pantalla» sigue el esquema, para no abrir conexiones extra; confirmado por el usuario), **los GC de la dividida ya no salen solos** (cada TAKE pone `splitGc` live→off; solo salen al pulsar «al aire»), botones, posiciones, arrastrar/redimensionar, fondos por cantidad (molde PNG), GC por recuadro, audio por recuadro, peleas guardadas.
 - GC: texto libre, mover arrastrando, estilos por tipo (colores, opacidad, tamaño, plantilla PNG 620×120, efectos, «se baja solo»), marcador desde Google Sheets.
 - Mezclador: faders por cámara y VTR, nivel general, «Probar audio (bip)».
@@ -58,7 +59,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - **Rediseño estilo ATEM:** él va dictando los pasos; **no cambiar el diseño sin que lo pida**. La **emergencia siempre a mano** (botón fijo arriba).
 - **Contador del VTR:** formato `-02:28 / 03:10`, bien visible como los medidores, parpadeo rojo en los últimos 10 s, en pausa se congela y debe coincidir con OBS; **sin barra de progreso**.
 - **Medidores de audio** en cada fuente (VTR incluido); `/program` limpio.
-- **Stinger** (aún por hacer): WebM con transparencia, él elige a mano el segundo del corte (ej. video de 10 s, cambio a los 5 s), el audio del video suena, varios cargados y elegibles; CUT y FADE se mantienen.
+- **Stinger** (HECHO, 2026-11-23): WebM con transparencia, él marca a mano el segundo del corte (barra sobre el video + «Cortar aquí» + número editable), el audio del video suena, varios cargados y elegibles; CUT y FADE se mantienen.
 - **Emergencia** (aún por hacer): poder subir video y dejarlo con opción de **repetir (loop)**.
 
 ## 5. Hallazgos técnicos importantes
@@ -74,7 +75,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - Un navegador en segundo plano frena los temporizadores y el reloj de video: para medir/capturar, la pestaña debe estar al frente.
 
 ## 6. Pendiente / próximos pasos (por prioridad)
-1. **Stinger** (ver §4): subir WebM con alfa, punto de corte elegible, audio, varios elegibles; se reproduce en `/program` sobre el Program. Es lo único que falta de lo pedido al inicio.
+1. **Probar el stinger con su video real en OBS** (con transparencia WebM): confirmar que el corte queda bajo la animación y que suena el audio. Ya se verificó en un Edge real que `/program` pide el corte en el segundo marcado (3,05 s para un corte en 3 s).
 2. **Emergencia:** casilla «Repetir», sonido opcional y botón de subida propio.
 3. **Rediseño estilo ATEM:** seguir paso a paso cuando el usuario diga.
 4. **Prueba real con 2–3 jugadores a la vez** (hoy solo se probó 1 de punta a punta) y **medición de rendimiento con 8–9 emisores** (Ryzen 5 3600 / RTX 3060; `docs/superpowers/notes/perf-spike.md`). Si no aguanta: perfil más liviano o app de escritorio.
@@ -107,7 +108,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - `public/program/` — salida para OBS. `public/shared/` — lógica común (`sources`, `split`, `gcstyle`, `vtr`, `vtrcount`, `meter`, `room`, `signal`, `client`). `public/graphics/` — plantillas, capa de GC, CSS/efectos.
 - `config/` — `teams.json` (del usuario, ignorado), `teams.example.json` (salas en blanco), `profiles.json`, `sheet-template.csv`. `vtr/` (ignorado). `data/` (ignorado).
 - `macropad/` — `cmd.bat`, `generar-botones.js` (genera `botones/`, ignorada por git), `plugin/` (`etiquetas.js`, `build.js`, `fuente/com.multicam.control.sdPlugin/`, `dist/`).
-- `Logos/` y `docs/capturas/` — material del README. `docs/MANUAL.md` — manual de operación. `docs/superpowers/notes/` — medición de rendimiento (los diseños y planes viejos se borraron; siguen en el historial de git). `tests/` — 301 pruebas.
+- `Logos/` y `docs/capturas/` — material del README. `docs/MANUAL.md` — manual de operación. `docs/superpowers/notes/` — medición de rendimiento (los diseños y planes viejos se borraron; siguen en el historial de git). `tests/` — 329 pruebas.
 
 ## 10. Registro de lo conversado (sesión 2026-11-22 y 23)
 1. **Cámaras ocultas:** el selector «Equipos» existía pero la barra no bajaba de línea y quedaba cortado; se arregló. Luego la aérea pasó a contar como una cámara más (1–9).

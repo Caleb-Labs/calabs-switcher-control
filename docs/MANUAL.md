@@ -21,6 +21,7 @@ GC con estilos, marcador desde Google Sheets, VTR, emergencia y mezclador de aud
 | `s` | pantalla dividida a Preview |
 | `Espacio` | **CUT** (Preview ↔ Program) |
 | `Enter` | **FADE** |
+| `t` | **TRANSICIÓN** (lanza el stinger elegido) |
 | `[` `]` | cámara anterior / siguiente en Preview |
 | `-` `=` `m` | volumen de las cámaras / mute |
 | `,` `.` `p` | VTR anterior / siguiente / play-pausa |
@@ -66,6 +67,14 @@ Es una fuente más (`s`): se manda a Preview y se toma con CUT/FADE. En el panel
 4. **Audio:** el 🔊 de cada recuadro elige qué cámaras suenan **mientras la dividida está al aire** (al salir vuelve el mezclador como estaba).
 5. **Fondos por cantidad** (desplegable): elige la cantidad, «Cargar fondo», y «Molde PNG» descarga una guía 1920×1080 con las medidas en píxeles de cada recuadro para mandar a diseñar el fondo. También se detecta `split-2.png`, `split-3.png`… en `vtr/`.
 6. **Peleas:** nombre + «Guardar» recuerda cámaras, posiciones, textos y audio; «Cargar» las recupera.
+
+## Transiciones (stinger)
+Una transición propia (un video, con su sonido) que se reproduce sobre el Program mientras la cámara cambia **en el segundo que tú marques**. CUT y FADE siguen igual.
+1. **Formato:** WebM con transparencia (lo que lee OBS). Un `.mp4` solo sirve si la transición no necesita transparencia; un `.mov` con transparencia (ProRes 4444) **no** se ve con transparencia en OBS: conviértelo a WebM.
+2. Pestaña **Mezclador** → **Agregar transición** (sube el archivo; puedes agregar varias). Clic en una de la lista para elegirla; **✕** la quita de la lista (el archivo se queda en la carpeta `vtr`).
+3. **Marcar el corte:** en el reproductor mueve la barra hasta el cuadro donde quieres que cambie la cámara y pulsa **Cortar aquí**; o escribe el segundo en «Corte en el segundo» (admite decimales, p. ej. `5.2`). Cada transición guarda su propio segundo.
+4. **Lanzarla:** pon en Preview la cámara que quieres y pulsa **TRANSICIÓN** (arriba, junto a CUT y FADE), la tecla `t` o el comando `stinger` del macropad. El video suena por `/program` y, al llegar al segundo marcado, Preview pasa a Program.
+5. Si `/program` (OBS) no está abierto, el servidor corta solo 1,5 s después del segundo marcado. Si Preview y Program son la misma cámara, no pasa nada.
 
 ## VTR y emergencia
 - **VTR:** «Subir archivos» (videos `.mp4 .webm .mov` o imágenes `.png .jpg .svg`; también puedes copiarlos a `vtr/`). Fader de volumen en su tile. La "Tabla de posiciones" sale por el VTR. `"vtrDefault": "standby.png"` en la config lo deja con una imagen por defecto.
