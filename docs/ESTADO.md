@@ -26,7 +26,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - **GC:** texto libre, mover arrastrando, **estilos** por tipo (pantalla única / dividida / marcador): colores, opacidad, tamaño, plantilla PNG (620×120), efectos de entrada/salida, "se baja solo a los N segundos", vista previa en vivo.
 - **VTR / emergencia:** subir archivos desde el panel, fader de volumen, cartel cuando no hay archivo; emergencia con foto o video.
 - **Audio:** faders por cámara, mezclador, nivel general, VTR; botón "Probar audio (bip)"; estado del audio del VTR.
-- **Macropad:** `POST /api/do/<comando>` (`macropad\cmd.bat`) y teclas extra. Propuesta de asignación de diales en el README. **Falta configurarlo en Redragon Station.**
+- **Macropad:** `POST /api/do/<comando>` (`macropad\cmd.bat`, o un `.bat` por comando en `macropad/botones/`) y teclas extra. Propuesta de asignación de diales en el README. **Falta configurarlo en Redragon Station.**
 - **Zona segura:** casilla en la barra; guías solo en el monitor de Preview.
 - **Seguridad básica:** servidor solo en 127.0.0.1, chequeo de Origin (WS y API), subidas con lista blanca/tamaño máximo, SVG sandbox, textos de Sheets siempre como texto (no HTML).
 - **Persistencia:** `data/split.json` (pantalla dividida, peleas, posiciones y estilos de GC, nombres, cantidad, emergencia, conexión). Variable `SPLIT_FILE` para otro archivo.
@@ -63,7 +63,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 3. **Audio en OBS:** botón "Probar audio (bip)", VTR en Program + ▶, y que VDO.Ninja obedezca el comando `{volume}` por iframe (sin verificar). Activar "Controlar audio mediante OBS" y Monitoreo de audio.
 4. **Verificar en vivo:** evento `view-connection` (caída de cámara), efectos de GC, salida automática, fade en movimiento, dividida con video real.
 5. **Marcador:** probar con Google Sheets (pasos en README). Opcional: **modo de prueba local** (editor de puntos en el panel).
-6. **Macropad:** ver si Redragon Station permite "ejecutar programa" (`macropad\cmd.bat`) o solo teclas; asignar diales.
+6. **Macropad:** el software del macropad (en español) tiene «Abrir» y «Abrir una aplicación», pero «Abrir una aplicación» solo deja elegir apps instaladas (sin archivos ni argumentos). Se generaron `macropad/botones/*.bat` (uno por comando, `npm run botones`, probados desde Windows con PowerShell). **Falta que el usuario pruebe en su macropad** si «Abrir» le deja elegir un `.bat`; si no: accesos directos en el menú Inicio (aparecerían como «aplicaciones instaladas») o AutoHotkey con teclas F13–F24. No se sabe si los diales distinguen girar izq/der.
 7. **Revisión de código** del último bloque grande (conexión, estilos, audio de dividida, cámaras visibles) con `/code-review`; solo el bloque anterior pasó por un revisor independiente.
 8. Opcionales: QR para la cámara aérea (celular), botón para borrar archivos subidos, replay, preguntar si el NDI debe ser distinto de la interpretación actual (lo saca OBS).
 9. Menores sin resolver: reintento si falla `/api/sources`, rango de Sheets sin codificar en URL, números con formato regional, nombre largo sobre el logo en el GC de nombre.
@@ -79,5 +79,5 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - `server/` — `state.js` (reducer y persistencia), `index.js` (HTTP+WS+guardado+auto-ocultar), `api.js` (sources, links, teams, comando), `commands.js`, `upload.js`, `vtr.js`, `sheets.js`, `links.js`, `autohide.js`, `config.js`, `profiles.js`, `main.js`.
 - `public/control/` — panel (control.js, splitpanel.js, mixer.js, connpanel.js, gcstylepanel.js, gcmove.js, mold.js, messages.js…).
 - `public/program/` — salida para OBS. `public/shared/` — lógica común (sources, split, gcstyle, vtr, client). `public/graphics/` — plantillas, capa de GC, CSS/efectos.
-- `config/` — `teams.json` (del usuario, ignorado por git), `teams.example.json`, `profiles.json`, `sheet-template.csv`. `vtr/` — archivos subidos (ignorado). `data/` — persistencia (ignorado). `macropad/cmd.bat`.
+- `config/` — `teams.json` (del usuario, ignorado por git), `teams.example.json`, `profiles.json`, `sheet-template.csv`. `vtr/` — archivos subidos (ignorado). `data/` — persistencia (ignorado). `macropad/cmd.bat`, `macropad/botones/`.
 - `docs/superpowers/` — diseño (`specs/`), plan (`plans/`), medición (`notes/`). `tests/` — 225 pruebas.
