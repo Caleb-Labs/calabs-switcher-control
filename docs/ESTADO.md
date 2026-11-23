@@ -1,6 +1,6 @@
 # CaLabs Switcher Control — Estado del proyecto (para retomar)
 
-Última actualización: 2026-11-23 · Rama: `feat/multicam` · **297 pruebas pasando** (`npm test`) · Operación completa en `docs/MANUAL.md`.
+Última actualización: 2026-11-23 · Rama: `feat/multicam` · **301 pruebas pasando** (`npm test`) · Operación completa en `docs/MANUAL.md`.
 
 > Nombre del proyecto: **CaLabs Switcher Control** (antes «Multicam Switcher»). Nombre técnico: **web video switcher / vision mixer** (en español: mezclador / switcher de video; el oficio es «realización»). Repositorio: `Caleb-Labs/calabs-switcher-control` (ver §8).
 
@@ -40,7 +40,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - Emergencia con foto o video (hoy el video siempre repite y va mudo).
 
 **Pantalla dividida, GC, audio**
-- Split 2–9 cámaras: botones, posiciones, arrastrar/redimensionar, fondos por cantidad (molde PNG), GC por recuadro, audio por recuadro, peleas guardadas.
+- Split 2–9 cámaras: **video real de cada cámara en su recuadro** cuando la dividida está en Preview/Program del panel (`public/control/splitview.js`; en la tira chica y en el editor de «Cámaras en pantalla» sigue el esquema, para no abrir conexiones extra; confirmado por el usuario), **los GC de la dividida ya no salen solos** (cada TAKE pone `splitGc` live→off; solo salen al pulsar «al aire»), botones, posiciones, arrastrar/redimensionar, fondos por cantidad (molde PNG), GC por recuadro, audio por recuadro, peleas guardadas.
 - GC: texto libre, mover arrastrando, estilos por tipo (colores, opacidad, tamaño, plantilla PNG 620×120, efectos, «se baja solo»), marcador desde Google Sheets.
 - Mezclador: faders por cámara y VTR, nivel general, «Probar audio (bip)».
 
@@ -107,7 +107,7 @@ Es una **aplicación web local** (servidor Node + dos páginas), no un programa 
 - `public/program/` — salida para OBS. `public/shared/` — lógica común (`sources`, `split`, `gcstyle`, `vtr`, `vtrcount`, `meter`, `room`, `signal`, `client`). `public/graphics/` — plantillas, capa de GC, CSS/efectos.
 - `config/` — `teams.json` (del usuario, ignorado), `teams.example.json` (salas en blanco), `profiles.json`, `sheet-template.csv`. `vtr/` (ignorado). `data/` (ignorado).
 - `macropad/` — `cmd.bat`, `generar-botones.js` (genera `botones/`, ignorada por git), `plugin/` (`etiquetas.js`, `build.js`, `fuente/com.multicam.control.sdPlugin/`, `dist/`).
-- `Logos/` y `docs/capturas/` — material del README. `docs/MANUAL.md` — manual de operación. `docs/superpowers/notes/` — medición de rendimiento (los diseños y planes viejos se borraron; siguen en el historial de git). `tests/` — 297 pruebas.
+- `Logos/` y `docs/capturas/` — material del README. `docs/MANUAL.md` — manual de operación. `docs/superpowers/notes/` — medición de rendimiento (los diseños y planes viejos se borraron; siguen en el historial de git). `tests/` — 301 pruebas.
 
 ## 10. Registro de lo conversado (sesión 2026-11-22 y 23)
 1. **Cámaras ocultas:** el selector «Equipos» existía pero la barra no bajaba de línea y quedaba cortado; se arregló. Luego la aérea pasó a contar como una cámara más (1–9).
