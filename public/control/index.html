@@ -11,6 +11,7 @@
   <strong>Multicam</strong>
   <button id="btn-cut" class="take">CUT <kbd>Espacio</kbd></button>
   <button id="btn-fade" class="take">FADE <kbd>Enter</kbd></button>
+  <button id="btn-stinger" class="take" title="Lanza la transición elegida (pestaña Mezclador): cambia a lo que está en Preview en el segundo que marcaste">TRANSICIÓN <kbd>t</kbd></button>
   <label class="fade-t" title="Duración del fade (el dial del macropad: fade-longer / fade-shorter)">Duración <input id="fade-ms" type="range" min="100" max="5000" step="100"> <span id="fade-val"></span></label>
   <button id="btn-emergency" class="danger" title="Emergencia: pone la imagen o el video de emergencia al aire (siempre a mano)">EMERGENCIA</button>
   <span id="vol" title="Volumen (diales del macropad o teclas - =  m)"></span>
@@ -19,7 +20,21 @@
 <main id="mv"></main>
 <div id="pages">
 <section class="page" data-page="mezclador">
-  <div id="trans-panel"><strong>Transiciones</strong><span class="hint">CUT y FADE están arriba, siempre a mano. Aquí van a vivir los stingers (transición propia con su punto de corte).</span></div>
+  <div id="trans-panel">
+    <strong>Transiciones</strong>
+    <span class="hint">CUT y FADE están arriba, siempre a mano. Aquí cargas tus transiciones (stingers) y las lanzas con el botón TRANSICIÓN, la tecla <kbd>t</kbd> o el macropad.</span>
+    <button id="st-add">Agregar transición</button><input id="st-file" type="file" accept=".webm,.mp4,.mov" hidden>
+    <div id="st-list"></div>
+    <div id="st-editor" hidden>
+      <div class="st-stage"><video id="st-video" controls muted playsinline></video></div>
+      <div class="st-cut">
+        <label>Corte en el segundo <input id="st-num" type="number" min="0" step="0.01"> s</label>
+        <input id="st-range" type="range" min="0" max="0" step="0.01">
+        <button id="st-mark">Cortar aquí</button>
+        <span class="hint">Mueve la barra hasta el cuadro donde quieres que cambie la cámara y pulsa «Cortar aquí», o escribe el segundo.</span>
+      </div>
+    </div>
+  </div>
 </section>
 <section class="page" data-page="camaras" hidden>
 <section id="splitpanel">

@@ -9,6 +9,7 @@ import { initMixer } from './mixer.js';
 import { initGcMove } from './gcmove.js';
 import { initConnPanel } from './connpanel.js';
 import { initGcStylePanel } from './gcstylepanel.js';
+import { initStingerPanel } from './stingerpanel.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { statusFromMessage } from '/shared/signal.js';
 import { syncVtr } from '/shared/vtr.js';
@@ -39,6 +40,7 @@ fadeInput.oninput = () => { const now = Date.now(); if (now - fadeSent > 60) { f
 fadeInput.onchange = () => { send({ type: 'FADE_TIME', ms: Number(fadeInput.value) }); fadeInput.blur(); };
 document.getElementById('btn-cut').onclick = () => send({ type: 'TAKE', mode: 'cut' });
 document.getElementById('btn-fade').onclick = () => send({ type: 'TAKE', mode: 'fade' });
+document.getElementById('btn-stinger').onclick = () => send({ type: 'STINGER_PLAY' });
 document.addEventListener('keydown', (e) => {
   if (!shouldHandleKey(e)) return;
   const action = keyToAction(e.key);
@@ -74,6 +76,7 @@ const mixer = initMixer({ send });
 const gcMove = initGcMove({ send });
 const connPanel = initConnPanel({ send });
 const gcStylePanel = initGcStylePanel({ send });
+const stingerPanel = initStingerPanel({ send });
 
 function build(state) {
   applySizes();
@@ -229,6 +232,8 @@ function render() {
   mixer.render(lastState);
   connPanel.render(lastState);
   gcStylePanel.render(lastState);
+  stingerPanel.render(lastState);
+  document.getElementById('btn-stinger').classList.toggle('on', !!lastState.stingerRun);
   if (lastConnRev !== null && lastState.connRev !== lastConnRev) reloadSources(); // cambió una sala/contraseña/calidad: se reconectan las cámaras
   lastConnRev = lastState.connRev;
   gcMove.render(lastState);
