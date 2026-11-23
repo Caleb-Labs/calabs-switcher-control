@@ -2,6 +2,9 @@ import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import WebSocket from 'ws';
 import { startServer } from '../server/index.js';
 
@@ -132,4 +135,26 @@ test('los archivos estáticos se sirven sin caché para que el panel cargue siem
   const res = await fetch(`http://127.0.0.1:${srv.port}/control/control.js`);
   assert.equal(res.status, 200);
   assert.equal(res.headers.get('cache-control'), 'no-store');
+});
+
+test('un cliente puede lanzar un stinger (acciones permitidas) y el estado difundido trae el run', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'st-'));
+  const splitFile = path.join(dir, 'show.json');
+  fs.writeFileSync(splitFile, JSON.stringify({ stingers: [{ file: 'a.webm', cutAt: 2 }], stingerSelected: 'a.webm' }));
+  const srv = await startServer({ port: 0, config, publicDir: fileURLToPath(new URL('../public', import.meta.url)), splitFile });
+  servers.push(srv);
+  const c = client(srv.port);
+  await c.open();
+  const first = await c.next();
+  assert.equal(first.state.stingerSelected, 'a.webm');
+  c.send({ type: 'action', action: { type: 'STINGER_PLAY' } });
+  const run = (await c.next()).state.stingerRun;
+  assert.deepEqual(run, { seq: 1, file: 'a.webm', cutAt: 2, from: 'cam1', to: 'cam2', cut: false });
+  c.send({ type: 'action', action: { type: 'STINGER_CUT_NOW', seq: 1 } });
+  const after = (await c.next()).state;
+  assert.equal(after.program, 'cam2');
+  assert.equal(after.stingerRun.cut, true);
+  c.send({ type: 'action', action: { type: 'STINGER_END', seq: 1 } });
+  assert.equal((await c.next()).state.stingerRun, null);
+  c.close();
 });

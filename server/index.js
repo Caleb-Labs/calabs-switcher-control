@@ -6,6 +6,7 @@ import { createState, reduce, persistable } from './state.js';
 import { originAllowed } from './origin.js';
 import { loadSplit, saveSplit } from './splitStore.js';
 import { createAutoHide } from './autohide.js';
+import { createStingerGuard } from './stingerguard.js';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -39,6 +40,7 @@ const CLIENT_ACTIONS = new Set([
   'SPLIT_SAVE_FIGHT', 'SPLIT_LOAD_FIGHT', 'SPLIT_DELETE_FIGHT',
   'SPLIT_SET_TEXT', 'SPLIT_AUDIO_TOGGLE', 'SPLIT_SET_GCPOS', 'SPLIT_GC', 'GC_SET_POS', 'GC_RESET_POS', 'MIX_TOGGLE', 'MIX_LEVEL', 'SET_VOLUME',
   'EMERGENCY_FILE', 'GC_STYLE', 'CONN_SET', 'CONN_ROOM', 'CONN_ROOMS', 'CAM_NAME', 'SET_CAM_COUNT', 'FADE_TIME', 'FADE_STEP', 'MIX_SELECT', 'MIX_ADJUST', 'MIX_SEL_TOGGLE', 'TEST_TONE',
+  'STINGER_ADD', 'STINGER_REMOVE', 'STINGER_CUT', 'STINGER_SELECT', 'STINGER_PLAY', 'STINGER_CUT_NOW', 'STINGER_END',
 ]);
 
 export async function startServer({ port = 3000, host = '127.0.0.1', config, publicDir, extraRoutes = [], splitFile = null, splitSaveDelayMs = 500 }) {
@@ -46,6 +48,7 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
   let state = createState({ ...config, saved: saved?.layouts ? { split: saved } : saved });
   let saveTimer = null;
   const autoHide = createAutoHide({ dispatch: (a) => dispatch(a) });
+  const stingerGuard = createStingerGuard({ dispatch: (a) => dispatch(a) });
   const flushSplit = () => {
     clearTimeout(saveTimer); saveTimer = null;
     try { saveSplit(splitFile, persistable(state)); } catch (e) { console.error('no se pudo guardar la pantalla dividida:', e.message); }
@@ -81,6 +84,7 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
     state = next;
     broadcast();
     autoHide.check(prev, next);
+    stingerGuard.check(prev, next);
     if (splitFile && splitChanged) { clearTimeout(saveTimer); saveTimer = setTimeout(flushSplit, splitSaveDelayMs); }
   };
 
@@ -102,6 +106,7 @@ export async function startServer({ port = 3000, host = '127.0.0.1', config, pub
     dispatch,
     close: () => new Promise((resolve) => {
       autoHide.stop();
+      stingerGuard.stop();
       if (splitFile && saveTimer) flushSplit();
       for (const c of wss.clients) c.terminate();
       wss.close(() => server.close(() => resolve()));
