@@ -229,6 +229,7 @@ export function reduce(state, action) {
         ...state,
         program: state.preview,
         preview: state.program,
+        splitGc: state.splitGc === 'live' ? 'off' : state.splitGc, // los GC de la dividida solo salen al pulsar «al aire»: ningún corte los deja armados
         lastTake: { mode, from: state.program, to: state.preview, seq: (state.lastTake?.seq ?? 0) + 1, ms: mode === 'fade' ? state.fadeMs : 0 },
       };
     }

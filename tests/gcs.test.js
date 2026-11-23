@@ -369,3 +369,19 @@ test('el servidor guarda y recupera la emergencia junto con lo demás', async ()
     await c.close();
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('los GC de la dividida no salen solos al pasar la dividida a Program: cada corte o fade los apaga (live -> off)', () => {
+  const armed = apply(S(), { type: 'SPLIT_GC', to: 'live' }, { type: 'SET_PREVIEW', id: 'split' });
+  const onAir = apply(armed, { type: 'TAKE' });
+  assert.equal(onAir.program, 'split');
+  assert.equal(onAir.splitGc, 'off');
+  assert.deepEqual(ids(mount(onAir, 'live')), []);
+  // pulsarlos «al aire» con la dividida ya en Program sí los muestra
+  assert.deepEqual(ids(mount(apply(onAir, { type: 'SPLIT_GC', to: 'live' }), 'live')), ['split-gc-0', 'split-gc-1']);
+  // al irse la dividida (corte o fade) se apagan, y al volver no reaparecen
+  const gone = apply(apply(onAir, { type: 'SPLIT_GC', to: 'live' }), { type: 'SET_PREVIEW', id: 'cam1' }, { type: 'TAKE', mode: 'fade' });
+  assert.equal(gone.splitGc, 'off');
+  assert.equal(apply(gone, { type: 'SET_PREVIEW', id: 'split' }, { type: 'TAKE' }).splitGc, 'off');
+  // «a preview» no se toca: sigue siendo preview
+  assert.equal(apply(S(), { type: 'SPLIT_GC', to: 'preview' }, { type: 'SET_PREVIEW', id: 'cam2' }, { type: 'TAKE' }).splitGc, 'preview');
+});
