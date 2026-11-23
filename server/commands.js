@@ -5,6 +5,7 @@ const table = {
   split: { type: 'SET_PREVIEW', id: 'split' },
   cut: { type: 'TAKE', mode: 'cut' },
   fade: { type: 'TAKE', mode: 'fade' },
+  stinger: { type: 'STINGER_PLAY' },
   'preview-next': { type: 'PREVIEW_STEP', dir: 1 },
   'preview-prev': { type: 'PREVIEW_STEP', dir: -1 },
   'audio-next': { type: 'AUDIO_MASTER_STEP', dir: 1 },

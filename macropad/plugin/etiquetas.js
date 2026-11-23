@@ -3,6 +3,7 @@
 export const ETIQUETAS = {
   cut: 'Corte (CUT)',
   fade: 'Fundido (FADE)',
+  stinger: 'Transición (stinger)',
   'fade-longer': 'Fundido más largo',
   'fade-shorter': 'Fundido más corto',
   'emergency-toggle': 'EMERGENCIA: encender / apagar',
@@ -48,7 +49,7 @@ export const ETIQUETAS = {
 };
 
 export const GRUPOS = [
-  { nombre: 'Cortes y transiciones', comandos: ['cut', 'fade', 'fade-longer', 'fade-shorter'] },
+  { nombre: 'Cortes y transiciones', comandos: ['cut', 'fade', 'stinger', 'fade-longer', 'fade-shorter'] },
   { nombre: 'Emergencia', comandos: ['emergency-toggle', 'emergency-on', 'emergency-off'] },
   { nombre: 'Cámaras a Preview', comandos: ['cam1', 'cam2', 'cam3', 'cam4', 'cam5', 'cam6', 'cam7', 'cam8', 'cam9', 'vtr', 'split', 'preview-next', 'preview-prev'] },
   { nombre: 'VTR', comandos: ['vtr-toggle', 'vtr-play', 'vtr-pause', 'vtr-next', 'vtr-prev'] },

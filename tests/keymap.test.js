@@ -98,3 +98,7 @@ test('badgeText: nombre de la ventana + de la fuente solo en preview/program', (
   assert.equal(badgeText('pre', 'Equipo 2'), 'PREVIEW · Equipo 2');
   assert.equal(badgeText('s-cam3', 'Equipo 3'), '');
 });
+
+test('keyToAction: t lanza la transición (stinger)', () => {
+  assert.deepEqual(keyToAction('t'), { type: 'STINGER_PLAY' });
+});

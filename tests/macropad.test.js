@@ -211,3 +211,8 @@ test('keyToAction: teclas extra de navegación y volumen', () => {
   assert.deepEqual(keyToAction(','), { type: 'VTR_PREV' });
   assert.deepEqual(keyToAction('p'), { type: 'VTR_TOGGLE' });
 });
+
+test('el comando stinger lanza la transición elegida', () => {
+  assert.deepEqual(commandToAction('stinger'), { type: 'STINGER_PLAY' });
+  assert.ok(COMMANDS.includes('stinger'));
+});
