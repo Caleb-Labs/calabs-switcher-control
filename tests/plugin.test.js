@@ -10,7 +10,7 @@ import { WebSocketServer } from 'ws';
 import { COMMANDS } from '../server/commands.js';
 import { ETIQUETAS, GRUPOS } from '../macropad/plugin/etiquetas.js';
 import { connectWS } from '../macropad/plugin/fuente/com.multicam.control.sdPlugin/bin/wsclient.js';
-import { parseArgs, isValidCommand, commandsFor } from '../macropad/plugin/fuente/com.multicam.control.sdPlugin/bin/plugin.js';
+import { parseArgs, isValidCommand, commandsFor, logLine } from '../macropad/plugin/fuente/com.multicam.control.sdPlugin/bin/plugin.js';
 import { buildPlugin, comandoHtml, dialHtml, PLUGIN_DIR } from '../macropad/plugin/build.js';
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
@@ -129,6 +129,34 @@ test('commandsFor: presionar el dial manda el comando de presionar (una sola vez
   assert.deepEqual(commandsFor({ ...down, payload: { settings: { right: 'cut' } } }), []);
 });
 
+test('commandsFor: acepta los nombres que usa el software de Knob (knobRotate, knobDown) y el sentido como texto', () => {
+  const k = (event, payload) => ({ event, action: 'com.multicam.control.dial', payload: { settings: S, ...payload } });
+  assert.deepEqual(commandsFor(k('knobRotate', { ticks: 1 })), ['preview-next']);
+  assert.deepEqual(commandsFor(k('knobDown', {})), ['cut']);
+  assert.deepEqual(commandsFor(k('knobPress', { pressed: true })), ['cut']);
+  assert.deepEqual(commandsFor(k('knobPress', { pressed: false })), []);
+  for (const d of ['right', 'clockwise', 'cw', 'RIGHT']) assert.deepEqual(commandsFor(k('dialRotate', { direction: d })), ['preview-next'], d);
+  for (const d of ['left', 'counterclockwise', 'counter-clockwise', 'ccw', 'anticlockwise']) assert.deepEqual(commandsFor(k('dialRotate', { direction: d })), ['preview-prev'], d);
+  assert.deepEqual(commandsFor(k('dialRotate', { direction: 'sideways' })), []);
+  assert.deepEqual(commandsFor(k('dialRotate', { ticks: '2' })), ['preview-next', 'preview-next'], 'número como texto');
+});
+
+test('commandsFor: si el dial acaba en una tecla, pulsarla manda el comando de "Presionar"', () => {
+  assert.deepEqual(commandsFor({ event: 'keyDown', action: 'com.multicam.control.dial', payload: { settings: S } }), ['cut']);
+  assert.deepEqual(commandsFor({ event: 'keyDown', action: 'com.multicam.control.dial', payload: { settings: { right: 'fade' } } }), []);
+});
+
+test('logLine resume un evento del dial para el registro de diagnóstico (sin volcar datos de más)', () => {
+  const l = logLine({ event: 'dialRotate', action: 'com.multicam.control.dial', context: 'abc', payload: { controller: 'Knob', ticks: 1, pressed: false, settings: { right: 'cut', port: 3000 }, coordinates: { column: 2, row: 0 } } }, new Date('2026-11-23T10:00:00Z'));
+  assert.match(l, /^2026-11-23T10:00:00\.000Z dialRotate /);
+  assert.match(l, /controller=Knob/);
+  assert.match(l, /ticks=1/);
+  assert.match(l, /payload:\[[^\]]*controller[^\]]*ticks/);
+  assert.equal(logLine({ event: 'keyDown', action: 'otra.accion' }), null, 'solo registra lo de nuestro dial');
+  assert.equal(logLine(null), null);
+  assert.ok(!l.includes('\n'));
+});
+
 test('commandsFor: la tecla normal sigue funcionando y lo de otras acciones se ignora', () => {
   assert.deepEqual(commandsFor({ event: 'keyDown', action: 'com.multicam.control.comando', payload: { settings: { command: 'fade' } } }), ['fade']);
   assert.deepEqual(commandsFor({ event: 'keyDown', action: 'otro.plugin.accion', payload: { settings: { command: 'fade' } } }), []);
@@ -192,8 +220,9 @@ test('el manifiesto es coherente y todos los archivos que nombra existen', () =>
   assert.deepEqual(m.Actions.map((a) => a.UUID), ['com.multicam.control.comando', 'com.multicam.control.dial']);
   for (const a of m.Actions) assert.ok(a.UUID.startsWith(m.UUID + '.'));
   assert.deepEqual(m.Actions[0].Controllers, ['Keypad']);
-  assert.deepEqual(m.Actions[1].Controllers, ['Encoder']);
-  assert.ok(m.Actions[1].Encoder?.TriggerDescription?.Rotate, 'el dial describe qué hace al girar');
+  // Como el plugin de ejemplo del usuario: su software llama «Knob» a las ruedas (Elgato las llama «Encoder»)
+  assert.deepEqual(m.Actions[1].Controllers, ['Keypad', 'Knob', 'Encoder']);
+  assert.match(m.Software.MinimumVersion, /^3\./, 'versión mínima del software del usuario (3.10.x), no la de Elgato');
   assert.ok(fs.existsSync(path.join(PLUGIN_DIR, m.CodePath)));
   for (const a of m.Actions) assert.ok(fs.existsSync(path.join(PLUGIN_DIR, a.PropertyInspectorPath)), a.PropertyInspectorPath);
   for (const base of [m.Icon, m.CategoryIcon, ...m.Actions.flatMap((a) => [a.Icon, a.States[0].Image])]) {

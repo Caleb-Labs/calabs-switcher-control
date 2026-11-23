@@ -13,7 +13,7 @@
     "Version": "20"
   },
   "Software": {
-    "MinimumVersion": "6.4"
+    "MinimumVersion": "3.10.188.226"
   },
   "OS": [
     {
@@ -41,18 +41,14 @@
     {
       "Name": "Dial Multicam",
       "UUID": "com.multicam.control.dial",
-      "Tooltip": "Rueda: un comando al girar a la derecha, otro a la izquierda y otro al presionar.",
+      "Tooltip": "Rueda: un comando al girar a la derecha, otro a la izquierda y otro al presionar. (En una tecla, pulsarla manda el de «Presionar».)",
       "Icon": "imgs/accion/lista",
       "PropertyInspectorPath": "ui/dial.html",
       "Controllers": [
+        "Keypad",
+        "Knob",
         "Encoder"
       ],
-      "Encoder": {
-        "TriggerDescription": {
-          "Rotate": "Comando al girar (derecha / izquierda)",
-          "Push": "Comando al presionar"
-        }
-      },
       "States": [
         {
           "Image": "imgs/accion/tecla",

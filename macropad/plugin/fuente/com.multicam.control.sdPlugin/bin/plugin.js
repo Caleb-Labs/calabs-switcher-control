@@ -1,6 +1,9 @@
 // Plugin "Multicam": acciones de tecla y de dial (rueda) que mandan un comando a la app Multicam (POST /api/do/<comando>).
 // Lo lanza el software del macropad con: node plugin.js -port N -pluginUUID U -registerEvent E -info J
 import http from 'node:http';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { connectWS } from './wsclient.js';
 
@@ -37,20 +40,55 @@ export function postCommand(command, port = 3000, timeoutMs = 2000) {
   });
 }
 
+// Nombres de evento: Elgato usa dialRotate/dialDown/dialPress; los programas que llaman «Knob» a las ruedas pueden usar knob*.
+const ROTATE = new Set(['dialRotate', 'knobRotate']);
+const DOWN = new Set(['dialDown', 'knobDown']);
+const PRESS = new Set(['dialPress', 'knobPress']); // trae payload.pressed (true al bajar)
+
+// Pasos de un giro: payload.ticks (positivo = derecha) o, si no viene, payload.direction como texto.
+function stepsOf(payload) {
+  const n = Math.trunc(Number(payload?.ticks));
+  if (Number.isFinite(n) && n !== 0) return n;
+  const d = typeof payload?.direction === 'string' ? payload.direction.toLowerCase() : '';
+  if (/counter|anti|left|ccw/.test(d)) return -1; // «counterclockwise» contiene «clock»: se mira antes
+  if (/right|clock|cw/.test(d)) return 1;
+  return 0;
+}
+
 // Qué comandos hay que mandar por un mensaje del software (lista vacía = nada que hacer).
 export function commandsFor(msg) {
   if (!msg || typeof msg !== 'object') return [];
   const s = msg.payload?.settings ?? {};
   if (msg.action === ACTION) return msg.event === 'keyDown' && isValidCommand(s.command) ? [s.command] : [];
   if (msg.action !== DIAL_ACTION) return [];
-  if (msg.event === 'dialRotate') {
-    const ticks = Math.trunc(Number(msg.payload?.ticks));
-    if (!Number.isFinite(ticks) || ticks === 0) return [];
-    const cmd = ticks > 0 ? s.right : s.left; // derecha = positivo
+  const push = isValidCommand(s.push) ? [s.push] : [];
+  if (ROTATE.has(msg.event)) {
+    const ticks = stepsOf(msg.payload);
+    if (!ticks) return [];
+    const cmd = ticks > 0 ? s.right : s.left;
     return isValidCommand(cmd) ? Array(Math.min(MAX_STEPS, Math.abs(ticks))).fill(cmd) : [];
   }
-  if (msg.event === 'dialDown' || (msg.event === 'dialPress' && msg.payload?.pressed === true)) return isValidCommand(s.push) ? [s.push] : [];
+  if (DOWN.has(msg.event)) return push;
+  if (PRESS.has(msg.event)) return msg.payload?.pressed === true ? push : [];
+  if (msg.event === 'keyDown') return push; // si el software deja la acción en una tecla, pulsarla = «Presionar»
   return [];
+}
+
+// Línea de diagnóstico de un evento de NUESTRO dial: qué evento llegó y con qué campos (para ver cómo habla el software).
+export function logLine(msg, now = new Date()) {
+  if (!msg || msg.action !== DIAL_ACTION || typeof msg.event !== 'string') return null;
+  const p = msg.payload ?? {};
+  const keys = Object.keys(p).join(',');
+  const extra = ['controller', 'ticks', 'direction', 'pressed'].filter((k) => k in p).map((k) => `${k}=${String(p[k])}`).join(' ');
+  return `${now.toISOString()} ${msg.event} ${extra} payload:[${keys}]`.replace(/\s+/g, ' ');
+}
+
+const LOG_FILE = path.join(os.tmpdir(), 'multicam-plugin.log');
+let logged = 0;
+function writeLog(line) {
+  if (!line || logged >= 400) return; // tope: es solo para diagnosticar
+  logged++;
+  try { fs.appendFileSync(LOG_FILE, line + '\n'); } catch { /* sin permiso para escribir: se ignora */ }
 }
 
 const portOf = (settings) => { const p = Number(settings?.port); return Number.isInteger(p) && p > 0 && p < 65536 ? p : 3000; };
@@ -65,6 +103,7 @@ export function startPlugin({ port, pluginUUID, registerEvent }) {
   async function handle(text) {
     let msg;
     try { msg = JSON.parse(text); } catch { return; }
+    writeLog(logLine(msg));
     const cmds = commandsFor(msg);
     const keyWithoutCommand = msg.event === 'keyDown' && msg.action === ACTION && !cmds.length; // tecla sin configurar
     let ok = !keyWithoutCommand;
