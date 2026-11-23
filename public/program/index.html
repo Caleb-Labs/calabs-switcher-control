@@ -7,7 +7,10 @@
   html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
   #gfx { width: 1920px; height: 1080px; }
   #stage { position: relative; width: 1920px; height: 1080px; }
+  #stinger { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 4; pointer-events: none; background: transparent; }
+  #stinger[hidden] { display: none; }
 </style>
 <div id="stage"></div>
+<video id="stinger" hidden playsinline></video>
 <div id="gfx" class="gfx"></div>
 <script type="module" src="/program/program.js"></script>

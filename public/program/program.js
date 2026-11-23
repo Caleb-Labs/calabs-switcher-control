@@ -3,6 +3,7 @@ import { createSourceElement, mountOnly, neededIds, visibleIds, idsFor, applyPla
 import { splitBgFile, splitPlacement } from '/shared/split.js';
 import { syncGraphics, applyScale } from '/graphics/layer.js';
 import { syncVtr } from '/shared/vtr.js';
+import { createStingerPlayer } from './stinger.js';
 
 const stage = document.getElementById('stage');
 const gfx = document.getElementById('gfx');
@@ -100,5 +101,18 @@ stage.addEventListener('load', reapplyVolumes, true);
 window.addEventListener('message', (e) => { if (e.origin === 'https://vdo.ninja' && e.data?.action === 'view-connection') reapplyVolumes(); });
 setInterval(reapplyVolumes, 2000);
 
-connect((state) => { lastState = state; render(state); });
+// Stinger: transición propia. El video manda: al llegar a su segundo de corte pide el cambio de cámara.
+let conn = null;
+const stingerVideo = document.getElementById('stinger');
+const stinger = createStingerPlayer({ video: stingerVideo, send: (a) => conn?.send(a) });
+const stingerTick = () => { stinger.onFrame(); stingerVideo.requestVideoFrameCallback?.(stingerTick); };
+stingerVideo.requestVideoFrameCallback?.(stingerTick);
+stingerVideo.addEventListener('timeupdate', () => stinger.onFrame()); // respaldo si no hay requestVideoFrameCallback
+stingerVideo.addEventListener('ended', () => stinger.onEnded());
+
+conn = connect((state) => {
+  lastState = state;
+  try { stinger.onState(state); } catch (e) { console.error('stinger:', e); } // un fallo del stinger nunca debe congelar el switch
+  render(state);
+});
 fetch('/api/sources').then((r) => r.json()).then((list) => { sources = list; if (lastState) render(lastState); });
