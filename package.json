@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server/main.js",
     "links": "node server/print-links.js",
+    "botones": "node macropad/generar-botones.js",
     "test": "node --test \"tests/**/*.test.js\""
   },
   "engines": {
