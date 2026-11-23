@@ -49,6 +49,9 @@ kbd { color: var(--muted); font-size: 11px; margin-left: 4px; }
 #vol { margin-left: 16px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 
 .src.split-view { background: #111 center / cover no-repeat; container-type: inline-size; }
+.sv-video { position: absolute; border: 0; background: #000; pointer-events: none; }
+.sv-box.has-video { background: transparent; place-items: end start; text-align: left; z-index: 1; }
+.sv-box.has-video { color: #fff; text-shadow: 0 1px 3px #000; }
 .sv-box { position: absolute; border: 1px solid #6f8fb0; background: #6f8fb033; display: grid; place-items: center; text-align: center; font-size: max(8px, 3.2cqw); overflow: hidden; padding: 1px; }
 #splitpanel { padding: 8px 12px 20px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
 .sp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }

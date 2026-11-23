@@ -221,7 +221,10 @@ function render() {
   preBadge.hidden = true;
   preNote.textContent = 'PREVIEW';
   const splitEl = tiles.get('split')?.querySelector('.split-view');
-  if (splitEl) renderSplitView(splitEl, lastState);
+  if (splitEl) { // video real de las cámaras solo si la dividida está en Preview o Program (cada una es una conexión extra al jugador)
+    const showing = areas.split === 'pgm' || areas.split === 'pre';
+    renderSplitView(splitEl, lastState, showing ? Object.fromEntries(sources.map((x) => [x.id, x.url])) : null);
+  }
   splitPanel.render(lastState);
   mixer.render(lastState);
   connPanel.render(lastState);
